@@ -39,7 +39,8 @@ care-nexus/
 
 ## Team Workflow
 
-- Main branch: stable integration branch.
-- Feature branches: use `feature/<module-name>` for daily development.
+- `main`: stable releases and reviewed stage baselines.
+- `develop`: planned daily integration branch. If it has not been created yet, do not create or switch to it without explicit approval.
+- `feature/*`: feature or documentation task branches.
 - Commit messages: keep them clear and module-oriented, such as `feat(training): add category API`.
 - Pull requests: merge after review and basic local verification.
