@@ -129,3 +129,47 @@
 
 - T-012 自动化测试和 MySQL 真实联调均已通过。
 - 前端目录未修改，因此前端 lint 和 build 未重新执行，未记录为通过。
+
+## 2026-07-09 T-014 培训资源管理后端自动化验证
+
+本节记录 T-014 培训类别、标签和资源管理后端的实际自动化验证情况。
+
+| 命令 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `cd backend; mvn test` | 后端单元测试、MockMvc接口测试 | 通过 | 累计执行 44 个测试，Failures 0，Errors 0；其中 T-014 新增 21 个测试，T-012 认证回归测试继续通过 |
+| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 44 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
+| MySQL 8 临时库执行 `001_schema.sql` 和 `002_seed_data.sql` | 数据库真实执行验证 | 通过 | 使用 `care_nexus_t014` 临时库，不覆盖既有 `care_nexus`；表数量 36，`CAREGIVER` 已具备 `training:resource:view` |
+| 后端连接 MySQL 8 临时库后 HTTP 联调 | T-014 真实接口联调 | 通过 | 覆盖 trainer/caregiver 登录、类别新增、标签新增、TEXT资源创建、发布、护工查询/详情、护工新增403、下架、下架后护工不可见、标签关联和操作日志 |
+
+### T-014 自动化测试覆盖
+
+- 未登录访问培训接口返回 HTTP 401。
+- `training:resource:view` 可查询，不能新增、修改、发布或下架。
+- `training:resource:manage` 可执行类别、标签和资源管理操作。
+- 类别新增、重复名称、空名称、不存在和非法状态校验。
+- 标签新增、重复名称、不存在和状态切换。
+- TEXT、LOCAL_FILE、EXTERNAL_LINK 三类存储方式校验。
+- 资源创建默认 `DRAFT`，`tagIds` 去重，`createdBy` 来自当前用户。
+- 草稿资源可修改，已发布资源直接修改返回 `CONFLICT`。
+- 普通查看用户无法读取草稿或下架资源详情。
+- 资源分页结构包含 `records`、`pageNo`、`pageSize`、`total`、`pages`。
+- 发布设置 `publishedAt` 并写操作日志，重复发布返回 `CONFLICT`。
+- 下架写操作日志，重复下架返回 `CONFLICT`。
+
+### MySQL真实联调结果
+
+- `trainer_demo` 登录成功，主角色为 `TRAINING_ADMIN`。
+- `caregiver_demo` 登录成功，主角色为 `CAREGIVER`。
+- `trainer_demo` 新增培训类别、新增培训标签、创建 TEXT 培训资源成功。
+- 新资源初始状态为 `DRAFT`。
+- `trainer_demo` 发布资源成功，状态变为 `PUBLISHED`。
+- `caregiver_demo` 可查询已发布培训资源，可查看已发布资源详情。
+- `caregiver_demo` 尝试新增资源返回 HTTP 403。
+- `trainer_demo` 下架资源成功，状态变为 `OFFLINE`。
+- 下架后 `caregiver_demo` 无法查看该资源详情，返回 HTTP 404。
+- `training_resource_tag` 关联去重后仅保留 1 条有效关联。
+- `operation_log` 中存在发布和下架记录，共 2 条。
+
+### 未执行事项
+
+- 未执行前端 lint 和前端 build。原因：T-014 未修改 `frontend/admin-web` 和 `frontend/mobile-web`。

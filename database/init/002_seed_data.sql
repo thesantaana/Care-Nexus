@@ -75,7 +75,7 @@ WHERE r.role_code = 'OPERATOR' AND p.permission_code IN ('care:order:view', 'car
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
-WHERE r.role_code = 'CAREGIVER' AND p.permission_code = 'care:order:view';
+WHERE r.role_code = 'CAREGIVER' AND p.permission_code IN ('care:order:view', 'training:resource:view');
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM sys_role r JOIN sys_permission p

@@ -16,6 +16,11 @@ import com.carenexus.auth.mapper.SysPermissionMapper;
 import com.carenexus.auth.mapper.SysRoleMapper;
 import com.carenexus.auth.mapper.SysUserMapper;
 import com.carenexus.common.response.ApiResponse;
+import com.carenexus.file.mapper.FileResourceMapper;
+import com.carenexus.training.mapper.TrainingCategoryMapper;
+import com.carenexus.training.mapper.TrainingResourceMapper;
+import com.carenexus.training.mapper.TrainingResourceTagMapper;
+import com.carenexus.training.mapper.TrainingTagMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Arrays;
@@ -73,6 +78,21 @@ class AuthControllerIntegrationTest {
 
     @MockBean
     private OperationLogMapper operationLogMapper;
+
+    @MockBean
+    private TrainingCategoryMapper trainingCategoryMapper;
+
+    @MockBean
+    private TrainingTagMapper trainingTagMapper;
+
+    @MockBean
+    private TrainingResourceMapper trainingResourceMapper;
+
+    @MockBean
+    private TrainingResourceTagMapper trainingResourceTagMapper;
+
+    @MockBean
+    private FileResourceMapper fileResourceMapper;
 
     @BeforeEach
     void setUp() {
