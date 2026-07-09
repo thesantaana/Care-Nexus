@@ -1,10 +1,10 @@
 # TASK-T-012 后端账号登录、当前用户与 RBAC 权限基础
 
-任务状态：REVIEW
+任务状态：DONE
 
 负责人：隋咏轩
 
-分支：`feature/T-012-auth-rbac`
+分支：`feature/T-012-auth-rbac`，已通过 PR #4 合并到 `develop`
 
 ## 1. 任务目标
 
@@ -83,4 +83,4 @@ sys_user.main_role_id -> sys_role -> sys_role_permission -> sys_permission.permi
 - 401 和 403 使用统一 JSON 响应。
 - 不提交真实密码、真实密钥、完整 Token 或数据库密码。
 - 不修改前端目录。
-- MySQL 真实联调已完成，等待项目负责人审核。
+- MySQL 真实联调已完成，项目负责人审核通过并已合并到 `develop`。
