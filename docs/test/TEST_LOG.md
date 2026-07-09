@@ -1,12 +1,12 @@
 # Test Log
 
-更新时间：2026-07-07
+更新时间：2026-07-09
 
-## 当前测试基础
+## 2026-07-07 审计阶段测试基础
 
-仓库当前尚未创建后端工程、前端工程、测试目录、构建脚本或测试命令配置，因此没有可执行的单元测试、后端构建、前端 lint 或前端生产构建命令。
+当时仓库尚未创建后端工程、前端工程、测试目录、构建脚本或测试命令配置，因此没有可执行的单元测试、后端构建、前端 lint 或前端生产构建命令。
 
-## 本轮审计检查执行情况
+## 2026-07-07 审计检查执行情况
 
 以下命令属于仓库审计检查，不属于软件测试，不得记录为功能测试、单元测试或构建通过。
 
@@ -19,10 +19,58 @@
 | 前端 lint | 未执行 | 仓库不存在前端工程和 lint 命令 |
 | 前端生产构建 | 未执行 | 仓库不存在前端工程和构建命令 |
 
-## 当前测试结论
+## 2026-07-07 测试结论
 
-仓库当前尚无可执行测试。未运行任何单元测试、接口测试、前端 lint 或生产构建。
+当时仓库尚无可执行测试。未运行任何单元测试、接口测试、前端 lint 或生产构建。
 
 ## 注意
 
 没有实际运行的测试不得记录为“通过”。后续创建工程后，应将每次测试命令、结果、错误摘要和处理方式追加到本文件。
+
+## 2026-07-09 T-011 工程骨架验证
+
+以下命令用于验证 T-011 工程骨架可构建、可启动和基础依赖安全情况，不代表 `docs/test/测试用例.md` 中 95 条详细业务测试用例已经执行。
+
+| 命令 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `mvn test` | 后端骨架单元测试 | 通过 | 执行 1 个 Spring Boot 上下文加载测试，Failures 0，Errors 0 |
+| `mvn package` | 后端构建 | 通过 | 成功生成后端 Spring Boot jar |
+| `java -jar backend/target/care-nexus-backend-0.1.0-SNAPSHOT.jar --server.port=18080` + `GET /api/v1/health` | 后端启动和健康检查 | 通过 | 健康检查返回 HTTP 200，响应包含 `status=UP` |
+| `npm install` | PC 管理端和移动端依赖 | 已执行 | 安装项目依赖并生成/更新 `package-lock.json` |
+| `npm run build` | PC 管理端 | 通过 | Vite 生产构建成功 |
+| `npm run build` | 移动端 | 通过 | Vite 生产构建成功 |
+| `npm audit --omit=dev` | PC 管理端和移动端生产依赖 | 通过 | 生产依赖审计结果为 0 vulnerabilities |
+| `mysql --version` | MySQL 客户端检查 | 通过 | 本机存在 MySQL 8.0.45 客户端 |
+| `Start-Service MySQL80` / `Start-Service mysql` | MySQL 服务启动尝试 | 未通过 | 当前终端权限不足，无法打开并启动本机 MySQL 服务 |
+| `mysql --no-defaults --comments --force --execute="SOURCE database/init/001_schema.sql"` | SQL 脚本执行验证 | 未完成 | 因 MySQL 服务未启动，连接 `localhost:3306` 失败 |
+| `docker --version` | Docker 环境检查 | 未安装 | 当前本机未识别 `docker` 命令；T-011 仅将 Docker 作为后续增强规划 |
+
+### 本轮测试结论
+
+- T-011 后端骨架构建、基础测试、启动和健康检查已通过。
+- T-011 两个前端骨架生产构建已通过。
+- 详细业务测试用例尚未执行，因为本轮没有实现完整业务功能。
+- 数据库 SQL 脚本已创建，但本机 MySQL 服务因权限限制未能启动，因此未完成真实连接执行验证。
+
+## 2026-07-09 T-011 修改后复审验证
+
+以下命令用于验证 T-011 修改后复审范围，仍不代表 `docs/test/测试用例.md` 中 95 条详细业务测试用例已经执行。
+
+| 命令 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `mvn verify` | 后端测试、打包、Checkstyle | 通过 | 执行 Spring Boot 上下文测试、生成 jar、Checkstyle 0 violations |
+| `npm run lint` | PC 管理端 | 通过 | ESLint 无错误、无警告 |
+| `npm run build` | PC 管理端 | 通过 | Vite 生产构建成功 |
+| `npm run lint` | 移动端 | 通过 | ESLint 无错误、无警告 |
+| `npm run build` | 移动端 | 通过 | Vite 生产构建成功 |
+| `npm audit --omit=dev` | PC 管理端和移动端生产依赖 | 通过 | 生产依赖审计结果为 0 vulnerabilities |
+| 临时 MySQL 8 实例执行 `001_schema.sql` 和 `002_seed_data.sql` | 数据库真实执行验证 | 通过 | 表数量 36，外键 50，唯一约束 17 |
+| 后端启动后访问 `GET /api/v1/health` | 后端健康检查 | 通过 | HTTP 200，响应包含 `status=UP` |
+
+### 本轮测试结论
+
+- 后端骨架、静态检查和健康检查已通过。
+- 两个前端骨架 lint 和生产构建已通过。
+- MySQL 8 建表脚本和演示数据脚本已在临时 MySQL 实例中真实执行通过；本轮确认已删除 `sys_user_role` 表并新增 `ai_draft_source_resource` 表。
+- 详细业务功能尚未实现，因此详细业务测试用例尚未执行。
+- PowerDesigner 模型文件和截图尚未生成；该成果已拆分为 T-030 / Issue #2，最终交付前基于最终版 SQL 手动生成。
