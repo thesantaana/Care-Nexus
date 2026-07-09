@@ -11,38 +11,80 @@ INSERT INTO sys_role (role_code, role_name) VALUES
 ('HEALTH_MANAGER', '健康管理人员');
 
 INSERT INTO sys_permission (permission_code, permission_name, permission_type) VALUES
+('system:user:view', '用户查看', 'ACTION'),
+('system:role:view', '角色查看', 'ACTION'),
+('training:resource:view', '培训资源查看', 'ACTION'),
+('care:order:view', '护理订单查看', 'ACTION'),
+('doctor:elder:view', '授权老人查看', 'ACTION'),
 ('training:resource:manage', '培训资源管理', 'ACTION'),
 ('care:order:assign', '护理订单分配', 'ACTION'),
 ('doctor:elder:authorize', '医生老人授权', 'ACTION'),
 ('system:user:manage', '用户管理', 'ACTION');
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
-SELECT 'admin_demo', '{bcrypt}DEMO_HASH_REPLACE_BEFORE_REAL_USE', '演示管理员', NULL, NULL, id, 'NORMAL'
+SELECT 'admin_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示管理员', NULL, NULL, id, 'NORMAL'
 FROM sys_role WHERE role_code = 'ADMIN';
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
-SELECT 'trainer_demo', '{bcrypt}DEMO_HASH_REPLACE_BEFORE_REAL_USE', '演示培训管理员', NULL, NULL, id, 'NORMAL'
+SELECT 'operator_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示运营人员', NULL, NULL, id, 'NORMAL'
+FROM sys_role WHERE role_code = 'OPERATOR';
+
+INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
+SELECT 'trainer_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示培训管理员', NULL, NULL, id, 'NORMAL'
 FROM sys_role WHERE role_code = 'TRAINING_ADMIN';
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
-SELECT 'doctor_demo', '{bcrypt}DEMO_HASH_REPLACE_BEFORE_REAL_USE', '演示医生', NULL, NULL, id, 'NORMAL'
+SELECT 'doctor_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示医生', NULL, NULL, id, 'NORMAL'
 FROM sys_role WHERE role_code = 'DOCTOR';
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
-SELECT 'caregiver_demo', '{bcrypt}DEMO_HASH_REPLACE_BEFORE_REAL_USE', '演示护工', NULL, NULL, id, 'NORMAL'
+SELECT 'health_manager_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示健康管理人员', NULL, NULL, id, 'NORMAL'
+FROM sys_role WHERE role_code = 'HEALTH_MANAGER';
+
+INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
+SELECT 'caregiver_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示护工', NULL, NULL, id, 'NORMAL'
 FROM sys_role WHERE role_code = 'CAREGIVER';
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
-SELECT 'elder_demo', '{bcrypt}DEMO_HASH_REPLACE_BEFORE_REAL_USE', '演示老人', NULL, NULL, id, 'NORMAL'
+SELECT 'elder_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示老人', NULL, NULL, id, 'NORMAL'
 FROM sys_role WHERE role_code = 'ELDER';
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
-SELECT 'family_demo', '{bcrypt}DEMO_HASH_REPLACE_BEFORE_REAL_USE', '演示家属', NULL, NULL, id, 'NORMAL'
+SELECT 'family_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示家属', NULL, NULL, id, 'NORMAL'
 FROM sys_role WHERE role_code = 'FAMILY';
+
+INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
+SELECT 'disabled_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示停用账号', NULL, NULL, id, 'DISABLED'
+FROM sys_role WHERE role_code = 'ELDER';
+
+INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status, is_deleted)
+SELECT 'deleted_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示逻辑删除账号', NULL, NULL, id, 'NORMAL', 1
+FROM sys_role WHERE role_code = 'ELDER';
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
 WHERE r.role_code = 'ADMIN';
+
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
+WHERE r.role_code = 'TRAINING_ADMIN' AND p.permission_code IN ('training:resource:view', 'training:resource:manage');
+
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
+WHERE r.role_code = 'OPERATOR' AND p.permission_code IN ('care:order:view', 'care:order:assign');
+
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
+WHERE r.role_code = 'CAREGIVER' AND p.permission_code = 'care:order:view';
+
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
+WHERE r.role_code = 'DOCTOR' AND p.permission_code = 'doctor:elder:view';
+
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
+WHERE r.role_code = 'HEALTH_MANAGER'
+  AND p.permission_code IN ('doctor:elder:view', 'doctor:elder:authorize');
 
 INSERT INTO sys_dict (dict_type, dict_code, dict_name, sort_no) VALUES
 ('ORDER_STATUS', 'PENDING_ASSIGN', '待分配', 1),

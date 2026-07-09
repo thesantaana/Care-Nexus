@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,6 +29,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(ErrorCode.VALIDATION_ERROR, "参数校验失败"));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.fail(ErrorCode.AUTH_FORBIDDEN, "Access denied"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
         LOGGER.error("Unhandled system exception", ex);
@@ -36,10 +43,17 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus resolveStatus(ErrorCode errorCode) {
-        if (errorCode == ErrorCode.UNAUTHORIZED) {
+        if (errorCode == ErrorCode.UNAUTHORIZED
+                || errorCode == ErrorCode.AUTH_INVALID_CREDENTIALS
+                || errorCode == ErrorCode.AUTH_TOKEN_MISSING
+                || errorCode == ErrorCode.AUTH_TOKEN_INVALID
+                || errorCode == ErrorCode.AUTH_TOKEN_EXPIRED
+                || errorCode == ErrorCode.AUTH_TOKEN_REVOKED
+                || errorCode == ErrorCode.AUTH_ACCOUNT_DISABLED
+                || errorCode == ErrorCode.AUTH_UNAUTHORIZED) {
             return HttpStatus.UNAUTHORIZED;
         }
-        if (errorCode == ErrorCode.FORBIDDEN) {
+        if (errorCode == ErrorCode.FORBIDDEN || errorCode == ErrorCode.AUTH_FORBIDDEN) {
             return HttpStatus.FORBIDDEN;
         }
         if (errorCode == ErrorCode.NOT_FOUND) {

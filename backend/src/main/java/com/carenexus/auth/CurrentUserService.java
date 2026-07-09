@@ -7,4 +7,6 @@ public interface CurrentUserService {
     Optional<CurrentUser> getCurrentUser();
 
     Long requireCurrentUserId();
+
+    CurrentUser loadActiveUser(Long userId);
 }

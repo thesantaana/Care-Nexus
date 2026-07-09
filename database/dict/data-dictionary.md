@@ -93,3 +93,10 @@
 | 视频 | mp4、webm | 500MB |
 
 文件存储名由服务端生成，原始文件名仅用于展示。
+## T-012 演示账号和认证数据说明
+
+- 演示账号统一密码为 `Demo@123456`，该密码仅用于虚构演示账号。
+- 数据库只保存 BCrypt 哈希，不保存明文密码。
+- `sys_user.account_status` 使用 `NORMAL` 和 `DISABLED` 表示正常和停用。
+- `sys_user.is_deleted=1` 表示逻辑删除账号，旧 Token 和登录请求均不得继续使用该账号。
+- T-012 可测试权限码至少包括：`system:user:view`、`system:role:view`、`training:resource:view`、`care:order:view`、`doctor:elder:view`。
