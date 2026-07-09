@@ -8,7 +8,7 @@
 
 更新时间：2026-07-09
 
-本文档基于需求基线 v1.0 和 `docs/api/API设计规范.md`，列出 MVP 阶段需要覆盖的接口清单。当前仅为接口设计，不代表已经实现。
+本文档基于需求基线 v1.0 和 `docs/api/API设计规范.md`，列出 MVP 阶段需要覆盖的接口清单。除 T-012 已实现的认证基础接口外，其他接口仍为设计清单，不代表已经实现。
 
 分页接口统一使用 `pageNo` 和 `pageSize`。AI 题目草稿审核统一使用 `review` 单接口，不再同时保留 approve/reject 双接口。
 
@@ -16,9 +16,10 @@
 
 | 接口名称 | HTTP方法 | URL | 允许角色 | 数据权限 | 请求字段 | 响应字段 | 状态变化 | 错误码 | 操作日志 |
 |---|---|---|---|---|---|---|---|---|---|
-| 登录 | POST | `/api/v1/auth/login` | 匿名 | 无 | username, password | token, user, mainRole, permissions | 无 | UNAUTHORIZED, FORBIDDEN | 是 |
-| 当前用户 | GET | `/api/v1/auth/me` | 已登录用户 | 本人 | 无 | user, mainRole, permissions | 无 | UNAUTHORIZED | 否 |
-| 退出登录 | POST | `/api/v1/auth/logout` | 已登录用户 | 本人 | 无 | success | Token失效 | UNAUTHORIZED | 是 |
+| 登录 | POST | `/api/v1/auth/login` | 匿名 | 无 | username, password | token, tokenType, expiresIn, expiresAt, userId, username, displayName, mainRoleCode, mainRoleName, permissionCodes | 无 | AUTH_INVALID_CREDENTIALS, AUTH_ACCOUNT_DISABLED, UNAUTHORIZED | 是 |
+| 当前用户 | GET | `/api/v1/auth/me` | 已登录用户 | 本人 | 无 | userId, username, displayName, mainRoleCode, mainRoleName, permissionCodes, accountStatus | 无 | AUTH_TOKEN_MISSING, AUTH_TOKEN_INVALID, AUTH_TOKEN_EXPIRED, AUTH_TOKEN_REVOKED, UNAUTHORIZED | 否 |
+| 退出登录 | POST | `/api/v1/auth/logout` | 已登录用户 | 本人 | 无 | success | 当前 JWT jti 加入单机内存黑名单 | AUTH_TOKEN_MISSING, AUTH_TOKEN_INVALID, UNAUTHORIZED | 是 |
+| RBAC验证接口 | GET | `/api/v1/auth/rbac-check` | 已登录用户 | 需要 `system:user:view` 权限 | 无 | permission, result | 无 | AUTH_FORBIDDEN, UNAUTHORIZED | 否 |
 
 ## 2. 用户、角色、权限、字典和日志
 
@@ -155,7 +156,7 @@
 
 ## 10. 数量汇总
 
-- 账号和当前用户：3 个。
+- 账号和当前用户：3 个 MVP 接口；另有 1 个 T-012 后端 RBAC 验证接口，不计入正式业务 MVP 合计。
 - 用户、角色、权限、字典和日志：19 个。
 - 培训类别、标签、资源、题库和考核管理：21 个。
 - 学习记录和考核执行：5 个。

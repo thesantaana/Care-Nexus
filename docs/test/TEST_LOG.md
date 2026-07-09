@@ -74,3 +74,58 @@
 - MySQL 8 建表脚本和演示数据脚本已在临时 MySQL 实例中真实执行通过；本轮确认已删除 `sys_user_role` 表并新增 `ai_draft_source_resource` 表。
 - 详细业务功能尚未实现，因此详细业务测试用例尚未执行。
 - PowerDesigner 模型文件和截图尚未生成；该成果已拆分为 T-030 / Issue #2，最终交付前基于最终版 SQL 手动生成。
+## 2026-07-09 T-012 后端登录权限自动化验证
+
+本节记录 T-012 后端账号登录、当前用户与 RBAC 权限基础的实际验证情况。
+
+| 命令 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `cd backend; mvn verify` | 后端单元测试、MockMvc接口测试、打包、Checkstyle | 通过 | 执行 23 个测试，Failures 0，Errors 0；Checkstyle 0 violations |
+| `Get-Service -Name MySQL80,mysql` | MySQL服务状态检查 | 未通过 | `MySQL80` 与 `mysql` 当前均显示 Stopped |
+| `Start-Service -Name MySQL80` | MySQL80服务启动尝试 | 未通过 | 当前终端无法打开并启动本机 MySQL80 服务 |
+
+### 自动化测试覆盖
+
+- 登录成功返回 Bearer Token、主角色和权限码。
+- 密码错误和不存在账号均返回 HTTP 401 且使用相同对外提示。
+- 停用账号和逻辑删除账号登录返回 HTTP 401。
+- 有效 Token 访问 `GET /api/v1/auth/me` 成功。
+- 无 Token、错误 Bearer 格式、伪造 Token、签名错误 Token、过期 Token 和黑名单 Token 返回 HTTP 401。
+- `POST /api/v1/auth/logout` 后原 Token 失效，重复 logout 不返回 500。
+- 有 `system:user:view` 权限访问 RBAC 验证接口返回 HTTP 200，无权限返回 HTTP 403。
+- `me` 返回主要业务角色和权限码。
+- BCrypt 哈希与演示密码匹配。
+- 账号停用后旧 Token 不可继续使用。
+- 权限变更后旧 Token 请求读取最新权限集合。
+
+### 未执行事项
+
+- 未执行 MySQL 真实联调。原因：本机 `MySQL80` 服务当前停止，且当前终端启动服务失败。
+- 未重新执行前端 lint 和前端 build。原因：T-012 为后端独立任务，本轮未修改 `frontend/admin-web` 和 `frontend/mobile-web`。
+
+## 2026-07-09 T-012 MySQL真实联调补跑
+
+用户启动 MySQL80 服务并提供本机 root 登录信息后，已完成 T-012 真实数据库和 HTTP 联调。数据库密码仅用于本机命令执行，未写入仓库。
+
+| 命令或操作 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `mysql --version` | MySQL客户端版本 | 通过 | MySQL 8.0.45 |
+| `Get-Service -Name MySQL80` | MySQL服务状态 | 通过 | `MySQL80` 为 Running |
+| `SOURCE 001_schema.sql` | 建库建表 | 通过 | 使用临时 ASCII 路径执行仓库 SQL，避免中文路径导致 MySQL `SOURCE` 失败 |
+| `SOURCE 002_seed_data.sql` | 演示数据 | 通过 | 使用 `--default-character-set=utf8mb4` 执行，避免中文种子数据乱码 |
+| 查询表数量 | 数据库结构 | 通过 | `care_nexus` 实际表数量 36 |
+| 查询演示账号 | 数据库数据 | 通过 | 演示用户 10 个，权限码 9 个；包含正常、停用、逻辑删除账号 |
+| 启动后端 `java -jar ... --server.port=18080` | 后端真实启动 | 通过 | 使用本机 MySQL 数据库和环境变量配置 |
+| `GET /api/v1/health` | 健康检查 | 通过 | HTTP 200，`SUCCESS/UP` |
+| `POST /api/v1/auth/login` | 管理员登录 | 通过 | HTTP 200，返回 Bearer Token、主角色 `ADMIN` 和权限码；Token 已脱敏记录 |
+| `GET /api/v1/auth/me` | 当前用户 | 通过 | HTTP 200，返回 `admin_demo` 和 `NORMAL` |
+| `GET /api/v1/auth/rbac-check` | RBAC验证 | 通过 | HTTP 200，返回 `allowed` |
+| `POST /api/v1/auth/logout` | 退出登录 | 通过 | HTTP 200，返回 `success=true` |
+| 旧 Token 再访问 `GET /api/v1/auth/me` | 黑名单验证 | 通过 | HTTP 401 |
+| 停用账号登录 | 账号状态校验 | 通过 | HTTP 401 |
+| 错误密码登录 | 凭证校验 | 通过 | HTTP 401 |
+
+### 本轮补跑结论
+
+- T-012 自动化测试和 MySQL 真实联调均已通过。
+- 前端目录未修改，因此前端 lint 和 build 未重新执行，未记录为通过。

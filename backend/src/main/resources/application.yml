@@ -81,3 +81,6 @@ care-nexus:
         - video/webm
   ai:
     mode: ${AI_MODE:mock}
+  jwt:
+    secret: ${CARE_NEXUS_JWT_SECRET:local-dev-demo-secret-change-before-real-use-32}
+    expiration-seconds: ${CARE_NEXUS_JWT_EXPIRATION_SECONDS:7200}

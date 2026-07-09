@@ -231,3 +231,37 @@ PUT /api/v1/training/ai/question-drafts/{id}/review
 - 数据权限要求。
 - 错误码。
 - 审计要求。
+## 17. T-012 认证实现补充
+
+T-012 已实现后端账号登录、当前用户、退出登录和 RBAC 功能权限基础。
+
+### 17.1 认证接口
+
+| 接口 | 说明 |
+|---|---|
+| `POST /api/v1/auth/login` | 匿名登录，成功返回 Bearer Token、过期时间、用户、主角色和权限码 |
+| `GET /api/v1/auth/me` | 需要 Bearer Token，重新加载账号状态、主角色和权限 |
+| `POST /api/v1/auth/logout` | 需要 Bearer Token，将当前 JWT 的 `jti` 加入单机内存黑名单 |
+| `GET /api/v1/auth/rbac-check` | T-012 后端权限验证接口，需要 `system:user:view` 权限 |
+
+### 17.2 认证错误码
+
+| 错误码 | 含义 |
+|---|---|
+| `AUTH_INVALID_CREDENTIALS` | 账号或密码错误，对外不区分账号不存在和密码错误 |
+| `AUTH_TOKEN_MISSING` | 缺少 Bearer Token |
+| `AUTH_TOKEN_INVALID` | Token 格式、签名或内容无效 |
+| `AUTH_TOKEN_EXPIRED` | Token 已过期 |
+| `AUTH_TOKEN_REVOKED` | Token 已退出或被加入黑名单 |
+| `AUTH_ACCOUNT_DISABLED` | 账号不可用 |
+| `AUTH_UNAUTHORIZED` | 未认证 |
+| `AUTH_FORBIDDEN` | 已认证但权限不足 |
+
+### 17.3 JWT规则
+
+- JWT 至少包含 `sub`、`jti`、`iat`、`exp`。
+- JWT 不保存密码、密码哈希、手机号、身份证号、健康记录、服务地址等敏感数据。
+- 每次认证根据 JWT 中的用户标识重新查询账号状态、主要业务角色和权限码。
+- `POST /api/v1/auth/login` 和 `GET /api/v1/health` 允许匿名访问。
+- `GET /api/v1/auth/me`、`POST /api/v1/auth/logout` 和其他接口默认需要认证。
+- 退出登录使用单机内存黑名单记录 `jti` 至 Token 过期时间；该机制不代表分布式会话或 Redis 登录状态管理。
