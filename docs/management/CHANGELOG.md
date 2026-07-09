@@ -47,3 +47,23 @@
 - 新增 AI 固定验收数据表、角色权限测试矩阵、状态流转测试矩阵和 REQ-UC-TS-TC 追踪矩阵，所有测试用例当前执行状态均为“未执行”。
 - 根据项目负责人审核意见，修正未确定用例为 T-011 设计依赖，补充密码、敏感配置和文件上传安全测试用例，拆分医生与健康管理人员权限边界。
 - T-010 当前记录为 `DONE` 状态；本轮未执行软件测试，未创建前端、后端、数据库或部署工程，未编写业务代码。
+- PR #1 已合并到 `develop`，随后从 `develop` 创建 `feature/T-011-architecture-skeleton` 执行 T-011。
+- 新增 `docs/design/系统架构设计.md`、`docs/design/数据库设计.md`、`docs/api/API设计规范.md`、`docs/design/工程骨架说明.md` 和 `docs/decisions/ADR-001-总体架构与工程结构.md`。
+- 新增后端 Spring Boot 工程骨架 `backend/`，包含统一响应、全局异常、基础安全配置、健康检查、文件存储接口、AI培训辅助适配接口、模块包结构和基础测试。
+- 新增前端工程骨架 `frontend/admin-web/` 和 `frontend/mobile-web/`，采用 Vue 3 + Vite，分别承载 PC 工作台和移动端工作台基础结构。
+- 新增数据库目录 `database/`，包含 MySQL 8 建表脚本、演示数据规划和数据字典说明；脚本执行验证因本机 MySQL 服务权限限制未完成。
+- T-011 当前记录为 `REVIEW` 状态；本轮仅创建工程骨架和基础设施，不实现完整业务功能，不执行详细业务测试用例。
+- 根据项目负责人“修改后复审”意见，补充 `docs/design/系统分析与设计模型.md` 和 `docs/design/原型设计.md`，包含包图、核心领域类图、关键时序图、部署图和低保真页面原型。
+- 新增 `docs/api/MVP接口清单.md`，形成 MVP 接口设计清单初稿。
+- 新增 `database/model/README.md`、`database/model/CDM说明.md`、`database/model/PDM说明.md`；未伪造 `.pdm` 或截图，PowerDesigner模型和截图后续按 T-030 / Issue #2 基于最终版 SQL 生成。
+- 修正模块边界：`admin/auth` 只负责用户、角色、权限、账号和基础字典，订单归 `care`，医生授权和健康管理归 `doctor`，AI草稿审核归 `training`，操作日志归 `audit`。
+- 修正数据库模型，实际表数量为 36 张，包含老人账号与老人档案关系、考核模型、题目选项、试卷题目关系、核心外键、受控手机号保存字段、培训资源存储模式和评价/投诉独立状态来源。
+- 加固后端安全骨架：健康检查匿名访问，其他接口默认认证；补充 CORS、异常状态码映射、文件上传校验、Token接口、当前用户接口、PasswordEncoder 和 Checkstyle。
+- 为两个前端工程补充 ESLint 和静态原型页面；T-011 仍保持 `REVIEW`，未创建标签，未合并到 `develop`，未开始完整业务编码。
+- 根据最终复审意见，修正数据权限模块边界：`auth` 只负责当前用户、Token、RBAC 和账号状态，医生老人授权由 `doctor` 模块校验，家属老人绑定和护工订单范围由 `care` 模块校验。
+- 补全 `docs/api/MVP接口清单.md` 至 96 个 MVP 接口，统一分页参数为 `pageNo/pageSize`，AI 题目草稿审核统一为 `review` 单接口。
+- 统一数据库角色数据源：保留 `sys_user.main_role_id`，删除 `sys_user_role`；AI 草稿改为 `ai_draft_source_resource` 多资料来源关系。
+- 加固安全和前端请求骨架：登录和健康检查匿名放行，其他接口默认认证；401/403 返回统一 JSON；CORS 使用 `ConfigurationProperties`；前端请求自动携带 Bearer Token 并处理 FormData 和 401。
+- 使用临时 MySQL 8 实例重新执行 `001_schema.sql` 和 `002_seed_data.sql`，验证通过：36 张表、50 个外键、17 个唯一约束。
+- T-011 架构、数据库设计、接口规范和工程骨架已完成项目负责人最终复审并封板；PowerDesigner模型和截图拆分为 T-030 / Issue #2，最终交付前基于最终版 SQL 生成，不阻塞当前业务开发。
+- 当前下一步进入 T-012：账号登录、当前用户和 RBAC 权限基础。
