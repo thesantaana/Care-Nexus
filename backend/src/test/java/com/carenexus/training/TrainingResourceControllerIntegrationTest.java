@@ -20,12 +20,23 @@ import com.carenexus.auth.mapper.SysRoleMapper;
 import com.carenexus.auth.mapper.SysUserMapper;
 import com.carenexus.file.entity.FileResource;
 import com.carenexus.file.mapper.FileResourceMapper;
-import com.carenexus.training.constant.TrainingStatuses;
+import com.carenexus.training.constant.EnableStatus;
+import com.carenexus.training.constant.TrainingResourceStatus;
+import com.carenexus.training.constant.TrainingResourceType;
+import com.carenexus.training.constant.TrainingStorageMode;
 import com.carenexus.training.entity.TrainingCategory;
 import com.carenexus.training.entity.TrainingResource;
 import com.carenexus.training.entity.TrainingResourceTag;
 import com.carenexus.training.entity.TrainingTag;
+import com.carenexus.training.mapper.ExamAnswerMapper;
+import com.carenexus.training.mapper.ExamQuestionMapper;
+import com.carenexus.training.mapper.ExamQuestionOptionMapper;
+import com.carenexus.training.mapper.ExamRecordMapper;
+import com.carenexus.training.mapper.LearningAccessLogMapper;
+import com.carenexus.training.mapper.LearningRecordMapper;
 import com.carenexus.training.mapper.TrainingCategoryMapper;
+import com.carenexus.training.mapper.TrainingExamMapper;
+import com.carenexus.training.mapper.TrainingExamQuestionMapper;
 import com.carenexus.training.mapper.TrainingResourceMapper;
 import com.carenexus.training.mapper.TrainingResourceTagMapper;
 import com.carenexus.training.mapper.TrainingTagMapper;
@@ -54,10 +65,10 @@ class TrainingResourceControllerIntegrationTest {
     private static final String PASSWORD_HASH = "$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u";
     private static final String TRAINER_LOGIN = "{\"username\":\"trainer_demo\",\"password\":\"Demo@123456\"}";
     private static final String CAREGIVER_LOGIN = "{\"username\":\"caregiver_demo\",\"password\":\"Demo@123456\"}";
-    private static final String CATEGORY_JSON = "{\"categoryName\":\"基础护理\",\"sortNo\":1}";
-    private static final String TAG_JSON = "{\"tagName\":\"压疮预防\"}";
+    private static final String CATEGORY_JSON = "{\"categoryName\":\"鍩虹鎶ょ悊\",\"sortNo\":1}";
+    private static final String TAG_JSON = "{\"tagName\":\"鍘嬬柈棰勯槻\"}";
     private static final String TEXT_RESOURCE_JSON = "{\"resourceType\":\"ARTICLE\",\"storageMode\":\"TEXT\","
-            + "\"categoryId\":1,\"title\":\"压疮预防\",\"summary\":\"summary\",\"content\":\"content\","
+            + "\"categoryId\":1,\"title\":\"鍘嬬柈棰勯槻\",\"summary\":\"summary\",\"content\":\"content\","
             + "\"durationSeconds\":300,\"tagIds\":[1,1]}";
 
     @Autowired
@@ -90,6 +101,30 @@ class TrainingResourceControllerIntegrationTest {
     @MockBean
     private FileResourceMapper fileResourceMapper;
 
+    @MockBean
+    private TrainingExamMapper trainingExamMapper;
+
+    @MockBean
+    private ExamQuestionMapper examQuestionMapper;
+
+    @MockBean
+    private ExamQuestionOptionMapper examQuestionOptionMapper;
+
+    @MockBean
+    private TrainingExamQuestionMapper trainingExamQuestionMapper;
+
+    @MockBean
+    private ExamRecordMapper examRecordMapper;
+
+    @MockBean
+    private ExamAnswerMapper examAnswerMapper;
+
+    @MockBean
+    private LearningRecordMapper learningRecordMapper;
+
+    @MockBean
+    private LearningAccessLogMapper learningAccessLogMapper;
+
     @BeforeEach
     void setUp() {
         when(sysRoleMapper.selectById(3L)).thenReturn(role(3L, "TRAINING_ADMIN", "Training Admin"));
@@ -104,9 +139,9 @@ class TrainingResourceControllerIntegrationTest {
                 .thenReturn(user(11L, "caregiver_demo", 4L));
         when(sysUserMapper.selectById(10L)).thenReturn(user(10L, "trainer_demo", 3L));
         when(sysUserMapper.selectById(11L)).thenReturn(user(11L, "caregiver_demo", 4L));
-        when(categoryMapper.selectById(1L)).thenReturn(category(1L, "基础护理", TrainingStatuses.ENABLED));
-        when(tagMapper.selectById(1L)).thenReturn(tag(1L, "压疮预防", TrainingStatuses.ENABLED));
-        when(tagMapper.selectById(2L)).thenReturn(tag(2L, "安全规范", TrainingStatuses.ENABLED));
+        when(categoryMapper.selectById(1L)).thenReturn(category(1L, "鍩虹鎶ょ悊", EnableStatus.ENABLED));
+        when(tagMapper.selectById(1L)).thenReturn(tag(1L, "鍘嬬柈棰勯槻", EnableStatus.ENABLED));
+        when(tagMapper.selectById(2L)).thenReturn(tag(2L, "瀹夊叏瑙勮寖", EnableStatus.ENABLED));
         when(categoryMapper.selectCount(any())).thenReturn(0L);
         when(tagMapper.selectCount(any())).thenReturn(0L);
         when(categoryMapper.insert(any())).thenAnswer(invocation -> {
@@ -142,11 +177,11 @@ class TrainingResourceControllerIntegrationTest {
 
     @Test
     void viewPermissionCanQueryEnabledCategories() throws Exception {
-        when(categoryMapper.selectList(any())).thenReturn(Collections.singletonList(category(1L, "基础护理",
-                TrainingStatuses.ENABLED)));
+        when(categoryMapper.selectList(any())).thenReturn(Collections.singletonList(category(1L, "鍩虹鎶ょ悊",
+                EnableStatus.ENABLED)));
         mockMvc.perform(get("/api/v1/training/categories").header("Authorization", bearer(caregiverToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].categoryName").value("基础护理"));
+                .andExpect(jsonPath("$.data[0].categoryName").value("鍩虹鎶ょ悊"));
     }
 
     @Test
@@ -163,8 +198,8 @@ class TrainingResourceControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(CATEGORY_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.categoryName").value("基础护理"))
-                .andExpect(jsonPath("$.data.status").value(TrainingStatuses.ENABLED));
+                .andExpect(jsonPath("$.data.categoryName").value("鍩虹鎶ょ悊"))
+                .andExpect(jsonPath("$.data.status").value(EnableStatus.ENABLED));
     }
 
     @Test
@@ -207,7 +242,7 @@ class TrainingResourceControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TAG_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.tagName").value("压疮预防"));
+                .andExpect(jsonPath("$.data.tagName").value("鍘嬬柈棰勯槻"));
         when(tagMapper.selectCount(any())).thenReturn(1L);
         mockMvc.perform(post("/api/v1/training/tags").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -226,7 +261,7 @@ class TrainingResourceControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"DISABLED\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value(TrainingStatuses.DISABLED));
+                .andExpect(jsonPath("$.data.status").value(EnableStatus.DISABLED));
     }
 
     @Test
@@ -235,7 +270,7 @@ class TrainingResourceControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TEXT_RESOURCE_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value(TrainingStatuses.DRAFT))
+                .andExpect(jsonPath("$.data.status").value(TrainingResourceStatus.DRAFT))
                 .andExpect(jsonPath("$.data.createdBy.id").value(10));
         ArgumentCaptor<TrainingResourceTag> captor = ArgumentCaptor.forClass(TrainingResourceTag.class);
         verify(resourceTagMapper).insert(captor.capture());
@@ -294,13 +329,13 @@ class TrainingResourceControllerIntegrationTest {
 
     @Test
     void updateDraftResourceSuccessButPublishedUpdateConflicts() throws Exception {
-        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingStatuses.DRAFT));
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.DRAFT));
         mockMvc.perform(put("/api/v1/training/resources/1").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TEXT_RESOURCE_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value(TrainingStatuses.DRAFT));
-        when(resourceMapper.selectById(2L)).thenReturn(resource(2L, TrainingStatuses.PUBLISHED));
+                .andExpect(jsonPath("$.data.status").value(TrainingResourceStatus.DRAFT));
+        when(resourceMapper.selectById(2L)).thenReturn(resource(2L, TrainingResourceStatus.PUBLISHED));
         mockMvc.perform(put("/api/v1/training/resources/2").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TEXT_RESOURCE_JSON))
@@ -310,17 +345,17 @@ class TrainingResourceControllerIntegrationTest {
     @Test
     void pageResourcesReturnsStablePageStructure() throws Exception {
         Page<TrainingResource> page = new Page<TrainingResource>(1, 10);
-        page.setRecords(Collections.singletonList(resource(1L, TrainingStatuses.PUBLISHED)));
+        page.setRecords(Collections.singletonList(resource(1L, TrainingResourceStatus.PUBLISHED)));
         page.setTotal(1);
         when(resourceMapper.selectPage(any(), any())).thenReturn(page);
         mockMvc.perform(get("/api/v1/training/resources")
-                        .param("keyword", "压疮")
+                        .param("keyword", "鍘嬬柈")
                         .param("resourceType", "ARTICLE")
                         .param("categoryId", "1")
                         .param("tagId", "1")
                         .header("Authorization", bearer(caregiverToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.records[0].title").value("压疮预防"))
+                .andExpect(jsonPath("$.data.records[0].title").value("鍘嬬柈棰勯槻"))
                 .andExpect(jsonPath("$.data.pageNo").value(1))
                 .andExpect(jsonPath("$.data.pageSize").value(10))
                 .andExpect(jsonPath("$.data.total").value(1));
@@ -328,38 +363,38 @@ class TrainingResourceControllerIntegrationTest {
 
     @Test
     void viewUserCannotReadDraftOrOfflineDetail() throws Exception {
-        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingStatuses.OFFLINE));
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.OFFLINE));
         mockMvc.perform(get("/api/v1/training/resources/1").header("Authorization", bearer(caregiverToken())))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void publishDraftSetsPublishedAtAndWritesOperationLog() throws Exception {
-        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingStatuses.DRAFT));
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.DRAFT));
         mockMvc.perform(put("/api/v1/training/resources/1/publish").header("Authorization", bearer(trainerToken())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value(TrainingStatuses.PUBLISHED))
+                .andExpect(jsonPath("$.data.status").value(TrainingResourceStatus.PUBLISHED))
                 .andExpect(jsonPath("$.data.publishedAt").exists());
         verify(operationLogMapper, atLeastOnce()).insert(any(OperationLog.class));
     }
 
     @Test
     void repeatPublishReturnsConflict() throws Exception {
-        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingStatuses.PUBLISHED));
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.PUBLISHED));
         mockMvc.perform(put("/api/v1/training/resources/1/publish").header("Authorization", bearer(trainerToken())))
                 .andExpect(status().isConflict());
     }
 
     @Test
     void offlinePublishedResourceAndRejectRepeatOffline() throws Exception {
-        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingStatuses.PUBLISHED));
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.PUBLISHED));
         mockMvc.perform(put("/api/v1/training/resources/1/offline").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"expired\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value(TrainingStatuses.OFFLINE));
+                .andExpect(jsonPath("$.data.status").value(TrainingResourceStatus.OFFLINE));
         verify(operationLogMapper, atLeastOnce()).insert(any(OperationLog.class));
-        when(resourceMapper.selectById(2L)).thenReturn(resource(2L, TrainingStatuses.OFFLINE));
+        when(resourceMapper.selectById(2L)).thenReturn(resource(2L, TrainingResourceStatus.OFFLINE));
         mockMvc.perform(put("/api/v1/training/resources/2/offline").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"expired\"}"))
@@ -438,15 +473,15 @@ class TrainingResourceControllerIntegrationTest {
     private TrainingResource resource(Long id, String status) {
         TrainingResource resource = new TrainingResource();
         resource.setId(id);
-        resource.setResourceType(TrainingStatuses.ARTICLE);
-        resource.setStorageMode(TrainingStatuses.TEXT);
+        resource.setResourceType(TrainingResourceType.ARTICLE);
+        resource.setStorageMode(TrainingStorageMode.TEXT);
         resource.setCategoryId(1L);
-        resource.setTitle("压疮预防");
+        resource.setTitle("鍘嬬柈棰勯槻");
         resource.setSummary("summary");
         resource.setContent("content");
         resource.setDurationSeconds(300);
         resource.setResourceStatus(status);
-        resource.setPublishedAt(TrainingStatuses.PUBLISHED.equals(status) ? LocalDateTime.now() : null);
+        resource.setPublishedAt(TrainingResourceStatus.PUBLISHED.equals(status) ? LocalDateTime.now() : null);
         resource.setCreatedBy(10L);
         resource.setUpdatedBy(10L);
         resource.setIsDeleted(0);

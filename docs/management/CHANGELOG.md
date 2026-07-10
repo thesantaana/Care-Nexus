@@ -91,3 +91,22 @@
 - 新增 T-014 MockMvc 自动化测试 21 个；后端 `mvn test` 已通过，累计执行 44 个测试，Failures 0，Errors 0。
 - 本轮未修改前端目录，未执行前端 lint/build；原因是 T-014 为后端独立任务。
 - T-014 已通过项目负责人审核，经 PR #5 Squash and merge 合并到 `develop`，状态更新为 `DONE`。
+
+## 2026-07-10 T-016 题库、考核和学习记录后端
+
+- 从最新 `develop` 创建 `feature/T-016-exam-learning-records`，启动 T-016。
+- 根据用户确认，考核题型调整为仅支持单选题和判断题，不实现简答题、人工评分或待评分状态。
+- 新增题库、题目选项、考核、考核题目关联、学习访问记录、我的学习记录、获取考核和提交考核后端接口。
+- 更新数据库脚本，为 `exam_question` 增加 `resource_id`，并将演示种子数据替换为 3 条护工培训资源和 9 道客观题。
+- 新增 T-016 MockMvc 自动化测试 7 个；后端 `mvn verify` 已通过，累计执行 51 个测试，Failures 0，Errors 0，Checkstyle 0 violations。
+- 本轮未修改前端目录，未执行前端 lint/build；原因是 T-016 为后端独立任务。
+- MySQL 真实执行暂未完成，原因是本机 MySQL 服务当前停止，且当前终端无权启动 `MySQL80` 或 `mysql` 服务。
+## 2026-07-10 后端复杂度和模块边界整理
+
+- 按项目负责人要求，对 T-014 培训资源管理后端和 T-016 题库、考核、学习记录后端进行可读性和复杂度整理。
+- 删除无业务用途的空模块标记类，拆除 `TrainingStatuses` 大杂烩常量，按资源状态、考核状态、考核结果、学习状态和题型分别维护常量。
+- 将原培训资源大 Service 拆分为类别标签、资源写入、资源查询、资源标签批量加载和访问权限等职责；training 模块通过 `FileResourceService` 读取文件资源，不再直接依赖 `FileResourceMapper`。
+- 将题库、考核、学习记录和考试提交拆分为管理、题目、学习、答题、组装和公共支撑服务，并将考核详情中的题目和选项加载调整为批量查询。
+- 补充 `AGENTS.md` 和工程骨架说明中的后端复杂度控制规则，后续开发继续按模块边界、Service 规模、批量查询和跨模块 Service 协作执行。
+- 后端 `mvn verify` 已通过，累计执行 51 个测试，Failures 0，Errors 0，Checkstyle 0 violations。
+- MySQL 真实导入补跑未完成：本机 `mysql` 和 `MySQL80` 服务当前均为 Stopped，当前终端启动服务被系统拒绝，3306 端口未监听；未写成通过。

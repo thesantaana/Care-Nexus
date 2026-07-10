@@ -17,7 +17,15 @@ import com.carenexus.auth.mapper.SysRoleMapper;
 import com.carenexus.auth.mapper.SysUserMapper;
 import com.carenexus.common.response.ApiResponse;
 import com.carenexus.file.mapper.FileResourceMapper;
+import com.carenexus.training.mapper.ExamAnswerMapper;
+import com.carenexus.training.mapper.ExamQuestionMapper;
+import com.carenexus.training.mapper.ExamQuestionOptionMapper;
+import com.carenexus.training.mapper.ExamRecordMapper;
+import com.carenexus.training.mapper.LearningAccessLogMapper;
+import com.carenexus.training.mapper.LearningRecordMapper;
 import com.carenexus.training.mapper.TrainingCategoryMapper;
+import com.carenexus.training.mapper.TrainingExamMapper;
+import com.carenexus.training.mapper.TrainingExamQuestionMapper;
 import com.carenexus.training.mapper.TrainingResourceMapper;
 import com.carenexus.training.mapper.TrainingResourceTagMapper;
 import com.carenexus.training.mapper.TrainingTagMapper;
@@ -94,10 +102,34 @@ class AuthControllerIntegrationTest {
     @MockBean
     private FileResourceMapper fileResourceMapper;
 
+    @MockBean
+    private TrainingExamMapper trainingExamMapper;
+
+    @MockBean
+    private ExamQuestionMapper examQuestionMapper;
+
+    @MockBean
+    private ExamQuestionOptionMapper examQuestionOptionMapper;
+
+    @MockBean
+    private TrainingExamQuestionMapper trainingExamQuestionMapper;
+
+    @MockBean
+    private ExamRecordMapper examRecordMapper;
+
+    @MockBean
+    private ExamAnswerMapper examAnswerMapper;
+
+    @MockBean
+    private LearningRecordMapper learningRecordMapper;
+
+    @MockBean
+    private LearningAccessLogMapper learningAccessLogMapper;
+
     @BeforeEach
     void setUp() {
-        SysRole adminRole = role(1L, "ADMIN", "管理员", "ENABLED", 0);
-        SysRole elderRole = role(2L, "ELDER", "老人", "ENABLED", 0);
+        SysRole adminRole = role(1L, "ADMIN", "Admin", "ENABLED", 0);
+        SysRole elderRole = role(2L, "ELDER", "Elder", "ENABLED", 0);
         when(sysRoleMapper.selectById(1L)).thenReturn(adminRole);
         when(sysRoleMapper.selectById(2L)).thenReturn(elderRole);
         when(sysPermissionMapper.selectPermissionCodesByRoleId(1L)).thenReturn(adminPermissions());

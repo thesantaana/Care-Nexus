@@ -25,7 +25,7 @@
 | LEARNING | 学习中 |
 | EXAM_TAKEN | 已参加考核 |
 | PASSED | 已通过 |
-| FAILED | 未通过 |
+| NOT_PASSED | 未通过 |
 
 ## 护理订单主状态
 
@@ -65,9 +65,8 @@
 | exam_status | PUBLISHED | 考核已发布 |
 | question_status | DRAFT | 题目草稿 |
 | question_status | PUBLISHED | 正式题目 |
-| pass_status | PENDING_SCORE | 待人工评分 |
 | pass_status | PASSED | 已通过 |
-| pass_status | FAILED | 未通过 |
+| pass_status | NOT_PASSED | 未通过 |
 
 ## 用户角色与AI资料来源
 

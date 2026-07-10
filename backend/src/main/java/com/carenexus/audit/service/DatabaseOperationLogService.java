@@ -21,6 +21,12 @@ public class DatabaseOperationLogService implements OperationLogService {
 
     @Override
     public void record(CurrentUser operator, String action, String targetType, Long targetId, String result) {
+        record(operator, action, targetType, targetId, result, "security audit event");
+    }
+
+    @Override
+    public void record(CurrentUser operator, String action, String targetType, Long targetId, String result,
+            String detailSummary) {
         OperationLog log = new OperationLog();
         if (operator != null) {
             log.setOperatorId(operator.getUserId());
@@ -30,7 +36,7 @@ public class DatabaseOperationLogService implements OperationLogService {
         log.setTargetType(targetType);
         log.setTargetId(targetId);
         log.setResult(result);
-        log.setDetailSummary("security audit event");
+        log.setDetailSummary(detailSummary);
         try {
             operationLogMapper.insert(log);
         } catch (RuntimeException ex) {

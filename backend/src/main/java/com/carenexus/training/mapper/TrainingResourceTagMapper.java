@@ -19,4 +19,16 @@ public interface TrainingResourceTagMapper extends BaseMapper<TrainingResourceTa
 
     @Select("SELECT resource_id FROM training_resource_tag WHERE tag_id = #{tagId} ORDER BY resource_id")
     List<Long> selectResourceIdsByTagId(@Param("tagId") Long tagId);
+
+    @Select({
+            "<script>",
+            "SELECT resource_id, tag_id FROM training_resource_tag",
+            "WHERE resource_id IN",
+            "<foreach collection='resourceIds' item='resourceId' open='(' separator=',' close=')'>",
+            "#{resourceId}",
+            "</foreach>",
+            "ORDER BY resource_id, tag_id",
+            "</script>"
+    })
+    List<TrainingResourceTag> selectByResourceIds(@Param("resourceIds") List<Long> resourceIds);
 }

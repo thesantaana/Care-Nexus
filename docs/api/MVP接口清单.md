@@ -78,8 +78,7 @@
 | 记录学习访问 | POST | `/api/v1/training/learning/access` | 护工 | 本人 | resourceId, accessSeconds | learningRecord | 未开始->学习中 | BAD_REQUEST, NOT_FOUND | 否 |
 | 查看学习记录 | GET | `/api/v1/training/learning/me` | 护工 | 本人 | 无 | learningRecord, accessLogs | 无 | UNAUTHORIZED | 否 |
 | 获取考核 | GET | `/api/v1/training/exams/{examId}` | 护工 | 已发布考核 | 无 | exam, questions | 无 | NOT_FOUND | 否 |
-| 提交考核 | POST | `/api/v1/training/exams/{examId}/records` | 护工 | 本人 | answers | examRecord | 已参加考核/已通过/未通过/待评分 | BAD_REQUEST, CONFLICT | 是 |
-| 人工评分简答题 | PUT | `/api/v1/training/exam-records/{recordId}/score` | 培训管理员 | 培训模块 | answerScores, comment | examRecord | 待评分->已通过/未通过 | NOT_FOUND, CONFLICT | 是 |
+| 提交考核 | POST | `/api/v1/training/exams/{examId}/records` | 护工 | 本人 | answers | examRecord | 已参加考核/已通过/未通过 | BAD_REQUEST, CONFLICT | 是 |
 
 ## 5. AI培训辅助和题目草稿审核
 
@@ -159,7 +158,7 @@
 - 账号和当前用户：3 个 MVP 接口；另有 1 个 T-012 后端 RBAC 验证接口，不计入正式业务 MVP 合计。
 - 用户、角色、权限、字典和日志：19 个。
 - 培训类别、标签、资源、题库和考核管理：21 个。
-- 学习记录和考核执行：5 个。
+- 学习记录和考核执行：4 个。
 - AI培训辅助和题目草稿审核：7 个。
 - 老人家属绑定、服务、地址和移动订单：16 个。
 - 订单分配、护工执行、评价和投诉处理：12 个。

@@ -173,3 +173,42 @@
 ### 未执行事项
 
 - 未执行前端 lint 和前端 build。原因：T-014 未修改 `frontend/admin-web` 和 `frontend/mobile-web`。
+
+## 2026-07-10 T-016 题库、考核和学习记录后端自动化验证
+
+本节记录 T-016 题库、考核和学习记录后端的实际验证情况。
+
+| 命令 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `cd backend; mvn test` | 后端单元测试、MockMvc接口测试 | 通过 | 累计执行 51 个测试，Failures 0，Errors 0；其中 T-016 新增 7 个测试 |
+| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 51 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
+| MySQL 8 临时库执行 `001_schema.sql` 和 `002_seed_data.sql` | 数据库真实执行验证 | 未执行成功 | MySQL 客户端存在，但 3306 连接失败；当前终端无权启动 `MySQL80` 或 `mysql` 服务 |
+
+### T-016 自动化测试覆盖
+
+- `training:resource:view` 无法创建考核。
+- 培训管理员可以创建考核和客观题。
+- `SHORT_ANSWER` 题型被拒绝。
+- 单选题选项必须只有一个正确答案。
+- 学习访问记录会累计整体学习时长并更新学习中状态。
+- 学习时长或资源访问未达标时拒绝提交考核。
+- 客观题提交后立即自动评分，并更新考核通过状态。
+
+### 未执行事项
+
+- 未执行前端 lint 和前端 build。原因：T-016 未修改 `frontend/admin-web` 和 `frontend/mobile-web`。
+- 未完成 MySQL 真实执行和 HTTP 联调。原因：本机 MySQL 服务当前停止，且当前终端无法启动服务。
+## 2026-07-10 后端复杂度整理验证
+
+本节记录 T-014 和 T-016 后端复杂度整理后的实际验证结果。
+
+| 命令或操作 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 51 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
+| `rg TrainingStatuses` | 常量拆分检查 | 通过 | 主代码和测试中不再引用 `TrainingStatuses` |
+| `rg FileResourceMapper backend/src/main/java/com/carenexus/training` | 模块边界检查 | 通过 | training 主代码不再直接引用 file 模块 Mapper |
+| `Get-Service -Name MySQL80,mysql` | MySQL 服务状态 | 未通过 | 两个服务均为 Stopped |
+| `Start-Service -Name MySQL80` / `Start-Service -Name mysql` | 尝试启动 MySQL 服务 | 未通过 | 当前终端无法打开并启动服务 |
+| `Get-NetTCPConnection -LocalPort 3306` | MySQL 端口检查 | 未通过 | 3306 未监听 |
+
+结论：后端自动化测试、构建和静态检查通过；MySQL 真实导入补跑因本机服务未启动且当前终端无权启动服务，仍未完成，不写成通过。
