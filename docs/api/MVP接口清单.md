@@ -54,12 +54,12 @@
 | 修改培训类别 | PUT | `/api/v1/training/categories/{id}` | 培训管理员 | 培训模块 | categoryName, sortNo | category | 修改类别 | NOT_FOUND, CONFLICT | 是 |
 | 启停培训类别 | PUT | `/api/v1/training/categories/{id}/status` | 培训管理员 | 培训模块 | status | category | 启用/停用 | NOT_FOUND | 是 |
 | 培训标签列表 | GET | `/api/v1/training/tags` | 培训管理员、护工 | 按状态过滤 | status | tags | 无 | FORBIDDEN | 否 |
-| 标签新增 | POST | `/api/v1/training/tags` | 培训管理员 | 培训模块 | tagName, sortNo | tag | 新增标签 | BAD_REQUEST, CONFLICT | 是 |
-| 标签修改 | PUT | `/api/v1/training/tags/{id}` | 培训管理员 | 培训模块 | tagName, sortNo | tag | 修改标签 | NOT_FOUND, CONFLICT | 是 |
+| 标签新增 | POST | `/api/v1/training/tags` | 培训管理员 | 培训模块 | tagName | tag | 新增标签 | BAD_REQUEST, CONFLICT | 是 |
+| 标签修改 | PUT | `/api/v1/training/tags/{id}` | 培训管理员 | 培训模块 | tagName | tag | 修改标签 | NOT_FOUND, CONFLICT | 是 |
 | 标签启停 | PUT | `/api/v1/training/tags/{id}/status` | 培训管理员 | 培训模块 | status | tag | 启用/停用 | NOT_FOUND | 是 |
-| 保存培训资源 | POST | `/api/v1/training/resources` | 培训管理员 | 培训模块 | type, storageMode, title, content, fileId, externalUrl, tagIds | resource | 草稿 | BAD_REQUEST | 是 |
-| 培训资源修改 | PUT | `/api/v1/training/resources/{id}` | 培训管理员 | 培训模块 | title, summary, content, fileId, externalUrl, tagIds | resource | 修改草稿或未下架内容 | NOT_FOUND, CONFLICT | 是 |
-| 培训资源分页 | GET | `/api/v1/training/resources` | 培训管理员、护工 | 已发布或管理权限 | type, categoryId, tagId, status, pageNo, pageSize | pageResult | 无 | FORBIDDEN | 否 |
+| 保存培训资源 | POST | `/api/v1/training/resources` | 培训管理员 | 培训模块 | resourceType, storageMode, categoryId, title, summary, content, fileResourceId, externalUrl, durationSeconds, tagIds | resource | 新建为DRAFT | BAD_REQUEST, NOT_FOUND, CONFLICT | 是 |
+| 培训资源修改 | PUT | `/api/v1/training/resources/{id}` | 培训管理员 | 培训模块 | categoryId, title, summary, content, fileResourceId, externalUrl, durationSeconds, tagIds | resource | 允许修改DRAFT/OFFLINE，PUBLISHED需先下架 | NOT_FOUND, CONFLICT | 是 |
+| 培训资源分页 | GET | `/api/v1/training/resources` | 培训管理员、护工 | 已发布或管理权限 | keyword, resourceType, categoryId, tagId, status, pageNo, pageSize | pageResult | 无 | FORBIDDEN | 否 |
 | 培训资源详情 | GET | `/api/v1/training/resources/{id}` | 培训管理员、护工 | 已发布或管理权限 | 无 | resource | 无 | NOT_FOUND, FORBIDDEN | 否 |
 | 发布培训资源 | PUT | `/api/v1/training/resources/{id}/publish` | 培训管理员 | 培训模块 | 无 | resource | 草稿->已发布 | NOT_FOUND, CONFLICT | 是 |
 | 下架培训资源 | PUT | `/api/v1/training/resources/{id}/offline` | 培训管理员 | 培训模块 | reason | resource | 已发布->已下架 | NOT_FOUND, CONFLICT | 是 |
@@ -166,3 +166,8 @@
 - 医生老人授权和健康管理：11 个。
 - 文件上传：2 个。
 - 合计：96 个 MVP 接口。
+
+## 11. 实现状态补充
+
+- T-014 已实际实现培训类别、标签和资源管理后端接口。
+- T-014 仅实现后端接口和权限校验；前端页面、题库、考核、学习记录和 AI 辅助仍属于后续任务。

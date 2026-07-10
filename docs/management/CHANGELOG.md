@@ -81,3 +81,12 @@
 - 补充 `docs/management/TASKS.md` 总任务路线图，新增 T-014 至 T-025 以及 T-030 高层任务，当前均为 `TODO`，未虚构业务功能完成情况。
 - 新增 `docs/management/tasks/TASK-T-013-frontend-auth.md`，明确 T-013 前端登录与权限接入的负责人、建议分支、修改范围、实现范围、不实现范围和验收标准。
 - 同步更新 `PROJECT_STATUS.md` 和 `docs/plans/项目进度计划.md`，将下一步明确为 T-013；本轮仅进行任务规划更新，未创建开发分支，未修改前后端业务代码。
+
+## 2026-07-09 T-014 培训类别、标签和资源管理后端
+
+- 从最新 `develop` 创建 `feature/T-014-training-resources`，启动 T-014，与 T-013 前端登录接入并行推进。
+- 新增培训类别、培训标签和培训资源管理后端接口，覆盖列表、新增、修改、启停、分页、详情、发布和下架。
+- 复用 T-012 当前用户、JWT 和 RBAC 权限基础，管理操作要求 `training:resource:manage`，查询操作允许 `training:resource:view` 或 `training:resource:manage`。
+- 更新 `database/init/002_seed_data.sql`，为 `CAREGIVER` 补充 `training:resource:view` 查看权限。
+- 新增 T-014 MockMvc 自动化测试 21 个；后端 `mvn test` 已通过，累计执行 44 个测试，Failures 0，Errors 0。
+- 本轮未修改前端目录，未执行前端 lint/build；原因是 T-014 为后端独立任务。
