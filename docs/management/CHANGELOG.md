@@ -90,3 +90,4 @@
 - 更新 `database/init/002_seed_data.sql`，为 `CAREGIVER` 补充 `training:resource:view` 查看权限。
 - 新增 T-014 MockMvc 自动化测试 21 个；后端 `mvn test` 已通过，累计执行 44 个测试，Failures 0，Errors 0。
 - 本轮未修改前端目录，未执行前端 lint/build；原因是 T-014 为后端独立任务。
+- T-014 已通过项目负责人审核，经 PR #5 Squash and merge 合并到 `develop`，状态更新为 `DONE`。
