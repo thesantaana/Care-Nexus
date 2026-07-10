@@ -39,7 +39,7 @@
 | T-023 | TODO | 综合联调、缺陷修复和回归测试 | 张远航主测、全体配合 | 完成核心 MVP 流程联调、缺陷记录、修复验证、回归测试和测试日志更新 |
 | T-024 | TODO | 部署说明、用户手册和交付材料 | 李亦航、张远航 | 完成部署说明、用户手册、产品说明、最终测试报告、交付清单和归档材料 |
 | T-025 | TODO | 演示、答辩和版本发布 | 全体 | 完成演示数据、答辩材料、项目总结、最终发布准备和版本发布记录 |
-| T-030 | TODO | PowerDesigner CDM、PDM和模型图片最终交付 | 隋咏轩 | 在数据库结构稳定后生成 `database/model/CareNexus.cdm`、`CareNexus.pdm`、`CareNexus-CDM.png`、`CareNexus-PDM.png`；最终交付前完成 |
+| T-030 | TODO | PowerDesigner CDM、PDM和模型图片最终交付 | 李亦航 | 在数据库结构稳定后生成 `database/model/CareNexus.cdm`、`CareNexus.pdm`、`CareNexus-CDM.png`、`CareNexus-PDM.png`；最终交付前完成 |
 
 ## 当前限制
 
