@@ -56,7 +56,8 @@ public class TrainingExamAssembler {
             questionResponse.setQuestionId(relation.getQuestionId());
             questionResponse.setScore(relation.getScore());
             questionResponse.setSortNo(relation.getSortNo());
-            questionResponse.setQuestion(toQuestionResponse(question, optionMap.get(question.getId()),
+            questionResponse.setQuestion(toQuestionResponse(question,
+                    optionMap.getOrDefault(question.getId(), Collections.emptyList()),
                     includeAnswers));
             questions.add(questionResponse);
         }

@@ -180,9 +180,9 @@
 
 | 命令 | 范围 | 结果 | 说明 |
 |---|---|---|---|
-| `cd backend; mvn test` | 后端单元测试、MockMvc接口测试 | 通过 | 累计执行 51 个测试，Failures 0，Errors 0；其中 T-016 新增 7 个测试 |
-| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 51 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
-| MySQL 8 临时库执行 `001_schema.sql` 和 `002_seed_data.sql` | 数据库真实执行验证 | 未执行成功 | MySQL 客户端存在，但 3306 连接失败；当前终端无权启动 `MySQL80` 或 `mysql` 服务 |
+| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 52 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
+| MySQL 8.0.45 执行 `001_schema.sql` 和 `002_seed_data.sql` | 数据库真实执行验证 | 通过 | 使用同版本隔离实例端口 3307；实际 36 张表、51 个外键、17 个唯一约束；3 个培训资源、9 道题、24 个选项和 1 套考核 |
+| 后端连接 MySQL 8.0.45 后执行最小 HTTP 联调 | T-016 主链路 | 通过 | 覆盖护工登录、资源学习、学习门槛、考核获取、提交、自动评分、培训通过状态和数据库落库 |
 
 ### T-016 自动化测试覆盖
 
@@ -194,21 +194,29 @@
 - 学习时长或资源访问未达标时拒绝提交考核。
 - 客观题提交后立即自动评分，并更新考核通过状态。
 
+### MySQL 最小真实联调结果
+
+- `caregiver_demo` 登录成功，主角色为 `CAREGIVER`。
+- 查询到 3 个已发布培训资源，逐个记录 600 秒学习访问。
+- 整体学习时长为 1800 秒，已访问资源 3/3，`examAllowed=true`。
+- 已发布考核返回 9 道客观题；提交正确答案后得分 60.00，考核状态和整体培训状态均为 `PASSED`。
+- 数据库实际写入 3 条学习访问、1 条学习汇总、1 条考核记录、9 条答案和 2 条操作日志。
+- 真实联调发现并修复判断题无选项时的 NPE，以及登录只读事务中操作日志无法写入的问题。
+
 ### 未执行事项
 
 - 未执行前端 lint 和前端 build。原因：T-016 未修改 `frontend/admin-web` 和 `frontend/mobile-web`。
-- 未完成 MySQL 真实执行和 HTTP 联调。原因：本机 MySQL 服务当前停止，且当前终端无法启动服务。
 ## 2026-07-10 后端复杂度整理验证
 
 本节记录 T-014 和 T-016 后端复杂度整理后的实际验证结果。
 
 | 命令或操作 | 范围 | 结果 | 说明 |
 |---|---|---|---|
-| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 51 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
+| `cd backend; mvn verify` | 后端测试、打包、Checkstyle | 通过 | 累计执行 52 个测试，Failures 0，Errors 0；生成 jar；Checkstyle 0 violations |
 | `rg TrainingStatuses` | 常量拆分检查 | 通过 | 主代码和测试中不再引用 `TrainingStatuses` |
 | `rg FileResourceMapper backend/src/main/java/com/carenexus/training` | 模块边界检查 | 通过 | training 主代码不再直接引用 file 模块 Mapper |
 | `Get-Service -Name MySQL80,mysql` | MySQL 服务状态 | 未通过 | 两个服务均为 Stopped |
 | `Start-Service -Name MySQL80` / `Start-Service -Name mysql` | 尝试启动 MySQL 服务 | 未通过 | 当前终端无法打开并启动服务 |
 | `Get-NetTCPConnection -LocalPort 3306` | MySQL 端口检查 | 未通过 | 3306 未监听 |
 
-结论：后端自动化测试、构建和静态检查通过；MySQL 真实导入补跑因本机服务未启动且当前终端无权启动服务，仍未完成，不写成通过。
+结论：后端自动化测试、构建和静态检查通过；随后使用 MySQL 8.0.45 同版本隔离实例完成真实导入和 T-016 最小 HTTP 联调，结果通过。3306 服务的 Windows I/O 崩溃属于本机服务环境问题，不作为项目 SQL 或业务联调失败记录。

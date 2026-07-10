@@ -6,7 +6,7 @@
 |---|---|
 | 任务编号 | T-016 |
 | 任务名称 | 题库、考核和学习记录后端 |
-| 状态 | REVIEW |
+| 状态 | DONE |
 | 负责人 | 隋咏轩 |
 | 审核人 | 隋咏轩 |
 | 分支 | `feature/T-016-exam-learning-records` |
@@ -43,13 +43,13 @@
 
 ## 验证记录
 
-- `cd backend; mvn test` 已通过，累计 51 个测试，Failures 0，Errors 0。
-- `cd backend; mvn verify` 已通过，累计 51 个测试，生成 jar，Checkstyle 0 violations。
+- `cd backend; mvn verify` 已通过，累计 52 个测试，Failures 0，Errors 0，生成 jar，Checkstyle 0 violations。
 - 前端 lint/build 未执行，原因是 T-016 未修改 `frontend/admin-web` 和 `frontend/mobile-web`。
-- MySQL 真实执行暂未完成，原因是本机 MySQL 服务当前停止，且当前终端无权启动 `MySQL80` 或 `mysql` 服务。
+- MySQL 8.0.45 真实执行通过：初始化脚本和种子脚本成功导入，实际生成 36 张表、51 个外键和 17 个唯一约束。
+- 最小真实 HTTP 联调通过：护工登录、3 个已发布资源学习、1800 秒学习门槛、9 道客观题获取与提交、60 分通过状态及数据库落库均符合预期。
 
-## 待审核事项
+## 完成结论
 
-- 确认只保留单选题和判断题的需求调整是否通过。
-- 确认学习满 30 分钟且访问全部已发布资源后允许考试的 MVP 规则是否通过。
-- 用户启动 MySQL 服务后，需要补跑数据库真实执行和 HTTP 联调。
+- 项目负责人已确认仅保留单选题和判断题，并确认学习满 30 分钟且访问全部已发布资源后允许考试的 MVP 规则。
+- T-016 后端功能实现和自动化测试已完成并通过审核，状态更新为 `DONE`。
+- MySQL 正式环境导入、完整真实 HTTP 联调及跨模块回归测试统一纳入 T-023 执行；本轮已执行的 MySQL 隔离实例最小联调仅作为开发阶段补充验证记录。

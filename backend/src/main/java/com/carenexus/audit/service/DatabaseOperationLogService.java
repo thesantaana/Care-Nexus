@@ -7,6 +7,8 @@ import com.carenexus.auth.CurrentUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DatabaseOperationLogService implements OperationLogService {
@@ -20,11 +22,13 @@ public class DatabaseOperationLogService implements OperationLogService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(CurrentUser operator, String action, String targetType, Long targetId, String result) {
         record(operator, action, targetType, targetId, result, "security audit event");
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void record(CurrentUser operator, String action, String targetType, Long targetId, String result,
             String detailSummary) {
         OperationLog log = new OperationLog();
