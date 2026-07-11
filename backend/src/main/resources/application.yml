@@ -84,3 +84,6 @@ care-nexus:
   jwt:
     secret: ${CARE_NEXUS_JWT_SECRET:local-dev-demo-secret-change-before-real-use-32}
     expiration-seconds: ${CARE_NEXUS_JWT_EXPIRATION_SECONDS:7200}
+  contact-protection:
+    secret: ${CARE_NEXUS_CONTACT_SECRET:local-demo-contact-key-change-me}
+    salt: ${CARE_NEXUS_CONTACT_SALT:9f2c7a4e8b1d6c30}

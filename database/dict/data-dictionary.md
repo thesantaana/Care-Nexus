@@ -49,6 +49,26 @@
 | PROCESSING | 投诉处理中 |
 | PROCESSED | 投诉已处理 |
 
+每个订单最多存在一条评价记录和一条投诉记录；两者均不改变订单主状态。
+
+## T-018 护理服务权限
+
+| 权限码 | 说明 |
+|---|---|
+| `care:service:view` | 浏览启用的护理服务项目 |
+| `care:service:manage` | 维护护理服务项目 |
+| `care:binding:manage` | 家属维护老人绑定 |
+| `care:address:manage` | 老人或家属维护本人服务地址 |
+| `care:order:create` | 老人或家属提交、取消预约 |
+| `care:order:view` | 查看授权范围内护理订单 |
+| `care:order:assign` | 运营人员人工分配订单 |
+| `care:order:execute` | 护工执行分配给本人的订单 |
+| `care:order:evaluate` | 老人或家属评价、投诉已完成订单 |
+| `care:complaint:handle` | 运营人员处理投诉 |
+
+老人绑定码只以 BCrypt 哈希保存到 `elder_profile.binding_code_hash`。演示老人绑定码为
+`Bind@123456`，仅用于虚构演示数据，不得用于真实环境。
+
 ## 培训资源存储模式
 
 | 值 | 说明 |

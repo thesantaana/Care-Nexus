@@ -9,4 +9,6 @@ public interface CurrentUserService {
     Long requireCurrentUserId();
 
     CurrentUser loadActiveUser(Long userId);
+
+    CurrentUser findActiveUserByUsername(String username);
 }

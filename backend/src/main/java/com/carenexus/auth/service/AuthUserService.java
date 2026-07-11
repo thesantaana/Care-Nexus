@@ -56,6 +56,15 @@ public class AuthUserService implements CurrentUserService, PermissionService {
         return toCurrentUser(user, false);
     }
 
+    @Override
+    public CurrentUser findActiveUserByUsername(String username) {
+        SysUser user = sysUserMapper.selectByUsernameIncludingDeleted(username);
+        if (user == null || Integer.valueOf(1).equals(user.getIsDeleted())) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "User not found");
+        }
+        return toCurrentUser(user, false);
+    }
+
     public CurrentUser loadByUsernameForLogin(String username) {
         SysUser user = sysUserMapper.selectByUsernameIncludingDeleted(username);
         return toCurrentUser(user, true);
