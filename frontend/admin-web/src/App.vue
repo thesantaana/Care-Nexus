@@ -1,31 +1,179 @@
 <template>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <h1>CareNexus</h1>
-      <p>PC端工作台</p>
-      <nav>
-        <RouterLink
-          v-for="item in menu"
-          :key="item.path"
-          :to="item.path"
+  <RouterView v-if="isPublicLayout" />
+
+  <div
+    v-else
+    class="app-shell"
+  >
+    <a
+      class="skip-link"
+      href="#main-content"
+    >跳到主要内容</a>
+
+    <button
+      v-if="mobileNavigationOpen"
+      class="sidebar-scrim"
+      type="button"
+      aria-label="关闭主导航"
+      @click="mobileNavigationOpen = false"
+    />
+
+    <aside
+      class="sidebar"
+      :class="{ 'is-open': mobileNavigationOpen }"
+    >
+      <RouterLink
+        class="brand"
+        to="/"
+        aria-label="CareNexus 角色工作台"
+      >
+        <span
+          class="brand-mark"
+          aria-hidden="true"
         >
-          {{ item.label }}
+          <span />
+          <span />
+        </span>
+        <span>
+          <strong>CareNexus</strong>
+          <small>颐联协作平台</small>
+        </span>
+      </RouterLink>
+
+      <p class="nav-section-label">
+        工作空间
+      </p>
+      <nav
+        class="primary-navigation"
+        aria-label="主导航"
+      >
+        <RouterLink
+          v-for="item in visibleNavigation"
+          :key="item.to"
+          :to="item.to"
+          @click="mobileNavigationOpen = false"
+        >
+          <AppIcon :name="item.icon" />
+          <span>{{ item.label }}</span>
         </RouterLink>
       </nav>
+
+      <div class="sidebar-note">
+        <AppIcon name="info" />
+        <p>菜单由当前账号权限生成，未开放模块不会展示模拟业务数据。</p>
+      </div>
     </aside>
-    <main class="content">
-      <RouterView />
-    </main>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-title">
+          <button
+            class="icon-button mobile-menu-button"
+            type="button"
+            aria-label="打开主导航"
+            :aria-expanded="mobileNavigationOpen"
+            @click="mobileNavigationOpen = true"
+          >
+            <AppIcon name="menu" />
+          </button>
+          <div>
+            <p>CareNexus PC 端</p>
+            <h1>{{ route.meta.title }}</h1>
+          </div>
+        </div>
+
+        <div class="account-menu">
+          <span
+            class="account-avatar"
+            aria-hidden="true"
+          >{{ userInitial }}</span>
+          <span class="account-copy">
+            <strong>{{ session.user?.displayName || session.user?.username }}</strong>
+            <small>{{ session.user?.mainRoleName }}</small>
+          </span>
+          <button
+            class="button button-quiet logout-button"
+            type="button"
+            :disabled="session.loading"
+            @click="handleLogout"
+          >
+            <AppIcon name="logout" />
+            <span>{{ session.loading ? '退出中…' : '退出' }}</span>
+          </button>
+        </div>
+      </header>
+
+      <main
+        id="main-content"
+        ref="mainContent"
+        class="content"
+        tabindex="-1"
+      >
+        <RouterView />
+      </main>
+    </div>
+  </div>
+
+  <div
+    class="toast-region"
+    aria-live="polite"
+    aria-atomic="false"
+  >
+    <div
+      v-for="message in feedback.messages"
+      :key="message.id"
+      class="toast"
+      :class="`toast-${message.type}`"
+      role="status"
+    >
+      <span>{{ message.message }}</span>
+      <button
+        type="button"
+        aria-label="关闭消息"
+        @click="dismissMessage(message.id)"
+      >
+        <AppIcon name="close" />
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-const menu = [
-  { label: '首页', path: '/' },
-  { label: '登录', path: '/login' },
-  { label: '护理培训', path: '/training' },
-  { label: '资源详情', path: '/training/resource' },
-  { label: '医生服务', path: '/doctor' },
-  { label: '综合管理', path: '/admin' }
-]
+import { computed, nextTick, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import AppIcon from './components/AppIcon.vue'
+import { navigationItems } from './config/navigation.js'
+import { hasAnyPermission, hasRole, session, signOut } from './auth/session.js'
+import { dismissMessage, feedback, notify } from './ui/feedback.js'
+
+const route = useRoute()
+const router = useRouter()
+const mobileNavigationOpen = ref(false)
+const mainContent = ref(null)
+
+const isPublicLayout = computed(() => route.meta.layout === 'auth')
+const visibleNavigation = computed(() => navigationItems.filter((item) => (
+  hasAnyPermission(item.permissions) && hasRole(item.roles)
+)))
+const userInitial = computed(() => (
+  session.user?.displayName || session.user?.username || 'C'
+).trim().slice(0, 1).toUpperCase())
+
+watch(() => route.fullPath, async () => {
+  mobileNavigationOpen.value = false
+  await nextTick()
+  if (!isPublicLayout.value) {
+    mainContent.value?.focus()
+  }
+})
+
+async function handleLogout() {
+  try {
+    await signOut()
+    await router.replace({ name: 'login' })
+  } catch (error) {
+    notify(error.message || '退出请求失败，本地登录状态已清理', 'warning')
+    await router.replace({ name: 'login' })
+  }
+}
 </script>

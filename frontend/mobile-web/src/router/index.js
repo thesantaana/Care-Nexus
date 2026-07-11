@@ -1,61 +1,167 @@
-import { h } from 'vue';
+import { createRouter, createWebHistory } from 'vue-router'
+import ForbiddenView from '../views/ForbiddenView.vue'
+import LoginView from '../views/LoginView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
+import ProfileView from '../views/ProfileView.vue'
+import UnavailableView from '../views/UnavailableView.vue'
+import WorkspaceView from '../views/WorkspaceView.vue'
+import { ensureSession, hasPermission, sessionState } from '../session.js'
 
-function block(title, lines) {
-  return h('article', { class: 'mobile-card' }, [
-    h('h3', title),
-    h('ul', lines.map((line) => h('li', line)))
-  ]);
-}
-
-function page(title, description, blocks) {
-  return {
-    render() {
-      return h('section', { class: 'page' }, [
-        h('h2', title),
-        h('p', description),
-        h('div', { class: 'stack' }, blocks)
-      ]);
-    }
-  };
-}
-
-export const routes = [
-  {
-    path: '/',
-    redirect: '/services'
-  },
+const routes = [
+  { path: '/', redirect: '/workspace' },
   {
     path: '/login',
-    component: page('移动端登录', '老人、家属和护工通过统一账号进入对应移动功能。', [
-      block('账号规则', ['一个账号一个主要业务角色', '停用账号不得继续操作'])
-    ])
+    name: 'login',
+    component: LoginView,
+    meta: { public: true, title: '登录' }
   },
   {
-    path: '/services',
-    component: page('移动端服务首页', '老人和家属浏览服务、维护地址并提交护理预约。', [
-      block('服务分类', ['基础护理', '康复护理', '陪诊协助']),
-      block('快捷入口', ['地址管理', '我的订单', '投诉处理状态'])
-    ])
-  },
-  {
-    path: '/service-detail',
-    component: page('服务详情与预约页面', '展示服务说明、老人、地址和预约时间选择结构。', [
-      block('服务信息', ['服务名称', '服务说明', '注意事项']),
-      block('预约信息', ['选择老人', '选择地址', '预约时间', '提交后进入待分配'])
-    ])
-  },
-  {
-    path: '/orders',
-    component: page('护工订单执行页面', '护工只能查看分配给自己的订单，并按状态执行服务。', [
-      block('订单列表', ['待确认', '已确认', '服务中']),
-      block('执行操作', ['确认服务', '开始服务', '完成服务并填写记录'])
-    ])
+    path: '/workspace',
+    name: 'workspace',
+    component: WorkspaceView,
+    meta: { requiresAuth: true, title: '移动工作台' }
   },
   {
     path: '/training',
-    component: page('移动培训学习', '护工可在移动端浏览培训资源、查看学习记录和参加考核。', [
-      block('学习入口', ['文章', '视频', 'PPT']),
-      block('考核状态', ['整体学习时长', '最近学习时间', '通过状态'])
-    ])
+    name: 'training',
+    component: () => import('../views/TrainingListView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['CAREGIVER'],
+      permissions: ['training:resource:view'],
+      title: '培训资源'
+    }
+  },
+  {
+    path: '/training/:resourceId(\\d+)',
+    name: 'training-detail',
+    component: () => import('../views/TrainingDetailView.vue'),
+    props: true,
+    meta: {
+      requiresAuth: true,
+      roles: ['CAREGIVER'],
+      permissions: ['training:resource:view'],
+      title: '资源详情'
+    }
+  },
+  {
+    path: '/learning',
+    name: 'learning',
+    component: () => import('../views/LearningProgressView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['CAREGIVER'],
+      permissions: ['training:resource:view'],
+      title: '学习进度'
+    }
+  },
+  {
+    path: '/services',
+    name: 'services',
+    component: UnavailableView,
+    props: {
+      title: '老人 / 家属护理服务',
+      description: '服务浏览、老人绑定、地址和预约能力属于后续护理订单任务。',
+      detail: '当前后端尚未提供移动服务、老人绑定、地址或预约接口。',
+      icon: 'services'
+    },
+    meta: { requiresAuth: true, roles: ['ELDER', 'FAMILY'], title: '护理服务' }
+  },
+  {
+    path: '/orders',
+    name: 'orders',
+    component: UnavailableView,
+    props: {
+      title: '护理订单待接入',
+      description: '派单、确认服务、开始服务和完成服务将在护理订单后端完成后开放。',
+      detail: '当前后端尚未提供护工订单查询或状态变更接口，页面不会展示模拟订单。',
+      icon: 'orders'
+    },
+    meta: {
+      requiresAuth: true,
+      roles: ['CAREGIVER'],
+      permissions: ['care:order:view'],
+      title: '护理订单'
+    }
+  },
+  {
+    path: '/doctor',
+    name: 'doctor',
+    component: UnavailableView,
+    props: {
+      title: '医生健康管理',
+      description: '健康档案、记录、预警、随访和评估将在医生后端任务完成后开放。',
+      detail: '当前后端尚未提供医生健康管理业务接口。',
+      icon: 'heart'
+    },
+    meta: { requiresAuth: true, roles: ['DOCTOR', 'HEALTH_MANAGER'], title: '健康管理' }
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: ProfileView,
+    meta: { requiresAuth: true, title: '我的账号' }
+  },
+  {
+    path: '/forbidden',
+    name: 'forbidden',
+    component: ForbiddenView,
+    meta: { requiresAuth: true, title: '无访问权限' }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: NotFoundView,
+    meta: { requiresAuth: true, title: '页面不存在' }
   }
-];
+]
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.path === from.path) return undefined
+    return { top: 0 }
+  }
+})
+
+router.beforeEach(async (to) => {
+  if (to.meta.public) {
+    if (!sessionState.token) return true
+    const user = await ensureSession()
+    return user ? { name: 'workspace' } : true
+  }
+
+  if (!to.meta.requiresAuth) return true
+  if (!sessionState.token) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  const user = await ensureSession()
+  if (!user) {
+    return {
+      name: 'login',
+      query: {
+        reason: sessionState.token ? 'unavailable' : 'expired',
+        redirect: to.fullPath
+      }
+    }
+  }
+
+  const allowedRoles = to.meta.roles || []
+  if (allowedRoles.length && !allowedRoles.includes(user.mainRoleCode)) {
+    return { name: 'forbidden' }
+  }
+
+  const requiredPermissions = to.meta.permissions || []
+  if (requiredPermissions.some((permission) => !hasPermission(permission))) {
+    return { name: 'forbidden' }
+  }
+
+  return true
+})
+
+router.afterEach((to) => {
+  document.title = `${to.meta.title || '移动工作台'} · CareNexus`
+})

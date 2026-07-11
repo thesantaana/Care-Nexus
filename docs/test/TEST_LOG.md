@@ -242,3 +242,21 @@
 
 - 未执行前端 lint/build，原因是 T-018 未修改前端代码。
 - 未执行 T-018 调整后 SQL 的正式 MySQL 全量导入、完整真实 HTTP 联调和跨模块回归测试。该范围由项目负责人明确归入 T-023，当前不得记录为通过。
+
+## 2026-07-11 T-013 / T-015 前端实现验证
+
+| 命令或操作 | 范围 | 结果 | 说明 |
+|---|---|---|---|
+| `cd frontend/admin-web && npm run lint` | PC 前端静态检查 | 通过 | ESLint 无报错 |
+| `cd frontend/admin-web && npm run build` | PC 前端生产构建 | 通过 | Vite 生产构建完成 |
+| `cd frontend/mobile-web && npm run lint` | 移动前端静态检查 | 通过 | ESLint 无报错 |
+| `cd frontend/mobile-web && npm run build` | 移动前端生产构建 | 通过 | Vite 生产构建完成；已消除父目录 PostCSS 配置造成的 Tailwind 告警 |
+| `cd frontend/portal-web && npm run build` | React 门户前端类型检查与生产构建 | 通过 | TypeScript 编译和 Vite 生产构建完成，图片与视频静态资源均被纳入工程 |
+| 两个 Vite 开发服务器 + 本机 HTTP 请求 | 前端入口冒烟检查 | 通过 | `5173` 与 `5174` 均返回应用入口 HTML |
+| `cd backend && mvn verify` | 后端依赖与测试尝试 | 未通过 | Maven Central TLS 握手失败，缺失依赖未能下载；不是业务测试失败 |
+| 本机真实 login/me/logout 联调 | 前后端认证接口 | 未执行 | 本机 MySQL 服务未运行，后端无法启动；待环境恢复后执行 |
+
+### 本轮结论
+
+- 已验证前端代码可通过静态检查和生产构建，未使用业务 Mock 数据。
+- 真实认证与培训 HTTP 联调尚未执行，因此 T-013、T-015 保持 `DOING`，不得标记为完成。
