@@ -92,6 +92,8 @@
 | AI草稿详情 | GET | `/api/v1/training/ai/question-drafts/{id}` | 培训管理员 | 培训模块 | 无 | draft, sourceResources | 无 | NOT_FOUND | 否 |
 | 审核题目草稿 | PUT | `/api/v1/training/ai/question-drafts/{id}/review` | 培训管理员 | 培训模块 | reviewResult, comment | draft, questionId | 草稿->通过/驳回 | NOT_FOUND, CONFLICT | 是 |
 
+T-022 当前仅实现稳定 Mock 模式：输入只能来自 `sourceResourceIds` 对应且可访问的 TEXT 培训资料，输出附带资源引用。题目草稿仅支持单选题和判断题，审核通过后正式题目仍为 DRAFT，不自动发布或加入考核。非 TEXT 资源没有正文时返回明确参数错误；本期不接真实模型，不读取健康数据。
+
 ## 6. 老人家属绑定、服务、地址和移动订单
 
 | 接口名称 | HTTP方法 | URL | 允许角色 | 数据权限 | 请求字段 | 响应字段 | 状态变化 | 错误码 | 操作日志 |

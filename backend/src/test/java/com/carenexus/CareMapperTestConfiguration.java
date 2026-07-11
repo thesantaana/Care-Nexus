@@ -1,5 +1,7 @@
 package com.carenexus;
 
+import com.carenexus.ai.mapper.AiDraftMapper;
+import com.carenexus.ai.mapper.AiDraftSourceResourceMapper;
 import com.carenexus.care.mapper.CareAddressMapper;
 import com.carenexus.care.mapper.CareOrderComplaintMapper;
 import com.carenexus.care.mapper.CareOrderEvaluationMapper;
@@ -22,6 +24,16 @@ import org.springframework.context.annotation.Bean;
 
 @TestConfiguration
 public class CareMapperTestConfiguration {
+
+    @Bean
+    public AiDraftMapper aiDraftMapper() {
+        return Mockito.mock(AiDraftMapper.class);
+    }
+
+    @Bean
+    public AiDraftSourceResourceMapper aiDraftSourceResourceMapper() {
+        return Mockito.mock(AiDraftSourceResourceMapper.class);
+    }
 
     @Bean
     public ElderProfileMapper elderProfileMapper() {
