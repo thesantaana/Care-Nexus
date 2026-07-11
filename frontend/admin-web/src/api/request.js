@@ -2,7 +2,7 @@ export const TOKEN_STORAGE_KEY = 'care-nexus-token'
 export const USER_STORAGE_KEY = 'care-nexus-user'
 export const UNAUTHORIZED_EVENT = 'care-nexus:unauthorized'
 
-const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1').replace(/\/$/, '')
+const baseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
 
 export class ApiError extends Error {
   constructor(message, { code = 'REQUEST_ERROR', status = 0, data = null } = {}) {
