@@ -21,7 +21,7 @@ function clearStoredSession() {
 
 function buildUrl(path, query) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  const url = new URL(`${baseUrl}${normalizedPath}`)
+  const url = new URL(`${baseUrl}${normalizedPath}`, window.location.origin)
 
   Object.entries(query || {}).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
