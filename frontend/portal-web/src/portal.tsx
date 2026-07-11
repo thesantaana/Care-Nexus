@@ -3,13 +3,10 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
-  CalendarClock,
   CheckCircle2,
   CircleAlert,
   LogOut,
   ShieldCheck,
-  Stethoscope,
-  UsersRound,
 } from 'lucide-react';
 
 type PortalRoute = 'login' | 'workspace';
@@ -80,22 +77,14 @@ function clearSession() {
 
 function roleSummary(user: CurrentUser) {
   if (user.mainRoleCode === 'CAREGIVER') {
-    return '从培训学习到护理订单执行，个人进度与服务安排会在这里汇合。';
+    return '集中浏览护理培训资料，掌握学习进度并参加护理知识考核。';
   }
-  if (user.mainRoleCode === 'DOCTOR' || user.mainRoleCode === 'HEALTH_MANAGER') {
-    return '健康档案、风险预警和随访工作将围绕已授权老人逐步接入。';
-  }
-  if (user.mainRoleCode === 'ADMIN' || user.mainRoleCode === 'OPERATOR') {
-    return '统一管理账号、服务流程与运营协同，业务权限以服务端返回结果为准。';
-  }
-  return '从培训资源管理开始，逐步完成内容、学习与服务协同。';
+  return '统一维护培训资源、分类标签、题库考核和AI辅助内容。';
 }
 
 function roleIcon(roleCode: string) {
   if (roleCode === 'CAREGIVER') return <BookOpen aria-hidden="true" />;
-  if (roleCode === 'DOCTOR' || roleCode === 'HEALTH_MANAGER') return <Stethoscope aria-hidden="true" />;
-  if (roleCode === 'ADMIN' || roleCode === 'OPERATOR') return <ShieldCheck aria-hidden="true" />;
-  return <UsersRound aria-hidden="true" />;
+  return <ShieldCheck aria-hidden="true" />;
 }
 
 export function Portal({ route, onHome, onRouteChange }: {
@@ -194,9 +183,9 @@ function Login({ onHome, onSignedIn }: {
               <ArrowLeft size={17} aria-hidden="true" /> 返回首页
             </button>
             <p className="mt-20 text-xs font-semibold uppercase tracking-[0.22em] text-teal-200">CareNexus unified access</p>
-            <h1 className="mt-5 max-w-lg text-5xl font-semibold leading-[1.05] tracking-[-0.05em]">从同一个入口，进入不同角色的照护协作。</h1>
+            <h1 className="mt-5 max-w-lg text-5xl font-semibold leading-[1.05] tracking-[-0.05em]">从同一个入口，连接培训管理与护理学习。</h1>
           </div>
-          <p className="relative max-w-md text-sm leading-7 text-slate-200">护工/护理人员、培训管理、医生和管理员共用身份认证与权限边界，业务能力按后端实际开放情况呈现。</p>
+          <p className="relative max-w-md text-sm leading-7 text-slate-200">管理员维护专业培训内容，护工随时学习、考核并获得AI辅助，让护理知识真正落实到日常工作。</p>
         </section>
 
         <section className="flex flex-col p-7 sm:p-12">
@@ -206,7 +195,7 @@ function Login({ onHome, onSignedIn }: {
           <div className="mb-10">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Welcome back</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-slate-950">登录工作台</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">使用后端配置的项目账号登录。系统会再次读取当前角色与权限。</p>
+            <p className="mt-3 text-sm leading-6 text-slate-500">使用管理员或护工账号登录护理培训平台。</p>
           </div>
 
           <form className="grid gap-5" onSubmit={handleSubmit}>
@@ -223,7 +212,7 @@ function Login({ onHome, onSignedIn }: {
               {pending ? '正在验证…' : '进入工作台'} <ArrowRight size={18} aria-hidden="true" />
             </button>
           </form>
-          <p className="mt-auto pt-10 text-xs leading-5 text-slate-400">演示账号请使用数据库种子数据中的账号；登录信息只发送至本机 CareNexus 后端。</p>
+          <p className="mt-auto pt-10 text-xs leading-5 text-slate-400">CareNexus 使用加密认证保护账号安全。</p>
         </section>
       </div>
     </main>
@@ -240,7 +229,6 @@ function Workspace({ user, token, onHome, onLogout }: {
   const [resourceError, setResourceError] = useState('');
   const [loading, setLoading] = useState(hasTrainingAccess(user));
   const isCaregiver = user.mainRoleCode === 'CAREGIVER';
-  const isDoctor = user.mainRoleCode === 'DOCTOR' || user.mainRoleCode === 'HEALTH_MANAGER';
 
   useEffect(() => {
     if (!hasTrainingAccess(user)) return;
@@ -254,17 +242,10 @@ function Workspace({ user, token, onHome, onLogout }: {
     ? {
         eyebrow: 'CAREGIVER PLATFORM',
         title: '护工 / 护理人员工作区',
-        description: '学习护理知识、查看个人学习进度，并在护理订单接口开放后执行服务。',
+        description: '学习护理知识、查看个人学习进度并参加护理知识考核。',
         icon: <BookOpen aria-hidden="true" />,
       }
-    : isDoctor
-      ? {
-          eyebrow: 'DOCTOR PLATFORM',
-          title: '医生健康管理工作区',
-          description: '已完成身份与权限校验；授权老人、健康预警和随访将在医生接口完成后进入此处。',
-          icon: <Stethoscope aria-hidden="true" />,
-        }
-      : {
+    : {
           eyebrow: 'MANAGEMENT PLATFORM',
           title: `${user.mainRoleName}工作区`,
           description: roleSummary(user),
@@ -294,11 +275,9 @@ function Workspace({ user, token, onHome, onLogout }: {
           </div>
         </section>
 
-        {isCaregiver && <section className="mt-10" aria-labelledby="resource-title"><div className="mb-4 flex items-end justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Live training data</p><h2 id="resource-title" className="mt-1 text-2xl font-semibold tracking-[-0.04em]">我的护理培训</h2></div><span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">培训资源已接入</span></div>{loading && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">正在读取培训资源…</p>}{resourceError && <p className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700" role="alert">{resourceError}</p>}{!loading && !resourceError && <div className="grid gap-4 md:grid-cols-3">{resources.map((resource) => <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" key={resource.id}><span className="text-xs font-semibold text-teal-700">{resource.categoryName || '护理培训'} · {resource.resourceType}</span><h3 className="mt-3 font-semibold">{resource.title}</h3><p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">{resource.summary || '查看培训资源详情与学习内容。'}</p></article>)}{resources.length === 0 && <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500">暂无已发布培训资源。</p>}</div>}<article className="mt-4 rounded-2xl border border-slate-200 bg-white p-6"><div className="flex items-start gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-slate-100 text-slate-600"><CalendarClock aria-hidden="true" /></span><div><h2 className="font-semibold">护理订单执行</h2><p className="mt-1 text-sm leading-6 text-slate-500">订单查询、确认、开始和完成服务会在护理订单后端接口开放后加入此工作区。</p></div></div></article></section>}
+        {isCaregiver && <section className="mt-10" aria-labelledby="resource-title"><div className="mb-4 flex items-end justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">TRAINING</p><h2 id="resource-title" className="mt-1 text-2xl font-semibold tracking-[-0.04em]">我的护理培训</h2></div></div>{loading && <p className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">正在读取培训资源…</p>}{resourceError && <p className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700" role="alert">{resourceError}</p>}{!loading && !resourceError && <div className="grid gap-4 md:grid-cols-3">{resources.map((resource) => <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" key={resource.id}><span className="text-xs font-semibold text-teal-700">{resource.categoryName || '护理培训'} · {resource.resourceType}</span><h3 className="mt-3 font-semibold">{resource.title}</h3><p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">{resource.summary || '查看培训资源详情与学习内容。'}</p></article>)}{resources.length === 0 && <p className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500">暂无已发布培训资源。</p>}</div>}</section>}
 
-        {isDoctor && <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-7"><div className="flex items-start gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-teal-50 text-teal-700"><Stethoscope aria-hidden="true" /></span><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Doctor only</p><h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">授权老人健康管理</h2><p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">这是仅在医生或健康管理人员登录后可见的区域。当前后端尚未开放健康档案、预警、随访和评估接口，接口完成后会直接接入这里。</p></div></div></section>}
-
-        {!isCaregiver && !isDoctor && <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-7"><div className="flex items-start gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-slate-100 text-slate-600"><ShieldCheck aria-hidden="true" /></span><div><h2 className="font-semibold">当前角色平台正在完善</h2><p className="mt-2 text-sm leading-6 text-slate-500">该入口只对当前登录角色可见。现有后端接口完成后会在此扩展，不在公开首页展示。</p></div></div></section>}
+        {!isCaregiver && <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-7"><div className="flex items-start gap-4"><span className="grid h-11 w-11 place-items-center rounded-xl bg-teal-50 text-teal-700"><ShieldCheck aria-hidden="true" /></span><div><h2 className="font-semibold">培训管理中心</h2><p className="mt-2 text-sm leading-6 text-slate-500">维护培训资料、分类标签和考核内容，为护工提供统一、可靠的学习资源。</p></div></div></section>}
       </div>
     </main>
   );

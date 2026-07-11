@@ -142,7 +142,7 @@ class TrainingResourceControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        when(sysRoleMapper.selectById(3L)).thenReturn(role(3L, "TRAINING_ADMIN", "Training Admin"));
+        when(sysRoleMapper.selectById(3L)).thenReturn(role(3L, "ADMIN", "Admin"));
         when(sysRoleMapper.selectById(4L)).thenReturn(role(4L, "CAREGIVER", "Caregiver"));
         when(sysPermissionMapper.selectPermissionCodesByRoleId(3L))
                 .thenReturn(Arrays.asList("training:resource:view", "training:resource:manage"));

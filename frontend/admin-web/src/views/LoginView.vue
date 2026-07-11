@@ -22,16 +22,16 @@
           智慧护理 · 可信协作
         </p>
         <h1 id="brand-title">
-          让培训、照护与健康管理清晰衔接
+          让护理培训更清晰、更高效
         </h1>
-        <p>一个账号进入对应角色工作台。菜单和操作权限均以服务端返回的 RBAC 权限为准。</p>
+        <p>集中管理培训资料、分类标签和考核内容，为护理人员提供统一学习入口。</p>
         <div
           class="auth-feature-list"
           aria-label="平台特性"
         >
-          <span>统一身份认证</span>
-          <span>角色权限隔离</span>
-          <span>真实业务联调</span>
+          <span>培训内容管理</span>
+          <span>学习权限控制</span>
+          <span>考核与AI辅助</span>
         </div>
       </div>
       <div

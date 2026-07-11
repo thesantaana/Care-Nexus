@@ -203,7 +203,7 @@ public class AiQuestionDraftService {
         QuestionDraftPayload payload = new QuestionDraftPayload();
         payload.questionType = type;
         payload.questionContent = content + (index == 0 ? "" : "（草稿" + (index + 1) + "）");
-        payload.analysis = "依据《" + source.getTitle() + "》生成，发布前须由培训管理员审核。";
+        payload.analysis = "依据《" + source.getTitle() + "》生成，发布前须由管理员审核。";
         if (ExamQuestionType.TRUE_FALSE.equals(type)) {
             payload.standardAnswer = "TRUE";
             return payload;

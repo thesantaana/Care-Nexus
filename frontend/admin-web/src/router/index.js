@@ -55,45 +55,6 @@ const routes = [
     meta: { title: '分类与标签', permissions: ['training:resource:manage'] }
   },
   {
-    path: '/care',
-    name: 'care',
-    component: () => import('../views/UnavailableModuleView.vue'),
-    props: {
-      eyebrow: 'CARE SERVICE',
-      title: '护理订单待接入',
-      description: '护理预约、人工分配和护工执行接口尚未在后端实现，因此此处不展示模拟订单。',
-      capabilities: ['预约与地址', '人工分配', '服务执行与评价']
-    },
-    meta: { title: '护理订单', permissions: ['care:order:view', 'care:order:assign'] }
-  },
-  {
-    path: '/doctor',
-    name: 'doctor',
-    component: () => import('../views/UnavailableModuleView.vue'),
-    props: {
-      eyebrow: 'HEALTH MANAGEMENT',
-      title: '医生健康管理待接入',
-      description: '授权老人、健康记录、预警和随访接口尚未在后端实现，因此此处不展示模拟健康数据。',
-      capabilities: ['授权老人档案', '健康预警', '随访与健康评估']
-    },
-    meta: { title: '医生服务', permissions: ['doctor:elder:view', 'doctor:elder:authorize'] }
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    component: () => import('../views/UnavailableModuleView.vue'),
-    props: {
-      eyebrow: 'SYSTEM GOVERNANCE',
-      title: '综合管理待接入',
-      description: '用户、角色、权限、字典和日志管理接口尚未在后端实现，因此此处不展示模拟管理数据。',
-      capabilities: ['用户与角色', '服务项目与字典', '操作日志']
-    },
-    meta: {
-      title: '综合管理',
-      permissions: ['system:user:view', 'system:user:manage', 'system:role:view']
-    }
-  },
-  {
     path: '/forbidden',
     name: 'forbidden',
     component: () => import('../views/ForbiddenView.vue'),

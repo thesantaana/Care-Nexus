@@ -150,12 +150,12 @@
       <article class="empty-card exam-honesty-card">
         <span class="empty-icon"><AppIcon name="file" /></span>
         <div>
-          <h2>{{ record.examAllowed ? '已满足考核条件' : '考核入口暂未开放' }}</h2>
+          <h2>{{ record.examAllowed ? '可以参加培训考核' : '继续完成培训学习' }}</h2>
           <p v-if="record.examAllowed">
-            后端尚未提供考核列表接口，因此不会硬编码考核 ID。接口补齐后再开放自然可达的考核入口。
+            你已达到本期培训的学习要求，可以进入考核环节检验学习成果。
           </p>
           <p v-else>
-            完成学习时长和全部已发布资源访问后，系统会更新资格；考核列表接口仍待后端补齐。
+            完成规定学习时长并浏览全部必修资源后，系统会自动更新考核资格。
           </p>
         </div>
         <RouterLink

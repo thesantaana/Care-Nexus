@@ -80,56 +80,51 @@ const cryptoSignals = [
 
 const cryptoModules: CryptoModule[] = [
   {
-    id: 'doctor-record-review',
-    title: '健康档案研判',
-    eyebrow: '01 / CLINICAL PROFILE',
+    id: 'training-resources',
+    title: '培训资源中心',
+    eyebrow: '01 / LEARNING CONTENT',
     icon: Database,
-    summary:
-      '整合老人健康档案、慢病史、用药记录与护理反馈，医生可以快速形成连续、准确的判断。',
-    metrics: '360° 健康视图',
-    points: ['长期趋势追踪', '用药与既往史关联', '护理记录同步'],
+    summary: '集中维护护理文章、视频和PPT，让学习资料分类清晰、持续更新。',
+    metrics: '多类型内容管理',
+    points: ['文章与视频', '分类标签', '发布与下架'],
     wide: true,
   },
   {
-    id: 'doctor-warning',
-    title: '健康预警中心',
-    eyebrow: '02 / RISK WARNING',
+    id: 'learning-progress',
+    title: '学习进度',
+    eyebrow: '02 / LEARNING PROGRESS',
     icon: ShieldCheck,
-    summary:
-      '对异常指标、重点人群和风险变化进行分层提示，让医生先一步发现问题、安排干预。',
-    metrics: '高风险优先队列',
-    points: ['异常波动识别', '重点人群标记', '干预建议生成'],
+    summary: '记录资源访问、整体学习时长和最近学习时间，清晰掌握培训状态。',
+    metrics: '学习过程可追踪',
+    points: ['访问记录', '累计时长', '培训状态'],
     wide: true,
   },
   {
-    id: 'doctor-followup',
-    title: '重点人群随访',
-    eyebrow: '03 / FOLLOW-UP CARE',
+    id: 'training-exam',
+    title: '护理知识考核',
+    eyebrow: '03 / KNOWLEDGE EXAM',
     icon: Activity,
-    summary:
-      '将随访计划、服务反馈和健康变化串联起来，医生能持续掌握老人状态。',
-    metrics: '随访计划自动编排',
-    points: ['随访任务提醒', '重点人群分层', '结果回流档案'],
+    summary: '通过单选题和判断题检验学习成果，系统自动评分并更新培训状态。',
+    metrics: '客观题自动评分',
+    points: ['题库维护', '考核发布', '成绩记录'],
   },
   {
-    id: 'doctor-intervention',
-    title: '干预记录闭环',
-    eyebrow: '04 / INTERVENTION LOOP',
+    id: 'ai-assistant',
+    title: 'AI学习助手',
+    eyebrow: '04 / AI ASSISTANT',
     icon: LockKeyhole,
-    summary:
-      '医生的评估、建议与处置记录沉淀为闭环证据，便于复盘、交接和持续管理。',
-    metrics: '医护协作留痕',
-    points: ['评估结论记录', '干预过程追踪', '交接信息清晰'],
+    summary: '基于已发布培训资料提供问答、总结和学习建议，回答保留资料来源。',
+    metrics: '内容有据可查',
+    points: ['资料问答', '知识总结', '学习建议'],
   },
   {
-    id: 'doctor-ai-assessment',
-    title: 'AI 辅助评估',
-    eyebrow: '05 / AI ASSESSMENT',
+    id: 'ai-question-draft',
+    title: 'AI题目草稿',
+    eyebrow: '05 / QUESTION DRAFT',
     icon: BrainCircuit,
-    summary:
-      'AI 将档案、预警和随访信息整理成医生可读的摘要，辅助更快完成专业判断。',
-    metrics: '结构化病情摘要',
-    points: ['风险摘要', '健康评估建议', '医生确认后生效'],
+    summary: '根据入库资料生成单选题和判断题草稿，经管理员审核后进入正式题库。',
+    metrics: '管理员审核后入库',
+    points: ['基于资料生成', '人工审核', '题库留痕'],
   },
 ];
 
@@ -406,7 +401,7 @@ function PlatformOverview() {
 
           <div className="relative z-10 grid gap-5 p-5 lg:grid-cols-[220px_1fr_270px] lg:p-8">
             <aside className="order-2 grid gap-3 lg:order-1">
-              {['公开首页', '护工服务', '护理平台', '医生服务', '后台隐藏'].map((item, index) => (
+              {['公开首页', '护理培训', '知识考核', 'AI助手', '管理后台'].map((item, index) => (
                 <div
                   key={item}
                   className={`flex min-h-16 items-center justify-between border border-slate-200 bg-white/72 px-4 text-sm font-semibold text-slate-700 scroll-anim scroll-reveal ${visibleClass}`}
@@ -433,7 +428,7 @@ function PlatformOverview() {
                   让培训、照护、随访与权限管理在同一系统内协作
                 </h3>
                 <p className="mt-5 text-sm leading-7 text-slate-600">
-                  MVP 先让护理培训系统获得 AI 能力，后续再把智能能力扩展到移动护理、医生健康管理和综合后台。
+                  AI能力聚焦护理培训资料问答、知识总结、学习建议和题目草稿生成。
                 </p>
               </div>
 
@@ -734,7 +729,7 @@ function CyberVideoModule() {
             <span className="block">更有温度</span>
           </h2>
           <p className="mt-5 max-w-md text-base leading-7 text-slate-600">
-            Nexus 让 AI 助手参与培训、护理与医生随访，把复杂流程整理成清晰、可靠的照护协作。
+            Nexus 让 AI 助手参与培训学习，把分散资料整理成清晰、可靠的护理知识支持。
           </p>
           <div className="mt-8">
             <a
@@ -1048,15 +1043,15 @@ function CryptoBlueprintModules() {
         >
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-              DOCTOR SERVICE
+              TRAINING PLATFORM
             </p>
             <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.06em] text-slate-950 sm:text-6xl">
-              医生服务，让专业判断更快抵达
+              护理培训，让专业能力持续成长
             </h2>
           </div>
           <p className="text-sm leading-7 text-slate-600">
-            Nexus 将健康档案、预警、随访和干预记录整理成医生可快速理解的工作台，
-            让医生保持专业主导，同时减少重复整理和信息遗漏。
+            Nexus 将培训资料、学习进度、护理考核和AI辅助汇聚到同一平台，
+            让管理员高效维护内容，让护工专注学习与成长。
           </p>
         </div>
 
@@ -1066,10 +1061,10 @@ function CryptoBlueprintModules() {
           <div className="relative z-10 grid gap-5 md:grid-cols-[1fr_auto] md:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Clinical command
+                Training command
               </p>
               <p className="mt-3 max-w-2xl text-xl font-semibold tracking-[-0.04em]">
-                重要信息自动汇总到医生视角：谁需要随访、哪里出现风险、上一次干预是否有效，一眼就能接上判断。
+                从资料发布到学习、考核和AI辅助，每一步都有清晰入口和可靠记录。
               </p>
             </div>
             <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-slate-950/10 bg-white/70 shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
@@ -1090,11 +1085,11 @@ function CryptoBlueprintModules() {
         >
           <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
             <p className="text-sm leading-6 text-slate-600">
-              医生服务模块强调专业能力：持续健康档案、风险预警、随访干预和 AI 辅助评估都由医生确认后进入服务闭环。
+              培训内容由管理员维护，AI生成题目须审核后进入题库，学习与考核结果全程留痕。
             </p>
             <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-900">
               <LockKeyhole className="h-5 w-5" strokeWidth={1.8} />
-              Doctor verified
+              Admin reviewed
             </div>
           </div>
         </div>
@@ -1231,7 +1226,7 @@ function App() {
             style={{ animationDelay: '0.7s' }}
           >
             <p className="text-sm text-slate-600 leading-relaxed">
-              每一段生命信息都记录着照护需求、健康变化与服务轨迹，Nexus 将它们连接为可理解、可协同的智能医疗网络。
+              每一次学习都在积累护理能力，Nexus 将资料、练习与考核连接成清晰的成长路径。
             </p>
           </div>
 
@@ -1240,7 +1235,7 @@ function App() {
             style={{ animationDelay: '0.85s' }}
           >
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              滑过基因链，揭示从护理培训到医生随访的服务流转，让数据、人员与 AI 能力在同一系统中持续生长。
+              探索护理培训、知识考核与AI辅助，让专业知识在日常学习中持续生长。
             </p>
             <button
               className="bg-slate-900 hover:bg-sky-500 text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-sky-300/45"

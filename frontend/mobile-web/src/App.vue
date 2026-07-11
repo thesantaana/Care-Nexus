@@ -87,24 +87,11 @@ const userInitial = computed(() => {
 })
 
 const navigationItems = computed(() => {
-  const role = sessionState.user?.mainRoleCode
   const items = [{ label: '工作台', path: '/workspace', icon: 'home' }]
-
-  if (role === 'CAREGIVER') {
-    items.push(
-      { label: '学习', path: '/training', icon: 'book' },
-      { label: '进度', path: '/learning', icon: 'progress' },
-      { label: '订单', path: '/orders', icon: 'orders' }
-    )
-  } else if (role === 'ELDER' || role === 'FAMILY') {
-    items.push(
-      { label: '服务', path: '/services', icon: 'services' },
-      { label: '订单', path: '/orders', icon: 'orders' }
-    )
-  } else if (role === 'DOCTOR' || role === 'HEALTH_MANAGER') {
-    items.push({ label: '健康', path: '/doctor', icon: 'heart' })
-  }
-
+  items.push(
+    { label: '学习', path: '/training', icon: 'book' },
+    { label: '进度', path: '/learning', icon: 'progress' }
+  )
   items.push({ label: '我的', path: '/profile', icon: 'user' })
   return items.slice(0, 5)
 })

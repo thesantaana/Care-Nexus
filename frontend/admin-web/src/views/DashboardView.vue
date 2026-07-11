@@ -3,10 +3,10 @@
     <div class="hero-card dashboard-hero">
       <div>
         <p class="eyebrow">
-          角色工作台
+          管理工作台
         </p>
         <h2>{{ greeting }}，{{ session.user?.displayName || session.user?.username }}</h2>
-        <p>当前以“{{ session.user?.mainRoleName }}”身份登录。下面只展示账号实际拥有的工作入口。</p>
+        <p>管理培训资料、内容分类和学习资源，为护工提供持续、规范的培训支持。</p>
       </div>
       <div
         class="identity-card"
@@ -25,7 +25,6 @@
         </p>
         <h2>从这里继续工作</h2>
       </div>
-      <p>{{ session.user?.permissionCodes?.length || 0 }} 项服务端权限已同步</p>
     </div>
 
     <div
@@ -41,10 +40,6 @@
           <AppIcon :name="card.icon" />
         </div>
         <div class="workspace-card-copy">
-          <span
-            class="availability"
-            :class="card.available ? 'is-ready' : 'is-pending'"
-          >{{ card.available ? '已接入' : '等待后端' }}</span>
           <h3>{{ card.title }}</h3>
           <p>{{ card.description }}</p>
         </div>
@@ -52,7 +47,7 @@
           class="text-link"
           :to="card.to"
         >
-          {{ card.available ? '进入模块' : '查看范围' }}
+          进入模块
           <AppIcon name="chevron" />
         </RouterLink>
       </article>
@@ -66,27 +61,6 @@
       <h2>暂无可访问模块</h2>
       <p>账号已登录，但服务端尚未分配业务权限。请联系管理员检查角色配置。</p>
     </div>
-
-    <section
-      class="info-panel"
-      aria-labelledby="permission-title"
-    >
-      <div>
-        <p class="eyebrow">
-          权限同步
-        </p>
-        <h2 id="permission-title">
-          当前权限代码
-        </h2>
-      </div>
-      <div class="permission-list">
-        <code
-          v-for="permission in session.user?.permissionCodes || []"
-          :key="permission"
-        >{{ permission }}</code>
-        <span v-if="!session.user?.permissionCodes?.length">暂无权限代码</span>
-      </div>
-    </section>
   </section>
 </template>
 
@@ -101,35 +75,10 @@ const greeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好'
 const cards = [
   {
     title: '护理培训',
-    description: '管理或查看培训分类、标签和资源，数据来自当前后端。',
+    description: '维护培训分类、标签和文章、视频、PPT等学习资源。',
     to: '/training/resources',
     icon: 'book',
-    permissions: ['training:resource:view', 'training:resource:manage'],
-    available: true
-  },
-  {
-    title: '护理订单',
-    description: '护理预约、分配与服务执行将在订单后端完成后接入。',
-    to: '/care',
-    icon: 'care',
-    permissions: ['care:order:view', 'care:order:assign'],
-    available: false
-  },
-  {
-    title: '医生服务',
-    description: '健康档案、预警与随访将在医生健康管理后端完成后接入。',
-    to: '/doctor',
-    icon: 'doctor',
-    permissions: ['doctor:elder:view', 'doctor:elder:authorize'],
-    available: false
-  },
-  {
-    title: '综合管理',
-    description: '用户、角色、字典与日志管理将在对应后端接口完成后接入。',
-    to: '/admin',
-    icon: 'shield',
-    permissions: ['system:user:view', 'system:user:manage', 'system:role:view'],
-    available: false
+    permissions: ['training:resource:view', 'training:resource:manage']
   }
 ]
 

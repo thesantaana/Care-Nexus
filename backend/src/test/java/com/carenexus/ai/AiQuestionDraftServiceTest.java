@@ -151,7 +151,7 @@ class AiQuestionDraftServiceTest {
     }
 
     private CurrentUser currentUser() {
-        return new CurrentUser(10L, "trainer", "Trainer", "TRAINING_ADMIN", "培训管理员",
+        return new CurrentUser(10L, "admin", "Admin", "ADMIN", "管理员",
                 "NORMAL", Collections.singleton("training:resource:manage"));
     }
 }

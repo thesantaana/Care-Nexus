@@ -7,7 +7,7 @@
       <h1 tabindex="-1">
         我的账号
       </h1>
-      <p>账号信息来自当前用户接口，本页不展示敏感凭据。</p>
+      <p>查看当前账号、角色和学习权限。</p>
     </div>
 
     <article class="profile-card">

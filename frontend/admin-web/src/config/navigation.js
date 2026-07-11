@@ -1,6 +1,6 @@
 export const navigationItems = [
   {
-    label: '角色工作台',
+    label: '工作台',
     to: '/',
     icon: 'home'
   },
@@ -15,23 +15,5 @@ export const navigationItems = [
     to: '/training/catalogs',
     icon: 'tag',
     permissions: ['training:resource:manage']
-  },
-  {
-    label: '护理订单',
-    to: '/care',
-    icon: 'care',
-    permissions: ['care:order:view', 'care:order:assign']
-  },
-  {
-    label: '医生服务',
-    to: '/doctor',
-    icon: 'doctor',
-    permissions: ['doctor:elder:view', 'doctor:elder:authorize']
-  },
-  {
-    label: '综合管理',
-    to: '/admin',
-    icon: 'shield',
-    permissions: ['system:user:view', 'system:user:manage', 'system:role:view']
   }
 ]

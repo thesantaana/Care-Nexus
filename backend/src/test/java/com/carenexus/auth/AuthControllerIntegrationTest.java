@@ -132,9 +132,9 @@ class AuthControllerIntegrationTest {
     @BeforeEach
     void setUp() {
         SysRole adminRole = role(1L, "ADMIN", "Admin", "ENABLED", 0);
-        SysRole elderRole = role(2L, "ELDER", "Elder", "ENABLED", 0);
+        SysRole caregiverRole = role(2L, "CAREGIVER", "Caregiver", "ENABLED", 0);
         when(sysRoleMapper.selectById(1L)).thenReturn(adminRole);
-        when(sysRoleMapper.selectById(2L)).thenReturn(elderRole);
+        when(sysRoleMapper.selectById(2L)).thenReturn(caregiverRole);
         when(sysPermissionMapper.selectPermissionCodesByRoleId(1L)).thenReturn(adminPermissions());
         when(sysPermissionMapper.selectPermissionCodesByRoleId(2L)).thenReturn(Collections.emptyList());
         when(sysUserMapper.selectByUsernameIncludingDeleted("admin_demo")).thenReturn(user(1L, "admin_demo", 1L, "NORMAL", 0));
@@ -384,7 +384,7 @@ class AuthControllerIntegrationTest {
     }
 
     private List<String> adminPermissions() {
-        return Arrays.asList("system:user:view", "system:role:view", "training:resource:view",
-                "care:order:view", "doctor:elder:view");
+        return Arrays.asList("system:user:view", "system:role:view", "system:user:manage",
+                "training:resource:view", "training:resource:manage");
     }
 }

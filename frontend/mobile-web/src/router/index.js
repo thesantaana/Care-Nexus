@@ -3,7 +3,6 @@ import ForbiddenView from '../views/ForbiddenView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import ProfileView from '../views/ProfileView.vue'
-import UnavailableView from '../views/UnavailableView.vue'
 import WorkspaceView from '../views/WorkspaceView.vue'
 import { ensureSession, hasPermission, sessionState } from '../session.js'
 
@@ -54,47 +53,6 @@ const routes = [
       permissions: ['training:resource:view'],
       title: '学习进度'
     }
-  },
-  {
-    path: '/services',
-    name: 'services',
-    component: UnavailableView,
-    props: {
-      title: '老人 / 家属护理服务',
-      description: '服务浏览、老人绑定、地址和预约能力属于后续护理订单任务。',
-      detail: '当前后端尚未提供移动服务、老人绑定、地址或预约接口。',
-      icon: 'services'
-    },
-    meta: { requiresAuth: true, roles: ['ELDER', 'FAMILY'], title: '护理服务' }
-  },
-  {
-    path: '/orders',
-    name: 'orders',
-    component: UnavailableView,
-    props: {
-      title: '护理订单待接入',
-      description: '派单、确认服务、开始服务和完成服务将在护理订单后端完成后开放。',
-      detail: '当前后端尚未提供护工订单查询或状态变更接口，页面不会展示模拟订单。',
-      icon: 'orders'
-    },
-    meta: {
-      requiresAuth: true,
-      roles: ['CAREGIVER'],
-      permissions: ['care:order:view'],
-      title: '护理订单'
-    }
-  },
-  {
-    path: '/doctor',
-    name: 'doctor',
-    component: UnavailableView,
-    props: {
-      title: '医生健康管理',
-      description: '健康档案、记录、预警、随访和评估将在医生后端任务完成后开放。',
-      detail: '当前后端尚未提供医生健康管理业务接口。',
-      icon: 'heart'
-    },
-    meta: { requiresAuth: true, roles: ['DOCTOR', 'HEALTH_MANAGER'], title: '健康管理' }
   },
   {
     path: '/profile',
