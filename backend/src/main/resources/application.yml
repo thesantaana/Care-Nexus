@@ -87,3 +87,14 @@ care-nexus:
   contact-protection:
     secret: ${CARE_NEXUS_CONTACT_SECRET:local-demo-contact-key-change-me}
     salt: ${CARE_NEXUS_CONTACT_SALT:9f2c7a4e8b1d6c30}
+  health-threshold:
+    systolic-low: ${HEALTH_SYSTOLIC_LOW:90}
+    systolic-high: ${HEALTH_SYSTOLIC_HIGH:140}
+    diastolic-low: ${HEALTH_DIASTOLIC_LOW:60}
+    diastolic-high: ${HEALTH_DIASTOLIC_HIGH:90}
+    glucose-low: ${HEALTH_GLUCOSE_LOW:3.9}
+    glucose-high: ${HEALTH_GLUCOSE_HIGH:7.0}
+    heart-rate-low: ${HEALTH_HEART_RATE_LOW:60}
+    heart-rate-high: ${HEALTH_HEART_RATE_HIGH:100}
+    temperature-low: ${HEALTH_TEMPERATURE_LOW:35.0}
+    temperature-high: ${HEALTH_TEMPERATURE_HIGH:37.3}

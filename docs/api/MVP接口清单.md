@@ -141,10 +141,15 @@
 | 健康档案详情 | GET | `/api/v1/doctor/elders/{elderId}` | 医生、健康管理人员 | 授权老人 | 无 | elderProfile | 无 | FORBIDDEN | 否 |
 | 健康记录列表 | GET | `/api/v1/doctor/elders/{elderId}/health-records` | 医生、健康管理人员 | 授权老人 | startTime, endTime, pageNo, pageSize | pageResult | 无 | FORBIDDEN | 否 |
 | 新增健康记录 | POST | `/api/v1/doctor/elders/{elderId}/health-records` | 医生、健康管理人员 | 授权老人 | recordTime, indicators, remark | record, alert | 可触发预警 | BAD_REQUEST, FORBIDDEN | 是 |
+| 健康预警列表 | GET | `/api/v1/doctor/elders/{elderId}/alerts` | 医生、健康管理人员 | 授权老人 | status, pageNo, pageSize | pageResult | 无 | FORBIDDEN | 否 |
+| 人工创建健康预警 | POST | `/api/v1/doctor/elders/{elderId}/alerts` | 医生、健康管理人员 | 授权老人 | alertLevel, alertContent | alert | 新建为待处理 | BAD_REQUEST, FORBIDDEN | 是 |
 | 处理健康预警 | PUT | `/api/v1/doctor/alerts/{id}/status` | 医生、健康管理人员 | 授权老人 | alertStatus, comment | alert | 待处理->处理中->已关闭 | CONFLICT, FORBIDDEN | 是 |
-| 保存随访记录 | POST | `/api/v1/doctor/elders/{elderId}/follow-ups` | 医生、健康管理人员 | 授权老人 | method, result, recordStatus | followUp | 草稿/已确认 | BAD_REQUEST | 是 |
-| 保存干预记录 | POST | `/api/v1/doctor/elders/{elderId}/interventions` | 医生、健康管理人员 | 授权老人 | content, recordStatus | intervention | 草稿/已确认 | BAD_REQUEST | 是 |
-| 保存健康评估 | POST | `/api/v1/doctor/elders/{elderId}/assessments` | 医生、健康管理人员 | 授权老人 | riskLevel, conclusion, suggestion, status | assessment | 草稿->已确认 | BAD_REQUEST | 是 |
+| 保存随访记录 | POST | `/api/v1/doctor/elders/{elderId}/follow-ups` | 医生 | 授权老人 | method, result, recordStatus | followUp | 草稿/已确认 | BAD_REQUEST | 是 |
+| 确认随访记录 | PUT | `/api/v1/doctor/follow-ups/{id}/confirm` | 医生 | 本人创建且仍有老人授权 | 无 | followUp | 草稿->已确认 | CONFLICT, FORBIDDEN | 是 |
+| 保存干预记录 | POST | `/api/v1/doctor/elders/{elderId}/interventions` | 医生 | 授权老人 | content, recordStatus | intervention | 草稿/已确认 | BAD_REQUEST | 是 |
+| 确认干预记录 | PUT | `/api/v1/doctor/interventions/{id}/confirm` | 医生 | 本人创建且仍有老人授权 | 无 | intervention | 草稿->已确认 | CONFLICT, FORBIDDEN | 是 |
+| 保存健康评估 | POST | `/api/v1/doctor/elders/{elderId}/assessments` | 医生 | 授权老人 | riskLevel, conclusion, suggestion, status | assessment | 草稿->已确认 | BAD_REQUEST | 是 |
+| 确认健康评估 | PUT | `/api/v1/doctor/assessments/{id}/confirm` | 医生 | 本人创建且仍有老人授权 | 无 | assessment | 草稿->已确认 | CONFLICT, FORBIDDEN | 是 |
 
 ## 9. 文件上传
 
@@ -162,9 +167,9 @@
 - AI培训辅助和题目草稿审核：7 个。
 - 老人家属绑定、服务、地址和移动订单：16 个。
 - 订单分配、护工执行、评价和投诉处理：12 个。
-- 医生老人授权和健康管理：11 个。
+- 医生老人授权和健康管理：16 个。
 - 文件上传：2 个。
-- 合计：96 个 MVP 接口。
+- 合计：101 个 MVP 接口。
 
 ## 11. 实现状态补充
 
