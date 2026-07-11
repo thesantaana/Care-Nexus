@@ -97,6 +97,7 @@ CREATE TABLE elder_profile (
   birth_date DATE,
   mobile_cipher_text VARCHAR(255),
   mobile_last4 VARCHAR(8),
+  binding_code_hash VARCHAR(255),
   health_summary VARCHAR(500),
   profile_status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -111,7 +112,10 @@ CREATE TABLE elder_family_binding (
   family_user_id BIGINT NOT NULL,
   binding_status VARCHAR(32) NOT NULL DEFAULT 'ACTIVE',
   verify_type VARCHAR(32),
+  verified_at DATETIME,
+  cancel_reason VARCHAR(500),
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   cancelled_at DATETIME,
   UNIQUE KEY uk_elder_family (elder_id, family_user_id),
   KEY idx_family_user_id (family_user_id)
@@ -372,6 +376,7 @@ CREATE TABLE care_order_complaint (
   handled_result VARCHAR(1000),
   handled_at DATETIME,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_order_complaint_order (order_id),
   KEY idx_complaint_order_status (order_id, complaint_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -476,12 +481,14 @@ ALTER TABLE care_order ADD CONSTRAINT fk_care_order_service FOREIGN KEY (service
 ALTER TABLE care_order ADD CONSTRAINT fk_care_order_address FOREIGN KEY (address_id) REFERENCES care_address(id);
 ALTER TABLE care_order ADD CONSTRAINT fk_care_order_caregiver FOREIGN KEY (assigned_caregiver_id) REFERENCES sys_user(id);
 ALTER TABLE care_order_status_log ADD CONSTRAINT fk_order_status_log_order FOREIGN KEY (order_id) REFERENCES care_order(id);
+ALTER TABLE care_order_status_log ADD CONSTRAINT fk_order_status_log_operator FOREIGN KEY (operated_by) REFERENCES sys_user(id);
 ALTER TABLE care_service_record ADD CONSTRAINT fk_service_record_order FOREIGN KEY (order_id) REFERENCES care_order(id);
 ALTER TABLE care_service_record ADD CONSTRAINT fk_service_record_caregiver FOREIGN KEY (caregiver_id) REFERENCES sys_user(id);
 ALTER TABLE care_order_evaluation ADD CONSTRAINT fk_order_evaluation_order FOREIGN KEY (order_id) REFERENCES care_order(id);
 ALTER TABLE care_order_evaluation ADD CONSTRAINT fk_order_evaluation_user FOREIGN KEY (evaluator_id) REFERENCES sys_user(id);
 ALTER TABLE care_order_complaint ADD CONSTRAINT fk_order_complaint_order FOREIGN KEY (order_id) REFERENCES care_order(id);
 ALTER TABLE care_order_complaint ADD CONSTRAINT fk_order_complaint_user FOREIGN KEY (complainant_id) REFERENCES sys_user(id);
+ALTER TABLE care_order_complaint ADD CONSTRAINT fk_order_complaint_handler FOREIGN KEY (handled_by) REFERENCES sys_user(id);
 ALTER TABLE health_record ADD CONSTRAINT fk_health_record_elder FOREIGN KEY (elder_id) REFERENCES elder_profile(id);
 ALTER TABLE health_record ADD CONSTRAINT fk_health_record_recorder FOREIGN KEY (recorder_id) REFERENCES sys_user(id);
 ALTER TABLE health_alert ADD CONSTRAINT fk_health_alert_elder FOREIGN KEY (elder_id) REFERENCES elder_profile(id);

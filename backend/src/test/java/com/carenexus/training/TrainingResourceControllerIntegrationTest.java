@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.carenexus.CareMapperTestConfiguration;
 import com.carenexus.audit.entity.OperationLog;
 import com.carenexus.audit.mapper.OperationLogMapper;
 import com.carenexus.auth.entity.SysRole;
@@ -51,6 +52,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
@@ -60,6 +62,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "care-nexus.jwt.expiration-seconds=3600"
 })
 @AutoConfigureMockMvc
+@Import(CareMapperTestConfiguration.class)
 class TrainingResourceControllerIntegrationTest {
 
     private static final String PASSWORD_HASH = "$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u";

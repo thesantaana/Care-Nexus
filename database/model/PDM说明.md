@@ -30,6 +30,7 @@ PDM 以 `database/init/001_schema.sql` 为准。当前 SQL 目标数据库为 My
 - `sys_user.main_role_id` 外键关联 `sys_role.id`，作为 MVP 阶段用户主要业务角色的唯一数据源。
 - MVP 阶段不保留 `sys_user_role` 多角色关系表，RBAC 权限通过 `sys_role_permission` 维护。
 - `elder_profile.user_id` 可为空；非空时唯一关联老人登录账号。
+- `elder_profile.binding_code_hash` 保存老人独立绑定码的 BCrypt 哈希，不保存明文绑定码。
 - `elder_family_binding` 对 `(elder_id, family_user_id)` 建唯一约束，不将状态纳入唯一键。
 - `doctor_elder_authorization` 对 `(doctor_user_id, elder_id)` 建唯一约束，不将状态纳入唯一键。
 - `training_exam`、`exam_question`、`exam_question_option`、`training_exam_question`、`exam_record` 和 `exam_answer` 构成考核物理模型。
@@ -37,7 +38,8 @@ PDM 以 `database/init/001_schema.sql` 为准。当前 SQL 目标数据库为 My
 - `training_resource` 增加 `storage_mode` 和 `external_url`，支持文本、本地文件和外部链接。
 - AI草稿资料来源通过 `ai_draft_source_resource(draft_id, resource_id)` 支持多资料关联。
 - 评价状态以 `care_order_evaluation` 是否存在为准。
-- 投诉状态以 `care_order_complaint.complaint_status` 为准。
+- 评价和投诉分别通过订单唯一约束限制为每单一次；投诉状态以 `care_order_complaint.complaint_status` 为准。
+- 订单状态操作人和投诉处理人均通过物理外键关联 `sys_user`。
 - 联系电话使用受控保存字段 `mobile_cipher_text` / `contact_mobile_cipher_text` 和展示辅助字段 `mobile_last4` / `contact_mobile_last4`。
 
 ## 4. 待生成模型
