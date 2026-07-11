@@ -6,7 +6,7 @@
 |---|---|
 | 任务编号 | T-013 |
 | 任务名称 | 前端登录与权限接入 |
-| 状态 | TODO |
+| 状态 | DOING |
 | 负责人 | 孙洋 |
 | 审核人 | 隋咏轩 |
 | 建议分支 | `feature/T-013-frontend-auth` |
@@ -32,6 +32,12 @@
 8. 路由守卫。
 9. 根据角色和`permissionCodes`控制菜单或入口。
 10. PC端和移动端分别完成真实后端联调。
+
+## 当前执行记录
+
+- 已在 `feature/frontend-integration` 实现两个 Vue 应用的登录、Token 本地保存、Bearer 请求头、`me` 会话恢复、退出登录、401 清理、路由守卫和按角色/权限的菜单控制。
+- 两个前端的 lint 和生产构建已通过。
+- 真实 `login`、`me`、`logout` HTTP 联调尚未完成：本机 MySQL 服务未运行，且本轮 `mvn verify` 受 Maven Central TLS 握手失败阻塞。该状态不视为功能验收通过。
 
 ## 不实现范围
 

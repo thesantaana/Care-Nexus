@@ -1,72 +1,141 @@
-import { h } from 'vue';
+import { createRouter, createWebHistory } from 'vue-router'
+import { hasAnyPermission, hasRole, isAuthenticated } from '../auth/session.js'
 
-function card(title, lines) {
-  return h('article', { class: 'card' }, [
-    h('h3', title),
-    h('ul', lines.map((line) => h('li', line)))
-  ]);
-}
-
-function page(title, description, cards) {
-  return {
-    render() {
-      return h('section', { class: 'page' }, [
-        h('div', { class: 'page-head' }, [
-          h('h2', title),
-          h('p', description)
-        ]),
-        h('div', { class: 'grid' }, cards)
-      ]);
-    }
-  };
-}
-
-export const routes = [
-  {
-    path: '/',
-    component: page('PC首页', '面向管理员、运营人员、培训管理员、医生和护工 PC 学习入口的工作台原型。', [
-      card('今日待办', ['AI题目草稿待审核', '护理订单待分配', '健康预警待处理']),
-      card('数据概览', ['培训资源数', '学习人数', '护理订单数', '健康预警数']),
-      card('快捷入口', ['新增培训资源', '人工分配订单', '维护医生老人授权', '查看操作日志'])
-    ])
-  },
+const routes = [
   {
     path: '/login',
-    component: page('登录占位', '后续接入统一登录、主要业务角色和 RBAC 权限。', [
-      card('登录信息', ['账号', '密码', '记住登录状态']),
-      card('安全规则', ['停用账号不得登录', '失败信息不泄露敏感原因'])
-    ])
+    name: 'login',
+    component: () => import('../views/LoginView.vue'),
+    meta: { title: '登录', layout: 'auth', public: true }
+  },
+  {
+    path: '/',
+    name: 'dashboard',
+    component: () => import('../views/DashboardView.vue'),
+    meta: { title: '角色工作台' }
   },
   {
     path: '/training',
-    component: page('培训资源一级页面', '培训管理员维护资源，护工可在 PC 端学习和参加考核。', [
-      card('筛选区', ['类别', '标签', '资源类型', '状态', '标题关键字']),
-      card('资源列表', ['标题', '类型', '类别', '状态', '学习人数', '更新时间']),
-      card('操作', ['新增文章', '上传视频', '上传PPT', '发布', '下架'])
-    ])
+    redirect: '/training/resources'
   },
   {
-    path: '/training/resource',
-    component: page('培训资源编辑/详情页面', '二级页面原型，用于展示资源编辑、资料内容和 AI 辅助入口。', [
-      card('基础信息', ['标题', '类别', '标签', '资源类型']),
-      card('内容维护', ['文章正文', '本地文件', '外部链接']),
-      card('AI辅助', ['资料问答', '知识点总结', '学习建议', '题目草稿生成'])
-    ])
+    path: '/training/resources',
+    name: 'training-resources',
+    component: () => import('../views/training/TrainingResourcesView.vue'),
+    meta: {
+      title: '培训资源',
+      permissions: ['training:resource:view', 'training:resource:manage']
+    }
+  },
+  {
+    path: '/training/resources/new',
+    name: 'training-resource-new',
+    component: () => import('../views/training/TrainingResourceFormView.vue'),
+    meta: { title: '新增培训资源', permissions: ['training:resource:manage'] }
+  },
+  {
+    path: '/training/resources/:id',
+    name: 'training-resource-detail',
+    component: () => import('../views/training/TrainingResourceDetailView.vue'),
+    meta: {
+      title: '培训资源详情',
+      permissions: ['training:resource:view', 'training:resource:manage']
+    }
+  },
+  {
+    path: '/training/resources/:id/edit',
+    name: 'training-resource-edit',
+    component: () => import('../views/training/TrainingResourceFormView.vue'),
+    meta: { title: '编辑培训资源', permissions: ['training:resource:manage'] }
+  },
+  {
+    path: '/training/catalogs',
+    name: 'training-catalogs',
+    component: () => import('../views/training/TrainingCatalogView.vue'),
+    meta: { title: '分类与标签', permissions: ['training:resource:manage'] }
+  },
+  {
+    path: '/care',
+    name: 'care',
+    component: () => import('../views/UnavailableModuleView.vue'),
+    props: {
+      eyebrow: 'CARE SERVICE',
+      title: '护理订单待接入',
+      description: '护理预约、人工分配和护工执行接口尚未在后端实现，因此此处不展示模拟订单。',
+      capabilities: ['预约与地址', '人工分配', '服务执行与评价']
+    },
+    meta: { title: '护理订单', permissions: ['care:order:view', 'care:order:assign'] }
   },
   {
     path: '/doctor',
-    component: page('医生健康档案页面', '医生和健康管理人员处理授权老人健康档案、预警、随访和评估。', [
-      card('授权老人', ['仅显示已授权老人', '支持按姓名筛选']),
-      card('健康记录', ['血压', '血糖', '心率', '体温', '记录时间']),
-      card('健康管理', ['预警处理', '随访记录', '干预记录', '健康评估'])
-    ])
+    name: 'doctor',
+    component: () => import('../views/UnavailableModuleView.vue'),
+    props: {
+      eyebrow: 'HEALTH MANAGEMENT',
+      title: '医生健康管理待接入',
+      description: '授权老人、健康记录、预警和随访接口尚未在后端实现，因此此处不展示模拟健康数据。',
+      capabilities: ['授权老人档案', '健康预警', '随访与健康评估']
+    },
+    meta: { title: '医生服务', permissions: ['doctor:elder:view', 'doctor:elder:authorize'] }
   },
   {
     path: '/admin',
-    component: page('综合管理入口', '综合管理端作为前端入口，按权限进入用户、字典、授权、审计等功能。', [
-      card('用户权限', ['用户管理', '角色管理', '权限管理', '账号启停']),
-      card('基础数据', ['字典管理', '服务项目入口', '医生老人授权入口']),
-      card('审计', ['操作日志查询', '敏感信息脱敏检查'])
-    ])
+    name: 'admin',
+    component: () => import('../views/UnavailableModuleView.vue'),
+    props: {
+      eyebrow: 'SYSTEM GOVERNANCE',
+      title: '综合管理待接入',
+      description: '用户、角色、权限、字典和日志管理接口尚未在后端实现，因此此处不展示模拟管理数据。',
+      capabilities: ['用户与角色', '服务项目与字典', '操作日志']
+    },
+    meta: {
+      title: '综合管理',
+      permissions: ['system:user:view', 'system:user:manage', 'system:role:view']
+    }
+  },
+  {
+    path: '/forbidden',
+    name: 'forbidden',
+    component: () => import('../views/ForbiddenView.vue'),
+    meta: { title: '无权访问' }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('../views/NotFoundView.vue'),
+    meta: { title: '页面不存在', public: true, layout: 'auth' }
   }
-];
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    return savedPosition || { top: 0 }
+  }
+})
+
+router.beforeEach((to) => {
+  if (to.name === 'login' && isAuthenticated.value) {
+    return { name: 'dashboard' }
+  }
+  if (!to.meta.public && !isAuthenticated.value) {
+    return {
+      name: 'login',
+      query: { redirect: to.fullPath }
+    }
+  }
+  if (to.meta.permissions && !hasAnyPermission(to.meta.permissions)) {
+    return { name: 'forbidden', query: { from: to.fullPath } }
+  }
+  if (to.meta.roles && !hasRole(to.meta.roles)) {
+    return { name: 'forbidden', query: { from: to.fullPath } }
+  }
+  return true
+})
+
+router.afterEach((to) => {
+  document.title = `${to.meta.title || '工作台'} · CareNexus`
+})
+
+export default router

@@ -1,12 +1,24 @@
 import { createApp } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
-import { routes } from './router/index.js'
+import router from './router/index.js'
+import { clearSession, initializeSession } from './auth/session.js'
+import { UNAUTHORIZED_EVENT } from './api/request.js'
 import './styles.css'
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes
+window.addEventListener(UNAUTHORIZED_EVENT, () => {
+  const redirect = router.currentRoute.value.fullPath
+  clearSession()
+  if (router.currentRoute.value.name !== 'login') {
+    router.replace({
+      name: 'login',
+      query: { redirect, reason: 'expired' }
+    })
+  }
 })
 
-createApp(App).use(router).mount('#app')
+async function bootstrap() {
+  await initializeSession()
+  createApp(App).use(router).mount('#app')
+}
+
+bootstrap()
