@@ -400,6 +400,7 @@ CREATE TABLE health_alert (
   alert_content VARCHAR(500) NOT NULL,
   handled_by BIGINT,
   handled_comment VARCHAR(500),
+  handled_at DATETIME,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY idx_health_alert_elder_status (elder_id, alert_status)
@@ -450,6 +451,8 @@ ALTER TABLE elder_family_binding ADD CONSTRAINT fk_elder_family_elder FOREIGN KE
 ALTER TABLE elder_family_binding ADD CONSTRAINT fk_elder_family_user FOREIGN KEY (family_user_id) REFERENCES sys_user(id);
 ALTER TABLE doctor_elder_authorization ADD CONSTRAINT fk_doctor_elder_doctor FOREIGN KEY (doctor_user_id) REFERENCES sys_user(id);
 ALTER TABLE doctor_elder_authorization ADD CONSTRAINT fk_doctor_elder_elder FOREIGN KEY (elder_id) REFERENCES elder_profile(id);
+ALTER TABLE doctor_elder_authorization ADD CONSTRAINT fk_doctor_elder_authorized_by FOREIGN KEY (authorized_by) REFERENCES sys_user(id);
+ALTER TABLE doctor_elder_authorization ADD CONSTRAINT fk_doctor_elder_cancelled_by FOREIGN KEY (cancelled_by) REFERENCES sys_user(id);
 ALTER TABLE training_resource ADD CONSTRAINT fk_training_resource_category FOREIGN KEY (category_id) REFERENCES training_category(id);
 ALTER TABLE training_resource ADD CONSTRAINT fk_training_resource_file FOREIGN KEY (file_resource_id) REFERENCES file_resource(id);
 ALTER TABLE training_resource_tag ADD CONSTRAINT fk_training_resource_tag_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
@@ -486,6 +489,7 @@ ALTER TABLE health_record ADD CONSTRAINT fk_health_record_elder FOREIGN KEY (eld
 ALTER TABLE health_record ADD CONSTRAINT fk_health_record_recorder FOREIGN KEY (recorder_id) REFERENCES sys_user(id);
 ALTER TABLE health_alert ADD CONSTRAINT fk_health_alert_elder FOREIGN KEY (elder_id) REFERENCES elder_profile(id);
 ALTER TABLE health_alert ADD CONSTRAINT fk_health_alert_record FOREIGN KEY (health_record_id) REFERENCES health_record(id);
+ALTER TABLE health_alert ADD CONSTRAINT fk_health_alert_handler FOREIGN KEY (handled_by) REFERENCES sys_user(id);
 ALTER TABLE follow_up_record ADD CONSTRAINT fk_follow_up_elder FOREIGN KEY (elder_id) REFERENCES elder_profile(id);
 ALTER TABLE follow_up_record ADD CONSTRAINT fk_follow_up_doctor FOREIGN KEY (doctor_id) REFERENCES sys_user(id);
 ALTER TABLE intervention_record ADD CONSTRAINT fk_intervention_elder FOREIGN KEY (elder_id) REFERENCES elder_profile(id);

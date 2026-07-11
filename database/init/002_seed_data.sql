@@ -19,6 +19,7 @@ INSERT INTO sys_permission (permission_code, permission_name, permission_type) V
 ('training:resource:manage', '培训资源管理', 'ACTION'),
 ('care:order:assign', '护理订单分配', 'ACTION'),
 ('doctor:elder:authorize', '医生老人授权', 'ACTION'),
+('doctor:health:manage', '健康数据管理', 'ACTION'),
 ('system:user:manage', '用户管理', 'ACTION');
 
 INSERT INTO sys_user (username, password_hash, real_name, mobile_cipher_text, mobile_last4, main_role_id, account_status)
@@ -79,12 +80,13 @@ WHERE r.role_code = 'CAREGIVER' AND p.permission_code IN ('care:order:view', 'tr
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
-WHERE r.role_code = 'DOCTOR' AND p.permission_code = 'doctor:elder:view';
+WHERE r.role_code = 'DOCTOR'
+  AND p.permission_code IN ('doctor:elder:view', 'doctor:health:manage');
 
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM sys_role r JOIN sys_permission p
 WHERE r.role_code = 'HEALTH_MANAGER'
-  AND p.permission_code IN ('doctor:elder:view', 'doctor:elder:authorize');
+  AND p.permission_code IN ('doctor:elder:view', 'doctor:elder:authorize', 'doctor:health:manage');
 
 INSERT INTO sys_dict (dict_type, dict_code, dict_name, sort_no) VALUES
 ('ORDER_STATUS', 'PENDING_ASSIGN', '待分配', 1),

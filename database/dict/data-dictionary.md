@@ -99,3 +99,5 @@
 - `sys_user.account_status` 使用 `NORMAL` 和 `DISABLED` 表示正常和停用。
 - `sys_user.is_deleted=1` 表示逻辑删除账号，旧 Token 和登录请求均不得继续使用该账号。
 - T-012 可测试权限码至少包括：`system:user:view`、`system:role:view`、`training:resource:view`、`care:order:view`、`doctor:elder:view`。
+- T-020 健康管理权限码包括：`doctor:elder:view`、`doctor:elder:authorize`、`doctor:health:manage`。
+- 健康阈值仅用于基础风险提示，不构成医疗诊断；实际阈值通过应用配置管理。
