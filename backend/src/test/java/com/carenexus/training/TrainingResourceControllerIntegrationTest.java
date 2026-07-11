@@ -10,8 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.carenexus.DoctorMapperTestConfiguration;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.carenexus.CareMapperTestConfiguration;
 import com.carenexus.audit.entity.OperationLog;
 import com.carenexus.audit.mapper.OperationLogMapper;
 import com.carenexus.auth.entity.SysRole;
@@ -62,7 +62,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "care-nexus.jwt.expiration-seconds=3600"
 })
 @AutoConfigureMockMvc
-@Import(DoctorMapperTestConfiguration.class)
+@Import(CareMapperTestConfiguration.class)
 class TrainingResourceControllerIntegrationTest {
 
     private static final String PASSWORD_HASH = "$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u";
