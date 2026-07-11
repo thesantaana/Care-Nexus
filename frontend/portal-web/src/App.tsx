@@ -307,7 +307,7 @@ function RevealLayer({ image, cursorX, cursorY }: RevealLayerProps) {
 function Navigation({ onOpenPortal }: { onOpenPortal: () => void }) {
   const navItems = [
     { label: '首页', href: '#home' },
-    { label: '护理平台', href: '#ai-consulting' },
+    { label: '护理培训', href: '#liquidity-network' },
   ];
 
   return (
@@ -425,7 +425,7 @@ function PlatformOverview() {
                   Nexus Care OS
                 </p>
                 <h3 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-4xl">
-                  让培训、照护、随访与权限管理在同一系统内协作
+                  让培训资料、学习进度、护理考核与AI辅助在同一系统内协作
                 </h3>
                 <p className="mt-5 text-sm leading-7 text-slate-600">
                   AI能力聚焦护理培训资料问答、知识总结、学习建议和题目草稿生成。
@@ -876,7 +876,7 @@ function AssistantDetailModule() {
             <span className="block text-slate-500">智能照护助手</span>
           </h2>
           <p className="mt-8 max-w-md text-base leading-8 text-slate-600 sm:text-lg">
-            它把培训提醒、服务记录、健康预警与随访建议整理成清晰线索，帮助每个角色更快理解下一步。
+            它基于已发布培训资料提供问答、知识总结和学习建议，帮助护工更快理解重点内容。
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <a
@@ -887,7 +887,7 @@ function AssistantDetailModule() {
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
             </a>
             <span className="text-sm font-medium text-slate-500">
-              培训 / 护理 / 随访协同
+              问答 / 总结 / 学习建议
             </span>
           </div>
         </div>
@@ -1098,37 +1098,6 @@ function CryptoBlueprintModules() {
   );
 }
 
-function SkyConsultingHero({ onLogin }: { onLogin: () => void }) {
-  return (
-    <section id="ai-consulting" className="sky-consulting-hero" aria-label="Nexus AI 智能照护能力展示">
-      <div className="sky-cloud sky-cloud-left" aria-hidden="true" />
-      <div className="sky-cloud sky-cloud-right" aria-hidden="true" />
-      <div className="sky-cloud sky-cloud-bottom" aria-hidden="true" />
-
-      <div className="sky-hero-copy">
-        <h1>Building the future with<br /><span>AI and strategy</span></h1>
-        <p>We help organizations unlock growth and efficiency<br />through data-driven consulting and intelligent automation.</p>
-        <div className="sky-hero-actions">
-          <button type="button">VIEW DEMO</button>
-          <button type="button" onClick={onLogin}>GET STARTED <span><ArrowUpRight aria-hidden="true" /></span></button>
-        </div>
-      </div>
-
-      <div className="sky-card-orbit" aria-label="Nexus 智能能力概览">
-        <div className="sky-orbit-card sky-orbit-ghost sky-orbit-ghost-left"><span>CareHub</span><span>AI Message</span></div>
-        <div className="sky-orbit-card sky-orbit-performance"><small>Performance <b>↗</b></small><strong>49%</strong><span>Business growth</span><i /><div><em>Strategic</em><em>AI-Focused</em></div></div>
-        <div className="sky-orbit-card sky-orbit-points"><div><em>Strategic</em><em>AI-First</em><em>Smarter</em><em>Grow Faster</em></div><span>Data Points</span><strong>520k+</strong></div>
-        <div className="sky-orbit-card sky-orbit-training"><b>+</b><strong>Data training</strong><span>Upload your content</span></div>
-        <div className="sky-orbit-card sky-orbit-expertise"><p>Expertise <i /> that<br />Combines Strategy,<br /><strong>Data,</strong> and Artificial<br />Intelligence</p></div>
-        <div className="sky-orbit-card sky-orbit-chart"><small>Intelligence in<br />Every Decision</small><div className="sky-area-chart" /></div>
-        <div className="sky-orbit-card sky-orbit-ghost sky-orbit-ghost-right" />
-      </div>
-
-      <div className="sky-rating">Rated 4.9/5 by 4,900+ clients <span>★ ★ ★ ★ ★</span></div>
-    </section>
-  );
-}
-
 function App() {
   const mouse = useRef<Point>({ x: -999, y: -999 });
   const smooth = useRef<Point>({ x: -999, y: -999 });
@@ -1249,7 +1218,6 @@ function App() {
 
         <CyberVideoModule />
         <AssistantDetailModule />
-        <SkyConsultingHero onLogin={() => navigate('login')} />
         <CryptoBlueprintModules />
       </div>
     </div>
