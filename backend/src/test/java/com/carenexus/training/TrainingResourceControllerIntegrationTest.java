@@ -12,6 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.carenexus.CareMapperTestConfiguration;
+import com.carenexus.ai.entity.AiDraft;
+import com.carenexus.ai.mapper.AiDraftMapper;
+import com.carenexus.ai.mapper.AiDraftSourceResourceMapper;
 import com.carenexus.audit.entity.OperationLog;
 import com.carenexus.audit.mapper.OperationLogMapper;
 import com.carenexus.auth.entity.SysRole;
@@ -73,6 +76,9 @@ class TrainingResourceControllerIntegrationTest {
     private static final String TEXT_RESOURCE_JSON = "{\"resourceType\":\"ARTICLE\",\"storageMode\":\"TEXT\","
             + "\"categoryId\":1,\"title\":\"鍘嬬柈棰勯槻\",\"summary\":\"summary\",\"content\":\"content\","
             + "\"durationSeconds\":300,\"tagIds\":[1,1]}";
+    private static final String AI_CONTENT_JSON = "{\"sourceResourceIds\":[1],\"question\":\"如何学习？\"}";
+    private static final String AI_DRAFT_JSON = "{\"sourceResourceIds\":[1],"
+            + "\"questionType\":\"SINGLE_CHOICE\",\"count\":1}";
 
     @Autowired
     private MockMvc mockMvc;
@@ -128,6 +134,12 @@ class TrainingResourceControllerIntegrationTest {
     @MockBean
     private LearningAccessLogMapper learningAccessLogMapper;
 
+    @MockBean
+    private AiDraftMapper aiDraftMapper;
+
+    @MockBean
+    private AiDraftSourceResourceMapper aiDraftSourceResourceMapper;
+
     @BeforeEach
     void setUp() {
         when(sysRoleMapper.selectById(3L)).thenReturn(role(3L, "TRAINING_ADMIN", "Training Admin"));
@@ -170,6 +182,12 @@ class TrainingResourceControllerIntegrationTest {
         when(resourceTagMapper.selectTagIdsByResourceId(any())).thenReturn(Collections.emptyList());
         when(resourceTagMapper.selectResourceIdsByTagId(1L)).thenReturn(Collections.singletonList(1L));
         when(operationLogMapper.insert(any())).thenReturn(1);
+        when(aiDraftMapper.insert(any())).thenAnswer(invocation -> {
+            AiDraft draft = invocation.getArgument(0);
+            draft.setId(81L);
+            return 1;
+        });
+        when(aiDraftSourceResourceMapper.insert(any())).thenReturn(1);
     }
 
     @Test
@@ -409,6 +427,57 @@ class TrainingResourceControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/auth/me").header("Authorization", bearer(trainerToken())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.permissionCodes[0]").exists());
+    }
+
+    @Test
+    void aiEndpointRequiresAuthentication() throws Exception {
+        mockMvc.perform(post("/api/v1/training/ai/qa")
+                        .contentType(MediaType.APPLICATION_JSON).content(AI_CONTENT_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void viewPermissionCanUseQaAndSummaryWithResourceReference() throws Exception {
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.PUBLISHED));
+        mockMvc.perform(post("/api/v1/training/ai/qa").header("Authorization", bearer(caregiverToken()))
+                        .contentType(MediaType.APPLICATION_JSON).content(AI_CONTENT_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.references[0].resourceId").value(1))
+                .andExpect(jsonPath("$.data.content").value(org.hamcrest.Matchers.containsString("鍘嬬柈")));
+        mockMvc.perform(post("/api/v1/training/ai/summary").header("Authorization", bearer(caregiverToken()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"sourceResourceIds\":[1]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.references[0].title").exists());
+    }
+
+    @Test
+    void viewPermissionCannotGenerateOrReadQuestionDrafts() throws Exception {
+        mockMvc.perform(post("/api/v1/training/ai/question-drafts")
+                        .header("Authorization", bearer(caregiverToken()))
+                        .contentType(MediaType.APPLICATION_JSON).content(AI_DRAFT_JSON))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/training/ai/question-drafts")
+                        .header("Authorization", bearer(caregiverToken())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void viewPermissionCannotUseOfflineResourceForAi() throws Exception {
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.OFFLINE));
+        mockMvc.perform(post("/api/v1/training/ai/qa").header("Authorization", bearer(caregiverToken()))
+                        .contentType(MediaType.APPLICATION_JSON).content(AI_CONTENT_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void managePermissionCanGenerateQuestionDraft() throws Exception {
+        when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.DRAFT));
+        mockMvc.perform(post("/api/v1/training/ai/question-drafts")
+                        .header("Authorization", bearer(trainerToken()))
+                        .contentType(MediaType.APPLICATION_JSON).content(AI_DRAFT_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.draftIds[0]").value(81));
     }
 
     private String trainerToken() throws Exception {
