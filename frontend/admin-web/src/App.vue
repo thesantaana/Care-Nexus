@@ -25,7 +25,7 @@
       <RouterLink
         class="brand"
         to="/"
-        aria-label="CareNexus 角色工作台"
+        aria-label="CareNexus 管理平台"
       >
         <span
           class="brand-mark"
@@ -60,7 +60,7 @@
 
       <div class="sidebar-note">
         <AppIcon name="info" />
-        <p>菜单由当前账号权限生成，未开放模块不会展示模拟业务数据。</p>
+        <p>护理培训内容管理平台</p>
       </div>
     </aside>
 

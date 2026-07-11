@@ -56,7 +56,7 @@
           登录 PC 工作台
         </h2>
         <p class="auth-form-intro">
-          请输入项目账号。登录成功后会再次向后端校验当前用户和权限。
+          使用管理员账号登录护理培训管理平台。
         </p>
 
         <div
@@ -140,7 +140,7 @@
         </form>
 
         <p class="auth-security-note">
-          登录信息仅发送至配置的 CareNexus 后端服务。
+          CareNexus 使用加密认证保护账号安全。
         </p>
       </div>
     </section>

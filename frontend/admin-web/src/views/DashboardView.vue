@@ -12,9 +12,8 @@
         class="identity-card"
         aria-label="当前身份信息"
       >
-        <span>主角色</span>
+        <span>当前身份</span>
         <strong>{{ session.user?.mainRoleName }}</strong>
-        <small>{{ session.user?.mainRoleCode }}</small>
       </div>
     </div>
 
