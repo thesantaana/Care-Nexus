@@ -66,6 +66,14 @@ public class TrainingExamSupport {
         return resource;
     }
 
+    public TrainingResource requireResource(Long id) {
+        TrainingResource resource = resourceMapper.selectById(id);
+        if (resource == null || Integer.valueOf(1).equals(resource.getIsDeleted())) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "Training resource not found");
+        }
+        return resource;
+    }
+
     public TrainingExam requirePublishedExam(Long id) {
         TrainingExam exam = requireExam(id);
         if (!ExamStatus.PUBLISHED.equals(exam.getExamStatus())) {
@@ -83,6 +91,18 @@ public class TrainingExamSupport {
         }
         if (examMapper.selectCount(wrapper) > 0) {
             throw new BusinessException(ErrorCode.CONFLICT, "Training exam name already exists");
+        }
+    }
+
+    public void ensureUniqueExamResource(Long resourceId, Long excludeId) {
+        QueryWrapper<TrainingExam> wrapper = new QueryWrapper<TrainingExam>()
+                .eq("resource_id", resourceId)
+                .eq("is_deleted", ACTIVE_FLAG);
+        if (excludeId != null) {
+            wrapper.ne("id", excludeId);
+        }
+        if (examMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException(ErrorCode.CONFLICT, "Training resource already has an exam");
         }
     }
 

@@ -49,7 +49,10 @@ public class TrainingExamManageService {
         accessPolicy.requireManage();
         String name = TrainingText.required(request.getExamName(), "Exam name is required");
         support.ensureUniqueExamName(name, null);
+        support.requireResource(request.getResourceId());
+        support.ensureUniqueExamResource(request.getResourceId(), null);
         TrainingExam exam = new TrainingExam();
+        exam.setResourceId(request.getResourceId());
         exam.setExamName(name);
         exam.setPassScore(support.requireNonNegative(request.getPassScore(), "Pass score is required"));
         exam.setMaxAttempts(support.requirePositive(request.getMaxAttempts(), "Max attempts must be greater than 0"));
@@ -67,6 +70,9 @@ public class TrainingExamManageService {
         }
         String name = TrainingText.required(request.getExamName(), "Exam name is required");
         support.ensureUniqueExamName(name, id);
+        support.requireResource(request.getResourceId());
+        support.ensureUniqueExamResource(request.getResourceId(), id);
+        exam.setResourceId(request.getResourceId());
         exam.setExamName(name);
         exam.setPassScore(support.requireNonNegative(request.getPassScore(), "Pass score is required"));
         exam.setMaxAttempts(support.requirePositive(request.getMaxAttempts(), "Max attempts must be greater than 0"));

@@ -63,8 +63,8 @@
 | 培训资源详情 | GET | `/api/v1/training/resources/{id}` | 培训管理员、护工 | 已发布或管理权限 | 无 | resource | 无 | NOT_FOUND, FORBIDDEN | 否 |
 | 发布培训资源 | PUT | `/api/v1/training/resources/{id}/publish` | 培训管理员 | 培训模块 | 无 | resource | 草稿->已发布 | NOT_FOUND, CONFLICT | 是 |
 | 下架培训资源 | PUT | `/api/v1/training/resources/{id}/offline` | 培训管理员 | 培训模块 | reason | resource | 已发布->已下架 | NOT_FOUND, CONFLICT | 是 |
-| 考核新增 | POST | `/api/v1/training/exams` | 培训管理员 | 培训模块 | examName, passScore, maxAttempts | exam | 草稿 | BAD_REQUEST, CONFLICT | 是 |
-| 考核修改 | PUT | `/api/v1/training/exams/{id}` | 培训管理员 | 培训模块 | examName, passScore, maxAttempts | exam | 修改考核 | NOT_FOUND, CONFLICT | 是 |
+| 考核新增 | POST | `/api/v1/training/exams` | 培训管理员 | 培训模块 | resourceId, examName, passScore, maxAttempts | exam | 草稿 | BAD_REQUEST, CONFLICT | 是 |
+| 考核修改 | PUT | `/api/v1/training/exams/{id}` | 培训管理员 | 培训模块 | resourceId, examName, passScore, maxAttempts | exam | 修改考核 | NOT_FOUND, CONFLICT | 是 |
 | 考核发布 | PUT | `/api/v1/training/exams/{id}/publish` | 培训管理员 | 培训模块 | 无 | exam | 草稿->已发布 | NOT_FOUND, CONFLICT | 是 |
 | 题目新增 | POST | `/api/v1/training/questions` | 培训管理员 | 培训模块 | questionType, content, standardAnswer, analysis | question | 新增题目 | BAD_REQUEST | 是 |
 | 题目修改 | PUT | `/api/v1/training/questions/{id}` | 培训管理员 | 培训模块 | content, standardAnswer, analysis, status | question | 修改题目 | NOT_FOUND, CONFLICT | 是 |
@@ -77,6 +77,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | 记录学习访问 | POST | `/api/v1/training/learning/access` | 护工 | 本人 | resourceId, accessSeconds | learningRecord | 未开始->学习中 | BAD_REQUEST, NOT_FOUND | 否 |
 | 查看学习记录 | GET | `/api/v1/training/learning/me` | 护工 | 本人 | 无 | learningRecord, accessLogs | 无 | UNAUTHORIZED | 否 |
+| 查看课程成绩汇总 | GET | `/api/v1/training/learning/scores` | 护工 | 本人 | 无 | 每课最高分、平均分、通过课程数、整体培训状态 | 无 | UNAUTHORIZED | 否 |
 | 获取考核 | GET | `/api/v1/training/exams/{examId}` | 护工 | 已发布考核 | 无 | exam, questions | 无 | NOT_FOUND | 否 |
 | 提交考核 | POST | `/api/v1/training/exams/{examId}/records` | 护工 | 本人 | answers | examRecord | 已参加考核/已通过/未通过 | BAD_REQUEST, CONFLICT | 是 |
 
@@ -165,7 +166,7 @@ T-022 当前仅实现稳定 Mock 模式：输入只能来自 `sourceResourceIds`
 - 账号和当前用户：3 个 MVP 接口；另有 1 个 T-012 后端 RBAC 验证接口，不计入正式业务 MVP 合计。
 - 用户、角色、权限、字典和日志：19 个。
 - 培训类别、标签、资源、题库和考核管理：21 个。
-- 学习记录和考核执行：4 个。
+- 学习记录和考核执行：5 个。
 - AI培训辅助和题目草稿审核：7 个。
 - 老人家属绑定、服务、地址和移动订单：16 个。
 - 订单分配、护工执行、评价和投诉处理：12 个。

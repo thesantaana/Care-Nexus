@@ -38,6 +38,7 @@ public class TrainingExamAssembler {
     public ExamResponse toExamResponse(TrainingExam exam, boolean includeAnswers) {
         ExamResponse response = new ExamResponse();
         response.setId(exam.getId());
+        response.setResourceId(exam.getResourceId());
         response.setExamName(exam.getExamName());
         response.setPassScore(exam.getPassScore());
         response.setMaxAttempts(exam.getMaxAttempts());

@@ -84,8 +84,10 @@ SELECT 'ARTICLE', 'TEXT', c.id, '照护工作中的手卫生五个关键时刻',
 FROM training_category c JOIN sys_user u
 WHERE c.category_name = '感染预防' AND u.username = 'admin_demo';
 
-INSERT INTO training_exam (exam_name, pass_score, max_attempts, exam_status)
-VALUES ('护工基础安全照护 MVP 考核', 48.00, 3, 'PUBLISHED');
+INSERT INTO training_exam (resource_id, exam_name, pass_score, max_attempts, exam_status)
+SELECT id, title, 60.00, 3, 'PUBLISHED'
+FROM training_resource
+WHERE resource_status = 'PUBLISHED' AND is_deleted = 0;
 
 INSERT INTO exam_question (resource_id, question_type, question_content, standard_answer, analysis, question_status)
 SELECT r.id, 'SINGLE_CHOICE', '下列哪一组措施最符合压疮日常预防要求？', 'B',
@@ -179,10 +181,9 @@ INSERT INTO exam_question_option (question_id, option_label, option_content, is_
 SELECT id, 'D', '戴手套后永远不用洗手', 0, 4 FROM exam_question WHERE question_content = '下列哪项属于手卫生五个关键时刻？';
 
 INSERT INTO training_exam_question (exam_id, question_id, score, sort_no)
-SELECT e.id, q.id, CASE WHEN q.question_type = 'TRUE_FALSE' THEN 5.00 ELSE 7.50 END,
-       ROW_NUMBER() OVER (ORDER BY q.id)
-FROM training_exam e JOIN exam_question q
-WHERE e.exam_name = '护工基础安全照护 MVP 考核';
+SELECT e.id, q.id, CASE WHEN q.question_type = 'TRUE_FALSE' THEN 20.00 ELSE 40.00 END,
+       ROW_NUMBER() OVER (PARTITION BY e.id ORDER BY q.id)
+FROM training_exam e JOIN exam_question q ON q.resource_id = e.resource_id;
 
 INSERT INTO ai_draft (draft_type, prompt, draft_content, draft_status)
 SELECT 'QUESTION_DRAFT', '基于资料生成单选题草稿', '【草稿】压疮预防单选题示例', 'DRAFT'

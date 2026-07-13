@@ -9,6 +9,9 @@ import javax.validation.constraints.Size;
 
 public class ExamRequest {
 
+    @NotNull
+    private Long resourceId;
+
     @NotBlank
     @Size(max = 128)
     private String examName;
@@ -20,6 +23,14 @@ public class ExamRequest {
     @NotNull
     @Min(1)
     private Integer maxAttempts;
+
+    public Long getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
+    }
 
     public String getExamName() {
         return examName;

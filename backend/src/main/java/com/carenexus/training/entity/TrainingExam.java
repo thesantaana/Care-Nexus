@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class TrainingExam {
 
     private Long id;
+    private Long resourceId;
     private String examName;
     private BigDecimal passScore;
     private Integer maxAttempts;
@@ -18,6 +19,14 @@ public class TrainingExam {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
     }
 
     public void setId(Long id) {

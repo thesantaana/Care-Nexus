@@ -71,8 +71,8 @@ class TrainingExamControllerIntegrationTest {
     private static final String PASSWORD_HASH = "$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u";
     private static final String TRAINER_LOGIN = "{\"username\":\"trainer_demo\",\"password\":\"Demo@123456\"}";
     private static final String CAREGIVER_LOGIN = "{\"username\":\"caregiver_demo\",\"password\":\"Demo@123456\"}";
-    private static final String EXAM_JSON = "{\"examName\":\"Caregiver MVP Exam\","
-            + "\"passScore\":48,\"maxAttempts\":3}";
+    private static final String EXAM_JSON = "{\"resourceId\":1,\"examName\":\"Caregiver MVP Exam\"," 
+            + "\"passScore\":60,\"maxAttempts\":3}";
     private static final String SINGLE_QUESTION_JSON = "{\"resourceId\":1,\"questionType\":\"SINGLE_CHOICE\","
             + "\"questionContent\":\"Which action helps prevent pressure injury?\",\"standardAnswer\":\"A\","
             + "\"analysis\":\"Turn and check skin regularly.\"}";

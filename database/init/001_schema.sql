@@ -175,13 +175,15 @@ CREATE TABLE training_note (
 
 CREATE TABLE training_exam (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  resource_id BIGINT NOT NULL,
   exam_name VARCHAR(128) NOT NULL,
   pass_score DECIMAL(5,2) NOT NULL DEFAULT 60.00,
   max_attempts INT NOT NULL DEFAULT 3,
   exam_status VARCHAR(32) NOT NULL DEFAULT 'DRAFT',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  is_deleted TINYINT NOT NULL DEFAULT 0
+  is_deleted TINYINT NOT NULL DEFAULT 0,
+  UNIQUE KEY uk_training_exam_resource (resource_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE exam_question (
@@ -274,6 +276,7 @@ ALTER TABLE learning_access_log ADD CONSTRAINT fk_learning_access_resource FOREI
 ALTER TABLE training_note ADD CONSTRAINT fk_training_note_user FOREIGN KEY (user_id) REFERENCES sys_user(id);
 ALTER TABLE training_note ADD CONSTRAINT fk_training_note_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
 ALTER TABLE exam_question ADD CONSTRAINT fk_exam_question_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
+ALTER TABLE training_exam ADD CONSTRAINT fk_training_exam_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
 ALTER TABLE exam_question ADD CONSTRAINT fk_exam_question_ai_draft FOREIGN KEY (source_ai_draft_id) REFERENCES ai_draft(id);
 ALTER TABLE exam_question_option ADD CONSTRAINT fk_question_option_question FOREIGN KEY (question_id) REFERENCES exam_question(id);
 ALTER TABLE training_exam_question ADD CONSTRAINT fk_training_exam_question_exam FOREIGN KEY (exam_id) REFERENCES training_exam(id);

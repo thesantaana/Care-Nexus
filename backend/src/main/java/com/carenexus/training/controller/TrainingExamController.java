@@ -11,11 +11,13 @@ import com.carenexus.training.exam.service.TrainingExamManageService;
 import com.carenexus.training.exam.service.TrainingExamTakingService;
 import com.carenexus.training.exam.service.TrainingLearningService;
 import com.carenexus.training.exam.service.TrainingQuestionService;
+import com.carenexus.training.exam.service.TrainingScoreService;
 import com.carenexus.training.vo.ExamRecordResponse;
 import com.carenexus.training.vo.ExamResponse;
 import com.carenexus.training.vo.LearningAccessResponse;
 import com.carenexus.training.vo.LearningRecordResponse;
 import com.carenexus.training.vo.QuestionResponse;
+import com.carenexus.training.vo.TrainingScoreSummaryResponse;
 import javax.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,13 +37,16 @@ public class TrainingExamController {
     private final TrainingQuestionService questionService;
     private final TrainingLearningService learningService;
     private final TrainingExamTakingService examTakingService;
+    private final TrainingScoreService scoreService;
 
     public TrainingExamController(TrainingExamManageService examManageService, TrainingQuestionService questionService,
-            TrainingLearningService learningService, TrainingExamTakingService examTakingService) {
+            TrainingLearningService learningService, TrainingExamTakingService examTakingService,
+            TrainingScoreService scoreService) {
         this.examManageService = examManageService;
         this.questionService = questionService;
         this.learningService = learningService;
         this.examTakingService = examTakingService;
+        this.scoreService = scoreService;
     }
 
     @PostMapping("/exams")
@@ -91,6 +96,11 @@ public class TrainingExamController {
     @GetMapping("/learning/me")
     public ApiResponse<LearningRecordResponse> myLearningRecord() {
         return ApiResponse.success(learningService.myLearningRecord());
+    }
+
+    @GetMapping("/learning/scores")
+    public ApiResponse<TrainingScoreSummaryResponse> myCourseScores() {
+        return ApiResponse.success(scoreService.myCourseScores());
     }
 
     @GetMapping("/exams/{examId}")

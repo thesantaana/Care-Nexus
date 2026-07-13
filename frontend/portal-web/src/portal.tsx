@@ -8,10 +8,8 @@ import {
   ChartNoAxesColumnIncreasing,
   CheckCircle2,
   CircleAlert,
-  LayoutDashboard,
   LogOut,
   NotebookPen,
-  Plus,
   Search,
   ShieldCheck,
   UserRound,
@@ -353,12 +351,6 @@ function Workspace({ user, token, onHome, onLogout }: {
   );
 }
 
-type LearningLibrary = {
-  favorites: number[];
-  completed: number[];
-  notes: Record<string, string>;
-};
-
 type TrainingNote = {
   id: number;
   resourceId: number;
@@ -366,6 +358,23 @@ type TrainingNote = {
   title: string;
   content: string;
   updatedAt: string;
+};
+
+type CourseScore = {
+  resourceId: number;
+  resourceTitle: string;
+  examId: number | null;
+  passScore: number;
+  bestScore: number;
+  passed: boolean;
+};
+
+type TrainingScoreSummary = {
+  courseCount: number;
+  passedCourseCount: number;
+  averageScore: number;
+  trainingPassed: boolean;
+  courseScores: CourseScore[];
 };
 
 type ProfileCustomization = {
@@ -381,10 +390,8 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   resourceError: string;
   onLogout: () => void;
 }) {
-  const storageKey = `carenexus-portal-learning:${user.userId}`;
   const profileKey = `carenexus-portal-profile:${user.userId}`;
   const [activeSection, setActiveSection] = useState<'courses' | 'progress' | 'notes' | 'profile'>('courses');
-  const [activeTab, setActiveTab] = useState<'mine' | 'all' | 'completed'>('all');
   const [keyword, setKeyword] = useState('');
   const [editingResource, setEditingResource] = useState<TrainingResource | null>(null);
   const [aiResource, setAiResource] = useState<TrainingResource | null>(null);
@@ -393,6 +400,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   const [aiError, setAiError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [notes, setNotes] = useState<TrainingNote[]>([]);
+  const [scoreSummary, setScoreSummary] = useState<TrainingScoreSummary | null>(null);
   const [profileMessage, setProfileMessage] = useState('');
   const [profile, setProfile] = useState<ProfileCustomization>(() => {
     try {
@@ -401,19 +409,6 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
       return { displayName: user.displayName, avatarDataUrl: user.avatarUrl || '/assets/default-avatar.png' };
     }
   });
-  const [library, setLibrary] = useState<LearningLibrary>(() => {
-    try {
-      return { favorites: [], completed: [], notes: {}, ...JSON.parse(localStorage.getItem(storageKey) || '{}') };
-    } catch {
-      return { favorites: [], completed: [], notes: {} };
-    }
-  });
-
-  function updateLibrary(next: LearningLibrary) {
-    setLibrary(next);
-    localStorage.setItem(storageKey, JSON.stringify(next));
-  }
-
   function saveProfile(next: ProfileCustomization) {
     const normalized = { ...next, displayName: next.displayName.trim() || user.displayName };
     setProfile(normalized);
@@ -434,11 +429,6 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
     reader.readAsDataURL(file);
   }
 
-  function toggleList(name: 'favorites' | 'completed', id: number) {
-    const current = library[name];
-    updateLibrary({ ...library, [name]: current.includes(id) ? current.filter((item) => item !== id) : [...current, id] });
-  }
-
   function openNote(resource: TrainingResource) {
     setEditingResource(resource);
   }
@@ -451,7 +441,15 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
     }
   }
 
-  useEffect(() => { refreshNotes(); }, [token]);
+  async function refreshScores() {
+    try {
+      setScoreSummary(await api<TrainingScoreSummary>('/training/learning/scores', {}, token));
+    } catch {
+      setScoreSummary(null);
+    }
+  }
+
+  useEffect(() => { refreshNotes(); refreshScores(); }, [token]);
 
   async function runAi(action: 'qa' | 'summary' | 'suggestions') {
     if (!aiResource || aiLoading) return;
@@ -474,11 +472,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   }
 
   const visibleResources = resources.filter((resource) => {
-    const matchesKeyword = !keyword.trim() || `${resource.title} ${resource.summary || ''}`.toLowerCase().includes(keyword.trim().toLowerCase());
-    if (!matchesKeyword) return false;
-    if (activeTab === 'mine') return library.favorites.includes(resource.id);
-    if (activeTab === 'completed') return library.completed.includes(resource.id);
-    return true;
+    return !keyword.trim() || `${resource.title} ${resource.summary || ''}`.toLowerCase().includes(keyword.trim().toLowerCase());
   });
 
   const navigation = [
@@ -499,20 +493,18 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
 
       <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8 lg:px-12">
         {activeSection === 'courses' && <>
-          <header className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Course library</p><h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">护工培训课程</h1><p className="mt-2 text-sm text-slate-500">学习护理知识，把需要学习的内容加入个人课程并记录笔记。</p></div><div className="flex gap-5 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm"><span><strong className="mr-1 text-xl text-teal-700">{resources.length}</strong>门课程</span><span><strong className="mr-1 text-xl text-teal-700">{library.favorites.length}</strong>门已加入</span></div></header>
-          <div className="mt-8 flex flex-col-reverse gap-4 border-b border-slate-200 lg:flex-row lg:items-center lg:justify-between"><div className="flex gap-7 overflow-x-auto">{([{ id: 'mine', label: '我的课程' }, { id: 'all', label: '全部课程' }, { id: 'completed', label: '已完成' }] as const).map((tab) => <button key={tab.id} className={`relative min-h-12 shrink-0 text-sm font-semibold ${activeTab === tab.id ? 'text-teal-700 after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:rounded-t after:bg-teal-600' : 'text-slate-500'}`} type="button" onClick={() => setActiveTab(tab.id)}>{tab.label}</button>)}</div><label className="relative mb-3 block w-full lg:w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input className="min-h-11 w-full rounded-full border border-slate-300 bg-white pl-10 pr-4 text-sm outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索课程" /></label></div>
-          <div className="mb-4 mt-8 flex items-end justify-between"><div><h2 className="text-xl font-semibold">{activeTab === 'all' ? '全部课程' : activeTab === 'mine' ? '我的课程' : '已完成课程'}</h2><p className="mt-1 text-xs text-slate-500">{activeTab === 'mine' ? '查看你收藏的课程' : activeTab === 'completed' ? '回顾已经完成的培训内容' : '当前已发布的护理培训内容'}</p></div><span className="text-xs text-slate-500">显示 {visibleResources.length} 项</span></div>
+          <header className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Course library</p><h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">护工培训课程</h1><p className="mt-2 text-sm text-slate-500">完成全部课程考核且每门成绩达到60分，即通过整体培训。</p></div><div className="flex gap-5 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm"><span><strong className="mr-1 text-xl text-teal-700">{resources.length}</strong>门课程</span><span><strong className="mr-1 text-xl text-teal-700">{scoreSummary?.passedCourseCount || 0}</strong>门已通过</span></div></header>
+          <div className="mt-8 flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between"><div><h2 className="text-xl font-semibold">全部课程</h2><p className="mt-1 text-xs text-slate-500">当前已发布的护理培训内容</p></div><label className="relative block w-full lg:w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input className="min-h-11 w-full rounded-full border border-slate-300 bg-white pl-10 pr-4 text-sm outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索课程" /></label></div>
           {loading && <p className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">正在加载培训课程…</p>}
           {resourceError && <p className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">{resourceError}</p>}
           {!loading && !resourceError && visibleResources.length > 0 && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleResources.map((resource) => {
-            const favorite = library.favorites.includes(resource.id);
-            const completed = library.completed.includes(resource.id);
-            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><button className={`absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-white/40 backdrop-blur ${favorite ? 'bg-teal-600 text-white' : 'bg-slate-900/30 text-white'}`} type="button" aria-label={favorite ? '移出我的课程' : '加入我的课程'} onClick={() => toggleList('favorites', resource.id)}><Plus className={`transition ${favorite ? 'rotate-45' : ''}`} size={19} /></button><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs ${completed ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>{completed ? '已完成' : favorite ? '已加入' : '未加入'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button><button className="text-xs font-semibold text-teal-700" type="button" onClick={() => toggleList('completed', resource.id)}>{completed ? '重新学习' : '标记完成'}</button></div></div></div></article>;
+            const score = scoreSummary?.courseScores.find((item) => item.resourceId === resource.id);
+            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs font-semibold ${score?.passed ? 'text-emerald-700' : 'text-slate-500'}`}>{score?.examId ? `${score.bestScore}分 · ${score.passed ? '已通过' : '未通过'}` : '考核待发布'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button></div></div></div></article>;
           })}</div>}
-          {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">可以切换到全部课程继续浏览。</p></div>}
+          {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">请尝试其他搜索关键词。</p></div>}
         </>}
 
-        {activeSection === 'progress' && <SimpleLearningSection icon={<ChartNoAxesColumnIncreasing />} title="学习进度" description="集中查看当前账号的课程完成情况。"><div className="grid gap-4 sm:grid-cols-3"><Metric label="课程总数" value={resources.length} /><Metric label="已加入课程" value={library.favorites.length} /><Metric label="已完成" value={library.completed.length} /></div></SimpleLearningSection>}
+        {activeSection === 'progress' && <LearningProgressDashboard profile={profile} resources={resources} scoreSummary={scoreSummary} noteCount={notes.length} />}
         {activeSection === 'notes' && <SimpleLearningSection icon={<NotebookPen />} title="学习笔记" description="笔记和图片保存在当前账号中，可在课程中继续编辑。"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{notes.map((note) => { const resource = resources.find((item) => item.id === note.resourceId); return <article className="rounded-lg border border-slate-200 bg-white p-5" key={note.id}><small className="text-teal-700">{note.resourceTitle}</small><h3 className="mt-2 font-semibold">{note.title}</h3><p className="mt-3 text-xs text-slate-400">最近更新：{new Date(note.updatedAt).toLocaleString('zh-CN')}</p>{resource && <button className="mt-4 text-xs font-semibold text-teal-700" type="button" onClick={() => openNote(resource)}>打开笔记</button>}</article>; })}{notes.length === 0 && <p className="col-span-full py-12 text-center text-sm text-slate-400">暂无笔记</p>}</div></SimpleLearningSection>}
         {activeSection === 'profile' && <SimpleLearningSection icon={<UserRound />} title="我的账号" description="维护当前设备上显示的头像和姓名。"><div className="max-w-2xl rounded-lg border border-slate-200 bg-white p-6 sm:p-8"><div className="flex flex-col gap-7 sm:flex-row"><div className="relative h-24 w-24 shrink-0">{profile.avatarDataUrl ? <img className="h-24 w-24 rounded-full object-cover" src={profile.avatarDataUrl} alt="个人头像" /> : <span className="grid h-24 w-24 place-items-center rounded-full bg-teal-100 text-3xl font-bold text-teal-800">{profile.displayName.slice(0, 1)}</span>}<label className="absolute bottom-0 right-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-teal-700 text-white shadow-lg" title="更换头像"><Camera size={17} /><input className="sr-only" type="file" accept="image/*" onChange={handleAvatarChange} /></label></div><div className="grid flex-1 gap-5"><label className="grid gap-2 text-sm font-medium text-slate-700">显示姓名<input className="min-h-11 rounded-md border border-slate-300 px-3 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={profile.displayName} maxLength={30} onChange={(event) => setProfile({ ...profile, displayName: event.target.value })} /></label><div className="grid gap-1 text-sm"><span className="text-slate-500">登录账号</span><strong>{user.username}</strong></div><div className="grid gap-1 text-sm"><span className="text-slate-500">身份</span><strong>{user.mainRoleName}</strong></div><button className="min-h-11 justify-self-start rounded-md bg-teal-700 px-5 text-sm font-semibold text-white" type="button" onClick={() => saveProfile(profile)}>保存个人资料</button>{profileMessage && <p className="text-sm text-teal-700" role="status">{profileMessage}</p>}</div></div></div></SimpleLearningSection>}
       </div>
@@ -527,6 +519,52 @@ function SimpleLearningSection({ icon, title, description, children }: { icon: R
   return <section><header className="mb-8 flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-lg bg-teal-100 text-teal-700">{icon}</span><div><h1 className="text-3xl font-semibold tracking-[-0.04em]">{title}</h1><p className="mt-1 text-sm text-slate-500">{description}</p></div></header>{children}</section>;
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return <article className="rounded-lg border border-slate-200 bg-white p-6"><LayoutDashboard className="text-teal-700" size={21} /><strong className="mt-5 block text-3xl">{value}</strong><span className="mt-1 block text-sm text-slate-500">{label}</span></article>;
+function LearningProgressDashboard({ profile, resources, scoreSummary, noteCount }: {
+  profile: ProfileCustomization;
+  resources: TrainingResource[];
+  scoreSummary: TrainingScoreSummary | null;
+  noteCount: number;
+}) {
+  const total = resources.length;
+  const passedCount = scoreSummary?.passedCourseCount || 0;
+  const completionRate = total === 0 ? 0 : Math.round((passedCount / total) * 100);
+
+  return <section>
+    <header className="mb-6 flex items-center gap-5 rounded-lg border border-slate-200 bg-white px-6 py-6 sm:px-8">
+      {profile.avatarDataUrl
+        ? <img className="h-16 w-16 rounded-full object-cover" src={profile.avatarDataUrl} alt="个人头像" />
+        : <span className="grid h-16 w-16 place-items-center rounded-full bg-teal-100 text-2xl font-bold text-teal-800">{profile.displayName.slice(0, 1)}</span>}
+      <div><h1 className="text-2xl font-semibold">{profile.displayName}</h1><p className="mt-1 text-sm text-slate-500">护理培训学习概览</p></div>
+    </header>
+
+    <div className="grid gap-6 xl:grid-cols-[1.1fr_.9fr]">
+      <div className="grid gap-6">
+        <article className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+            <div><h2 className="text-lg font-semibold">培训通过情况</h2><p className="mt-5 text-3xl font-semibold">{passedCount}<span className="ml-1 text-base font-normal text-slate-500">/ {total} 门</span></p><p className={`mt-2 text-sm font-medium ${scoreSummary?.trainingPassed ? 'text-emerald-600' : 'text-slate-500'}`}>{scoreSummary?.trainingPassed ? '整体培训已通过' : '全部课程达到60分后通过'}</p></div>
+            <div className="grid h-32 w-32 shrink-0 place-items-center rounded-full" style={{ background: `conic-gradient(#34d399 ${completionRate}%, #e8eef0 0)` }}>
+              <div className="grid h-[104px] w-[104px] place-items-center rounded-full bg-white text-center"><span className="text-xs text-slate-400">完成率<strong className="mt-1 block text-2xl text-slate-900">{completionRate}%</strong></span></div>
+            </div>
+          </div>
+        </article>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[['平均成绩', `${scoreSummary?.averageScore || 0}分`], ['已通过课程', `${passedCount}门`], ['学习笔记', `${noteCount}篇`]].map(([label, value]) => <article className="rounded-lg border border-slate-200 bg-white p-6" key={label}><strong className="text-3xl font-semibold text-teal-700">{value}</strong><span className="mt-2 block text-sm text-slate-500">{label}</span></article>)}
+        </div>
+      </div>
+
+      <article className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
+        <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">课程学习任务</h2><p className="mt-1 text-sm text-slate-500">查看每门课程的当前状态</p></div><ChartNoAxesColumnIncreasing className="text-teal-600" size={24} /></div>
+        <div className="mt-7 grid gap-6">
+          {resources.map((resource) => {
+            const score = scoreSummary?.courseScores.find((item) => item.resourceId === resource.id);
+            const bestScore = score?.bestScore || 0;
+            const status = !score?.examId ? '考核待发布' : score.passed ? '已通过' : '未通过';
+            return <div key={resource.id}><div className="mb-2 flex items-center justify-between gap-4"><span className="truncate text-sm font-medium">{resource.title}</span><span className={`shrink-0 text-xs font-semibold ${score?.passed ? 'text-emerald-600' : 'text-slate-500'}`}>{score?.examId ? `${bestScore}分 · ${status}` : status}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><span className={`block h-full rounded-full ${score?.passed ? 'bg-emerald-400' : 'bg-teal-500'}`} style={{ width: `${Math.min(100, bestScore)}%` }} /></div></div>;
+          })}
+          {resources.length === 0 && <p className="py-10 text-center text-sm text-slate-400">暂无课程进度</p>}
+        </div>
+      </article>
+    </div>
+  </section>;
 }

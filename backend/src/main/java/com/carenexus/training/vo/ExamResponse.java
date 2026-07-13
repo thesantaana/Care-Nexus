@@ -7,6 +7,7 @@ import java.util.List;
 public class ExamResponse {
 
     private Long id;
+    private Long resourceId;
     private String examName;
     private BigDecimal passScore;
     private Integer maxAttempts;
@@ -19,6 +20,14 @@ public class ExamResponse {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getResourceId() {
+        return resourceId;
+    }
+
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
     }
 
     public String getExamName() {
