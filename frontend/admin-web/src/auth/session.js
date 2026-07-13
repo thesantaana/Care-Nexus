@@ -50,6 +50,23 @@ export function clearSession() {
   localStorage.removeItem(USER_STORAGE_KEY)
 }
 
+export async function acceptPortalToken(token) {
+  clearSession()
+  session.token = token
+  localStorage.setItem(TOKEN_STORAGE_KEY, token)
+  try {
+    const currentUser = await getCurrentUser()
+    if (currentUser.mainRoleCode !== 'ADMIN') {
+      throw new Error('当前账号不是管理员账号')
+    }
+    persistUser(currentUser)
+    return currentUser
+  } catch (error) {
+    clearSession()
+    throw error
+  }
+}
+
 export async function signIn(credentials) {
   session.loading = true
   try {

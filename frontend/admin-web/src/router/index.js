@@ -1,13 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { hasAnyPermission, hasRole, isAuthenticated } from '../auth/session.js'
+import { redirectToPortal } from '../auth/portal.js'
 
 const routes = [
-  {
-    path: '/login',
-    name: 'login',
-    component: () => import('../views/LoginView.vue'),
-    meta: { title: '登录', layout: 'auth', public: true }
-  },
   {
     path: '/',
     name: 'dashboard',
@@ -82,7 +77,7 @@ const routes = [
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('../views/NotFoundView.vue'),
-    meta: { title: '页面不存在', public: true, layout: 'auth' }
+    meta: { title: '页面不存在', layout: 'auth' }
   }
 ]
 
@@ -95,14 +90,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (to.name === 'login' && isAuthenticated.value) {
-    return { name: 'dashboard' }
-  }
   if (!to.meta.public && !isAuthenticated.value) {
-    return {
-      name: 'login',
-      query: { redirect: to.fullPath }
-    }
+    redirectToPortal()
+    return false
   }
   if (to.meta.permissions && !hasAnyPermission(to.meta.permissions)) {
     return { name: 'forbidden', query: { from: to.fullPath } }

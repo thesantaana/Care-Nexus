@@ -140,14 +140,14 @@
 
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
 import { navigationItems } from './config/navigation.js'
 import { hasAnyPermission, hasRole, session, signOut } from './auth/session.js'
+import { redirectToPortal } from './auth/portal.js'
 import { dismissMessage, feedback, notify } from './ui/feedback.js'
 
 const route = useRoute()
-const router = useRouter()
 const mobileNavigationOpen = ref(false)
 const mainContent = ref(null)
 
@@ -170,10 +170,10 @@ watch(() => route.fullPath, async () => {
 async function handleLogout() {
   try {
     await signOut()
-    await router.replace({ name: 'login' })
+    redirectToPortal()
   } catch (error) {
     notify(error.message || '退出请求失败，本地登录状态已清理', 'warning')
-    await router.replace({ name: 'login' })
+    redirectToPortal()
   }
 }
 </script>

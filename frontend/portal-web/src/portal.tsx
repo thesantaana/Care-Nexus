@@ -127,6 +127,12 @@ export function Portal({ route, onHome, onRouteChange }: {
     setToken(login.token);
     setUser(currentUser);
     saveSession(login.token, currentUser);
+    if (currentUser.mainRoleCode === 'ADMIN') {
+      const adminWebUrl = import.meta.env.VITE_ADMIN_WEB_URL ||
+        `${window.location.protocol}//${window.location.hostname}:5173`;
+      window.location.replace(`${adminWebUrl}/auth-handoff#token=${encodeURIComponent(login.token)}`);
+      return;
+    }
     onRouteChange('workspace');
   }
 
