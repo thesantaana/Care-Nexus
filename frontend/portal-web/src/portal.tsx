@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 type PortalRoute = 'login' | 'workspace';
+type LoginRole = 'ADMIN' | 'CAREGIVER';
 
 type CurrentUser = {
   userId: number;
@@ -149,10 +150,40 @@ function Login({ onHome, onSignedIn }: {
   onHome: () => void;
   onSignedIn: (login: LoginResponse, user: CurrentUser) => void;
 }) {
-  const [username, setUsername] = useState('');
+  const [selectedRole, setSelectedRole] = useState<LoginRole>('ADMIN');
+  const [username, setUsername] = useState('admin_demo');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+
+  const roleOptions: Array<{
+    code: LoginRole;
+    title: string;
+    description: string;
+    demoAccount: string;
+    icon: typeof ShieldCheck;
+  }> = [
+    {
+      code: 'ADMIN',
+      title: '我是管理员',
+      description: '管理培训资源、分类标签、题库与考核内容',
+      demoAccount: 'admin_demo',
+      icon: ShieldCheck,
+    },
+    {
+      code: 'CAREGIVER',
+      title: '我是护工',
+      description: '学习护理课程、参加考核并查看学习进度',
+      demoAccount: 'caregiver_demo',
+      icon: BookOpen,
+    },
+  ];
+
+  function selectRole(role: LoginRole, demoAccount: string) {
+    setSelectedRole(role);
+    setUsername(demoAccount);
+    setError('');
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -164,6 +195,9 @@ function Login({ onHome, onSignedIn }: {
         body: JSON.stringify({ username: username.trim(), password }),
       });
       const currentUser = await api<CurrentUser>('/auth/me', {}, login.token);
+      if (currentUser.mainRoleCode !== selectedRole) {
+        throw new Error(`该账号不是${selectedRole === 'ADMIN' ? '管理员' : '护工'}账号，请重新选择身份。`);
+      }
       onSignedIn(login, currentUser);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : '登录失败，请稍后重试。');
@@ -183,7 +217,7 @@ function Login({ onHome, onSignedIn }: {
               <ArrowLeft size={17} aria-hidden="true" /> 返回首页
             </button>
             <p className="mt-20 text-xs font-semibold uppercase tracking-[0.22em] text-teal-200">CareNexus unified access</p>
-            <h1 className="mt-5 max-w-lg text-5xl font-semibold leading-[1.05] tracking-[-0.05em]">从同一个入口，连接培训管理与护理学习。</h1>
+            <h1 className="mt-5 max-w-lg text-5xl font-semibold leading-[1.05] tracking-[-0.05em]">选择你的身份，进入对应工作台。</h1>
           </div>
           <p className="relative max-w-md text-sm leading-7 text-slate-200">管理员维护专业培训内容，护工随时学习、考核并获得AI辅助，让护理知识真正落实到日常工作。</p>
         </section>
@@ -194,14 +228,35 @@ function Login({ onHome, onSignedIn }: {
           </button>
           <div className="mb-10">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Welcome back</p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-slate-950">登录工作台</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-500">使用管理员或护工账号登录护理培训平台。</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-slate-950">选择登录身份</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-500">系统会根据所选身份进入对应的管理或学习空间。</p>
           </div>
 
           <form className="grid gap-5" onSubmit={handleSubmit}>
+            <fieldset className="grid gap-3">
+              <legend className="mb-1 text-sm font-medium text-slate-700">你的身份</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {roleOptions.map((option) => {
+                  const Icon = option.icon;
+                  const active = selectedRole === option.code;
+                  return (
+                    <button
+                      key={option.code}
+                      className={`min-h-28 rounded-xl border p-4 text-left transition ${active ? 'border-teal-700 bg-teal-50 ring-2 ring-teal-100' : 'border-slate-200 bg-white hover:border-slate-400'}`}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => selectRole(option.code, option.demoAccount)}
+                    >
+                      <span className="flex items-center gap-2 font-semibold text-slate-900"><Icon size={19} aria-hidden="true" />{option.title}</span>
+                      <span className="mt-2 block text-xs leading-5 text-slate-500">{option.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               账号
-              <input className="min-h-12 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" required />
+              <input className="min-h-12 rounded-xl border border-slate-300 px-4 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" placeholder={selectedRole === 'ADMIN' ? '管理员账号' : '护工账号'} required />
             </label>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               密码
@@ -209,7 +264,7 @@ function Login({ onHome, onSignedIn }: {
             </label>
             {error && <p className="flex gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert"><CircleAlert size={18} aria-hidden="true" />{error}</p>}
             <button className="mt-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-teal-700 px-5 font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={pending}>
-              {pending ? '正在验证…' : '进入工作台'} <ArrowRight size={18} aria-hidden="true" />
+              {pending ? '正在验证…' : `进入${selectedRole === 'ADMIN' ? '管理' : '护工'}工作台`} <ArrowRight size={18} aria-hidden="true" />
             </button>
           </form>
           <p className="mt-auto pt-10 text-xs leading-5 text-slate-400">CareNexus 使用加密认证保护账号安全。</p>
