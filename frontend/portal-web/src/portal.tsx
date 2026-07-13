@@ -1,6 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import {
-  ArrowLeft,
   ArrowRight,
   BookOpen,
   Bot,
@@ -222,9 +221,6 @@ function Login({ onHome, onSignedIn }: {
           <div className="absolute inset-0 bg-cover bg-center opacity-40" style={{ backgroundImage: "url('/assets/gene_grass.png')" }} />
           <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(15,23,42,0.96),rgba(15,118,110,0.64))]" />
           <div className="relative">
-            <button className="inline-flex items-center gap-2 text-sm text-slate-200 transition hover:text-white" type="button" onClick={onHome}>
-              <ArrowLeft size={17} aria-hidden="true" /> 返回首页
-            </button>
             <p className="mt-20 text-xs font-semibold uppercase tracking-[0.22em] text-teal-200">CareNexus unified access</p>
             <h1 className="mt-5 max-w-lg text-5xl font-semibold leading-[1.05] tracking-[-0.05em]">选择你的身份，进入对应工作台。</h1>
           </div>
@@ -232,9 +228,6 @@ function Login({ onHome, onSignedIn }: {
         </section>
 
         <section className="flex flex-col p-7 sm:p-12">
-          <button className="mb-12 inline-flex items-center gap-2 self-start text-sm text-slate-600 lg:hidden" type="button" onClick={onHome}>
-            <ArrowLeft size={17} aria-hidden="true" /> 返回首页
-          </button>
           <div className="mb-10">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">Welcome back</p>
             <h2 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-slate-950">选择登录身份</h2>
