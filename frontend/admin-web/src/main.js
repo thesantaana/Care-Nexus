@@ -17,6 +17,7 @@ async function bootstrap() {
     try {
       await acceptPortalToken(portalToken)
       clearPortalTokenFromAddress()
+      await router.replace('/')
     } catch {
       redirectToPortal()
       return
