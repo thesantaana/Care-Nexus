@@ -1,85 +1,47 @@
 <template>
-  <section class="page page-wide">
-    <div class="hero-card dashboard-hero">
+  <section class="page page-wide admin-module">
+    <header class="admin-welcome">
       <div>
         <p class="eyebrow">
-          管理工作台
-        </p>
-        <h2>{{ greeting }}，{{ session.user?.displayName || session.user?.username }}</h2>
-        <p>管理培训资料、内容分类和学习资源，为护工提供持续、规范的培训支持。</p>
-      </div>
-      <div
-        class="identity-card"
-        aria-label="当前身份信息"
-      >
-        <span>当前身份</span>
-        <strong>{{ session.user?.mainRoleName }}</strong>
-      </div>
+          管理概览
+        </p><h2>{{ greeting }}，{{ session.user?.displayName || session.user?.username }}</h2><p>集中管理护理培训课程、考核、AI题目草稿和护工培训结果。</p>
+      </div><span class="admin-role">{{ session.user?.mainRoleName }}</span>
+    </header>
+    <div class="admin-metrics admin-metrics-four">
+      <article><strong>{{ stats.resources }}</strong><span>培训课程</span></article><article><strong>{{ stats.exams }}</strong><span>课程考核</span></article><article><strong>{{ stats.pendingDrafts }}</strong><span>待审核AI草稿</span></article><article><strong>{{ stats.passedCaregivers }}</strong><span>已通过培训护工</span></article>
     </div>
-
-    <div class="section-heading">
-      <div>
-        <p class="eyebrow">
-          可访问模块
-        </p>
-        <h2>从这里继续工作</h2>
-      </div>
-    </div>
-
     <div
-      v-if="workspaceCards.length"
-      class="workspace-grid"
+      v-if="error"
+      class="admin-alert"
     >
-      <article
-        v-for="card in workspaceCards"
+      {{ error }}
+    </div>
+    <div class="admin-dashboard-grid">
+      <RouterLink
+        v-for="card in cards"
         :key="card.to"
-        class="workspace-card"
+        class="admin-module-link"
+        :to="card.to"
       >
-        <div class="workspace-card-icon">
-          <AppIcon :name="card.icon" />
-        </div>
-        <div class="workspace-card-copy">
-          <h3>{{ card.title }}</h3>
-          <p>{{ card.description }}</p>
-        </div>
-        <RouterLink
-          class="text-link"
-          :to="card.to"
-        >
-          进入模块
-          <AppIcon name="chevron" />
-        </RouterLink>
-      </article>
-    </div>
-
-    <div
-      v-else
-      class="empty-state"
-    >
-      <AppIcon name="shield" />
-      <h2>暂无可访问模块</h2>
-      <p>账号已登录，但服务端尚未分配业务权限。请联系管理员检查角色配置。</p>
+        <AppIcon :name="card.icon" /><div><h3>{{ card.title }}</h3><p>{{ card.description }}</p></div><AppIcon name="chevron" />
+      </RouterLink>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
-import { hasAnyPermission, session } from '../auth/session.js'
-
-const hour = new Date().getHours()
-const greeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好'
-
+import { session } from '../auth/session.js'
+import { listResources } from '../api/training.js'
+import { listCaregiverScores, listDrafts, listExams } from '../api/adminTraining.js'
+const hour = new Date().getHours(); const greeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好'
+const stats = reactive({ resources: 0, exams: 0, pendingDrafts: 0, passedCaregivers: 0 }); const error = ref('')
 const cards = [
-  {
-    title: '护理培训',
-    description: '维护培训分类、标签和文章、视频、PPT等学习资源。',
-    to: '/training/resources',
-    icon: 'book',
-    permissions: ['training:resource:view', 'training:resource:manage']
-  }
+  { title: '课程管理', description: '维护课程、分类、标签、封面和发布状态。', to: '/training/resources', icon: 'book' },
+  { title: '题库与考核', description: '按课程维护独立考核和60分及格规则。', to: '/training/exams', icon: 'exam' },
+  { title: 'AI草稿审核', description: '审核基于培训资料生成的题目草稿。', to: '/training/ai-drafts', icon: 'spark' },
+  { title: '培训成绩', description: '查看护工每课最高分、平均分和通过状态。', to: '/training/scores', icon: 'chart' }
 ]
-
-const workspaceCards = computed(() => cards.filter((card) => hasAnyPermission(card.permissions)))
+onMounted(async () => { try { const [resources, exams, drafts, scores] = await Promise.all([listResources({ pageNo: 1, pageSize: 1 }), listExams(), listDrafts({ draftStatus: 'DRAFT', pageNo: 1, pageSize: 1 }), listCaregiverScores()]); stats.resources = resources?.total || 0; stats.exams = exams?.length || 0; stats.pendingDrafts = drafts?.total || 0; stats.passedCaregivers = scores?.filter((item) => item.trainingPassed).length || 0 } catch (e) { error.value = e.message } })
 </script>

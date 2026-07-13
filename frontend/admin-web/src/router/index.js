@@ -55,6 +55,24 @@ const routes = [
     meta: { title: '分类与标签', permissions: ['training:resource:manage'] }
   },
   {
+    path: '/training/exams',
+    name: 'training-exams',
+    component: () => import('../views/training/TrainingExamsView.vue'),
+    meta: { title: '题库与考核', permissions: ['training:resource:manage'] }
+  },
+  {
+    path: '/training/ai-drafts',
+    name: 'training-ai-drafts',
+    component: () => import('../views/training/TrainingAiDraftsView.vue'),
+    meta: { title: 'AI草稿审核', permissions: ['training:resource:manage'] }
+  },
+  {
+    path: '/training/scores',
+    name: 'training-scores',
+    component: () => import('../views/training/TrainingScoresView.vue'),
+    meta: { title: '培训成绩', permissions: ['training:resource:manage'] }
+  },
+  {
     path: '/forbidden',
     name: 'forbidden',
     component: () => import('../views/ForbiddenView.vue'),

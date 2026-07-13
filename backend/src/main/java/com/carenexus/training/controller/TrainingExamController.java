@@ -18,7 +18,9 @@ import com.carenexus.training.vo.LearningAccessResponse;
 import com.carenexus.training.vo.LearningRecordResponse;
 import com.carenexus.training.vo.QuestionResponse;
 import com.carenexus.training.vo.TrainingScoreSummaryResponse;
+import com.carenexus.training.vo.CaregiverTrainingScoreResponse;
 import javax.validation.Valid;
+import java.util.List;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -98,9 +100,19 @@ public class TrainingExamController {
         return ApiResponse.success(learningService.myLearningRecord());
     }
 
+    @GetMapping("/exams")
+    public ApiResponse<List<ExamResponse>> listExams() {
+        return ApiResponse.success(examManageService.listExams());
+    }
+
     @GetMapping("/learning/scores")
     public ApiResponse<TrainingScoreSummaryResponse> myCourseScores() {
         return ApiResponse.success(scoreService.myCourseScores());
+    }
+
+    @GetMapping("/learning/scores/users")
+    public ApiResponse<List<CaregiverTrainingScoreResponse>> caregiverScores() {
+        return ApiResponse.success(scoreService.caregiverScores());
     }
 
     @GetMapping("/exams/{examId}")

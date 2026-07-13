@@ -16,6 +16,9 @@ import com.carenexus.training.mapper.TrainingExamQuestionMapper;
 import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.support.TrainingText;
 import com.carenexus.training.vo.ExamResponse;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.springframework.stereotype.Service;
@@ -60,6 +63,14 @@ public class TrainingExamManageService {
         exam.setIsDeleted(ACTIVE_FLAG);
         examMapper.insert(exam);
         return assembler.toExamResponse(exam, true);
+    }
+
+    public List<ExamResponse> listExams() {
+        accessPolicy.requireManage();
+        return examMapper.selectList(new QueryWrapper<TrainingExam>()
+                        .eq("is_deleted", ACTIVE_FLAG)
+                        .orderByDesc("updated_at").orderByDesc("id"))
+                .stream().map(exam -> assembler.toExamResponse(exam, true)).collect(Collectors.toList());
     }
 
     public ExamResponse updateExam(Long id, ExamRequest request) {
