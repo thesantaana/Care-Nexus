@@ -161,6 +161,18 @@ CREATE TABLE learning_access_log (
   KEY idx_learning_access_user_time (user_id, accessed_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE training_note (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  resource_id BIGINT NOT NULL,
+  note_title VARCHAR(120) NOT NULL,
+  note_content LONGTEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_training_note_user_resource (user_id, resource_id),
+  KEY idx_training_note_user_updated (user_id, updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE training_exam (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   exam_name VARCHAR(128) NOT NULL,
@@ -259,6 +271,8 @@ ALTER TABLE training_resource_tag ADD CONSTRAINT fk_training_resource_tag_tag FO
 ALTER TABLE learning_record ADD CONSTRAINT fk_learning_record_user FOREIGN KEY (user_id) REFERENCES sys_user(id);
 ALTER TABLE learning_access_log ADD CONSTRAINT fk_learning_access_user FOREIGN KEY (user_id) REFERENCES sys_user(id);
 ALTER TABLE learning_access_log ADD CONSTRAINT fk_learning_access_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
+ALTER TABLE training_note ADD CONSTRAINT fk_training_note_user FOREIGN KEY (user_id) REFERENCES sys_user(id);
+ALTER TABLE training_note ADD CONSTRAINT fk_training_note_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
 ALTER TABLE exam_question ADD CONSTRAINT fk_exam_question_resource FOREIGN KEY (resource_id) REFERENCES training_resource(id);
 ALTER TABLE exam_question ADD CONSTRAINT fk_exam_question_ai_draft FOREIGN KEY (source_ai_draft_id) REFERENCES ai_draft(id);
 ALTER TABLE exam_question_option ADD CONSTRAINT fk_question_option_question FOREIGN KEY (question_id) REFERENCES exam_question(id);

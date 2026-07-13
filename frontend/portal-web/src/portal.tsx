@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   UserRound,
 } from 'lucide-react';
+import { RichNoteEditor } from './RichNoteEditor';
 
 type PortalRoute = 'login' | 'workspace';
 type LoginRole = 'ADMIN' | 'CAREGIVER';
@@ -358,6 +359,15 @@ type LearningLibrary = {
   notes: Record<string, string>;
 };
 
+type TrainingNote = {
+  id: number;
+  resourceId: number;
+  resourceTitle: string;
+  title: string;
+  content: string;
+  updatedAt: string;
+};
+
 type ProfileCustomization = {
   displayName: string;
   avatarDataUrl: string;
@@ -382,7 +392,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   const [aiAnswer, setAiAnswer] = useState('');
   const [aiError, setAiError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
-  const [noteDraft, setNoteDraft] = useState('');
+  const [notes, setNotes] = useState<TrainingNote[]>([]);
   const [profileMessage, setProfileMessage] = useState('');
   const [profile, setProfile] = useState<ProfileCustomization>(() => {
     try {
@@ -431,17 +441,17 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
 
   function openNote(resource: TrainingResource) {
     setEditingResource(resource);
-    setNoteDraft(library.notes[String(resource.id)] || '');
   }
 
-  function saveCurrentNote() {
-    if (!editingResource) return;
-    const notes = { ...library.notes };
-    if (noteDraft.trim()) notes[String(editingResource.id)] = noteDraft.trim();
-    else delete notes[String(editingResource.id)];
-    updateLibrary({ ...library, notes });
-    setEditingResource(null);
+  async function refreshNotes() {
+    try {
+      setNotes(await api<TrainingNote[]>('/training/notes', {}, token));
+    } catch {
+      setNotes([]);
+    }
   }
+
+  useEffect(() => { refreshNotes(); }, [token]);
 
   async function runAi(action: 'qa' | 'summary' | 'suggestions') {
     if (!aiResource || aiLoading) return;
@@ -503,11 +513,11 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
         </>}
 
         {activeSection === 'progress' && <SimpleLearningSection icon={<ChartNoAxesColumnIncreasing />} title="学习进度" description="集中查看当前账号的课程完成情况。"><div className="grid gap-4 sm:grid-cols-3"><Metric label="课程总数" value={resources.length} /><Metric label="已加入课程" value={library.favorites.length} /><Metric label="已完成" value={library.completed.length} /></div></SimpleLearningSection>}
-        {activeSection === 'notes' && <SimpleLearningSection icon={<NotebookPen />} title="学习笔记" description="笔记仅保存在当前设备和账号下。"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{Object.entries(library.notes).map(([id, note]) => { const resource = resources.find((item) => item.id === Number(id)); return <article className="rounded-lg border border-slate-200 bg-white p-5" key={id}><small className="text-teal-700">课程笔记</small><h3 className="mt-2 font-semibold">{resource?.title || `培训课程 #${id}`}</h3><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-500">{note}</p>{resource && <button className="mt-4 text-xs font-semibold text-teal-700" type="button" onClick={() => openNote(resource)}>编辑笔记</button>}</article>; })}{Object.keys(library.notes).length === 0 && <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-sm text-slate-500">还没有笔记，请从课程卡片点击“记笔记”。</p>}</div></SimpleLearningSection>}
+        {activeSection === 'notes' && <SimpleLearningSection icon={<NotebookPen />} title="学习笔记" description="笔记和图片保存在当前账号中，可在课程中继续编辑。"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{notes.map((note) => { const resource = resources.find((item) => item.id === note.resourceId); return <article className="rounded-lg border border-slate-200 bg-white p-5" key={note.id}><small className="text-teal-700">{note.resourceTitle}</small><h3 className="mt-2 font-semibold">{note.title}</h3><p className="mt-3 text-xs text-slate-400">最近更新：{new Date(note.updatedAt).toLocaleString('zh-CN')}</p>{resource && <button className="mt-4 text-xs font-semibold text-teal-700" type="button" onClick={() => openNote(resource)}>打开笔记</button>}</article>; })}{notes.length === 0 && <div className="col-span-full min-h-[520px] border-t border-slate-200 bg-white px-8 py-16"><div className="mx-auto max-w-4xl"><p className="border-b border-slate-100 pb-8 text-3xl font-semibold text-slate-300">请输入标题</p><p className="mt-7 text-sm text-slate-400">还没有笔记，请从课程卡片点击“记笔记”开始编辑。</p></div></div>}</div></SimpleLearningSection>}
         {activeSection === 'profile' && <SimpleLearningSection icon={<UserRound />} title="我的账号" description="维护当前设备上显示的头像和姓名。"><div className="max-w-2xl rounded-lg border border-slate-200 bg-white p-6 sm:p-8"><div className="flex flex-col gap-7 sm:flex-row"><div className="relative h-24 w-24 shrink-0">{profile.avatarDataUrl ? <img className="h-24 w-24 rounded-full object-cover" src={profile.avatarDataUrl} alt="个人头像" /> : <span className="grid h-24 w-24 place-items-center rounded-full bg-teal-100 text-3xl font-bold text-teal-800">{profile.displayName.slice(0, 1)}</span>}<label className="absolute bottom-0 right-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-teal-700 text-white shadow-lg" title="更换头像"><Camera size={17} /><input className="sr-only" type="file" accept="image/*" onChange={handleAvatarChange} /></label></div><div className="grid flex-1 gap-5"><label className="grid gap-2 text-sm font-medium text-slate-700">显示姓名<input className="min-h-11 rounded-md border border-slate-300 px-3 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={profile.displayName} maxLength={30} onChange={(event) => setProfile({ ...profile, displayName: event.target.value })} /></label><div className="grid gap-1 text-sm"><span className="text-slate-500">登录账号</span><strong>{user.username}</strong></div><div className="grid gap-1 text-sm"><span className="text-slate-500">身份</span><strong>{user.mainRoleName}</strong></div><button className="min-h-11 justify-self-start rounded-md bg-teal-700 px-5 text-sm font-semibold text-white" type="button" onClick={() => saveProfile(profile)}>保存个人资料</button>{profileMessage && <p className="text-sm text-teal-700" role="status">{profileMessage}</p>}</div></div></div></SimpleLearningSection>}
       </div>
 
-      {editingResource && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-5" role="dialog" aria-modal="true" aria-labelledby="note-dialog-title"><div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-2xl"><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">Course note</p><h2 className="mt-2 text-xl font-semibold" id="note-dialog-title">{editingResource.title}</h2><textarea className="mt-5 min-h-40 w-full resize-y rounded-lg border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder="记录课程重点、操作要点或需要复习的内容…" maxLength={2000} /><div className="mt-4 flex justify-end gap-3"><button className="min-h-10 rounded-md px-4 text-sm text-slate-600" type="button" onClick={() => setEditingResource(null)}>取消</button><button className="min-h-10 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white" type="button" onClick={saveCurrentNote}>保存笔记</button></div></div></div>}
+      {editingResource && <RichNoteEditor resourceId={editingResource.id} resourceTitle={editingResource.title} token={token} onClose={() => setEditingResource(null)} onSaved={refreshNotes} />}
       {aiResource && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-5" role="dialog" aria-modal="true" aria-labelledby="ai-dialog-title"><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">AI training</p><h2 className="mt-2 text-xl font-semibold" id="ai-dialog-title">{aiResource.title}</h2></div><button className="text-sm text-slate-500" type="button" onClick={() => setAiResource(null)}>关闭</button></div><div className="mt-5 flex flex-wrap gap-2"><button className="min-h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold" type="button" disabled={aiLoading} onClick={() => runAi('summary')}>总结要点</button><button className="min-h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold" type="button" disabled={aiLoading} onClick={() => runAi('suggestions')}>学习建议</button></div><textarea className="mt-4 min-h-28 w-full resize-y rounded-lg border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={aiQuestion} onChange={(event) => setAiQuestion(event.target.value)} placeholder="针对当前培训资料提问…" maxLength={500} /><button className="mt-3 min-h-10 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white disabled:opacity-50" type="button" disabled={aiLoading || !aiQuestion.trim()} onClick={() => runAi('qa')}>{aiLoading ? '生成中…' : '发送问题'}</button>{aiError && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">{aiError}</p>}{aiAnswer && <div className="mt-5 whitespace-pre-wrap rounded-md border-l-4 border-teal-600 bg-teal-50 p-4 text-sm leading-7 text-slate-700"><p>{aiAnswer}</p><small className="mt-3 block text-slate-500">AI内容仅作护理培训辅助，请以已发布培训资料为准。</small></div>}</div></div>}
     </main>
   );

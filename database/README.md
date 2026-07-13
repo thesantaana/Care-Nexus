@@ -19,6 +19,6 @@ database/
 
 目标数据库：MySQL 8.0。
 
-当前物理表数量：36 张。
+当前轻量版物理表数量：22 张（原21张核心表及新增的 `training_note`）。
 
 PowerDesigner `.pdm` 文件和 CDM/PDM 截图需在安装 PowerDesigner 的环境中生成；当前仓库不得包含伪造模型文件。

@@ -21,7 +21,7 @@
 - 已新增并审核通过 `docs/test/测试用例.md`，T-010 当前为 `DONE` 状态。
 - 已新增后端工程骨架 `backend/`，包含 Spring Boot 2.7.x、统一响应、全局异常、基础安全配置、健康检查、文件存储接口、AI适配接口和业务模块包结构；已按复审意见将领域数据权限接口拆分到 `doctor` 和 `care` 模块。
 - 已新增前端工程骨架 `frontend/admin-web/` 和 `frontend/mobile-web/`，分别承载 PC 工作台和移动端工作台的基础路由、布局、请求封装和环境样例。
-- 已新增数据库设计和初始化脚本目录 `database/`，包含 36 张表的建表脚本、演示字典/账号数据规划、数据字典说明和 CDM/PDM 说明目录。
+- 轻量版数据库初始化脚本当前包含22张表，其中新增 `training_note` 保存账号级富文本课程笔记。
 - 尚未存在 Docker、nginx 或部署配置。
 - 已存在后端基础测试骨架；尚未实现详细业务测试用例的自动化执行。
 
@@ -30,7 +30,7 @@
 | 类别 | 要求/计划 | 当前仓库状态 |
 |---|---|---|
 | 后端 | Java 8+、Spring Boot、Spring MVC、MyBatis 或 MyBatisPlus | 已创建 Java 8 + Spring Boot 2.7.18 + MyBatis-Plus 3.5.5 工程骨架 |
-| 数据库 | MySQL 8.0 | 当前初始化脚本设计为 36 张表、53 个外键、18 个唯一约束；T-018 调整后的正式 MySQL 重导入和约束核验纳入 T-023，不在本轮声称已执行 |
+| 数据库 | MySQL 8.0 | 轻量版当前为22张表；培训笔记表已在本地部署库执行建表、保存和读取验证，完整重导入和约束核验仍纳入 T-023 |
 | 缓存 | Redis | 设计为按需使用，当前骨架未强制接入 Redis |
 | 前端 | JavaScript、Vue | 已创建 Vue 3 + Vite 的 PC 管理端和移动端工程骨架 |
 | 测试 | JUnit 5、JMeter、前端 lint/build | 已创建后端 JUnit 5 骨架测试、Checkstyle、前端 ESLint，并完成后端 verify、前端 lint/build；详细业务测试尚未执行 |

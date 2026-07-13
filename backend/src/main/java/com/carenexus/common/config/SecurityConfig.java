@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/api/v1/health").permitAll()
                 .antMatchers("/api/v1/auth/login").permitAll()
+                .antMatchers("/note-media/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
