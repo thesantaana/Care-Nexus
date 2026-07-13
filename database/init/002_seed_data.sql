@@ -57,25 +57,28 @@ INSERT INTO training_tag (tag_name) VALUES
 ('感染防控'),
 ('安全规范');
 
-INSERT INTO training_resource (resource_type, storage_mode, category_id, title, summary, content, external_url, duration_seconds, resource_status, published_at, created_by)
+INSERT INTO training_resource (resource_type, storage_mode, category_id, title, summary, cover_url, content, external_url, duration_seconds, resource_status, published_at, created_by)
 SELECT 'ARTICLE', 'TEXT', c.id, '老年人压疮风险观察与日常预防',
        '介绍压疮风险观察、变换体位、保持皮肤和床单位清洁干燥、使用减压器具和记录要求。',
+       '/assets/course-pressure-care.png',
        '压疮风险较高的老年人包括长期卧床、久坐、活动受限或感觉减退者。护工应观察受压部位皮肤颜色、干燥程度和有无破损，检查纸尿裤、衣物和被褥是否干燥平整。应按照护理计划协助变换体位，保持皮肤清洁干燥，整理床铺并清除碎屑，按要求使用减压器具。发现持续发红、破损、水疱、渗液、异味或疼痛，应立即报告护理负责人或医护人员，并做好记录。',
        NULL, 900, 'PUBLISHED', NOW(), u.id
 FROM training_category c JOIN sys_user u
 WHERE c.category_name = '基础护理' AND u.username = 'admin_demo';
 
-INSERT INTO training_resource (resource_type, storage_mode, category_id, title, summary, content, external_url, duration_seconds, resource_status, published_at, created_by)
+INSERT INTO training_resource (resource_type, storage_mode, category_id, title, summary, cover_url, content, external_url, duration_seconds, resource_status, published_at, created_by)
 SELECT 'ARTICLE', 'TEXT', c.id, '老年人跌倒预防与安全陪护',
        '介绍跌倒风险、环境整理、起身行走协助、药物反应观察和跌倒后应急处理原则。',
+       '/assets/course-fall-prevention.png',
        '老年人跌倒可能导致骨折、头部损伤和活动能力下降。居室、厕所、走廊和活动区域应保持地面干燥、通道无障碍物。清洁地面前及过程中应放置明显安全警示标志。常用物品应放在容易拿到的位置。高风险老人起床、行走和如厕时，应使用合适助行器具或由工作人员协助，不催促老人快速起身。跌倒发生后不要立即强行扶起，应先观察意识、呼吸、疼痛、出血和肢体异常，立即呼叫专业人员并按流程记录。',
        NULL, 900, 'PUBLISHED', NOW(), u.id
 FROM training_category c JOIN sys_user u
 WHERE c.category_name = '安全照护' AND u.username = 'admin_demo';
 
-INSERT INTO training_resource (resource_type, storage_mode, category_id, title, summary, content, external_url, duration_seconds, resource_status, published_at, created_by)
+INSERT INTO training_resource (resource_type, storage_mode, category_id, title, summary, cover_url, content, external_url, duration_seconds, resource_status, published_at, created_by)
 SELECT 'ARTICLE', 'TEXT', c.id, '照护工作中的手卫生五个关键时刻',
        '讲解照护过程中必须执行手卫生的五个关键时刻，以及洗手、手消毒和手套使用原则。',
+       '/assets/course-hand-hygiene.png',
        '手卫生是阻断病原体通过双手传播的重要措施。五个关键时刻包括接触老年人之前、清洁或无菌相关操作之前、可能接触血液或排泄物等体液之后、接触老年人之后、接触老年人周围环境和物品之后。双手有可见污物时应使用流动水和洗手液洗手；双手无可见污物且机构允许时可使用速干手消毒剂。摘除手套后仍应进行手卫生，手套不能代替手卫生。',
        NULL, 720, 'PUBLISHED', NOW(), u.id
 FROM training_category c JOIN sys_user u
