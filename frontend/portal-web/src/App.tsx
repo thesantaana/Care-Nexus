@@ -305,10 +305,6 @@ function RevealLayer({ image, cursorX, cursorY }: RevealLayerProps) {
 }
 
 function Navigation({ onOpenPortal }: { onOpenPortal: () => void }) {
-  const navItems = [
-    { label: '护理培训', href: '#liquidity-network' },
-  ];
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between p-4 sm:p-5">
       <a href="#home" className="flex items-center gap-2.5" aria-label="CareNexus 首页">
@@ -317,18 +313,6 @@ function Navigation({ onOpenPortal }: { onOpenPortal: () => void }) {
         </svg>
         <span className="text-gray-900 text-2xl font-playfair italic">CareNexus</span>
       </a>
-
-      <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 bg-white/70 backdrop-blur-xl border border-slate-300/70 shadow-[0_18px_60px_rgba(148,163,184,0.22)] rounded-full px-2 py-2 items-center gap-1">
-        {navItems.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="rounded-full bg-slate-900 px-5 py-1.5 text-sm font-medium text-white shadow-sm shadow-slate-400/30 transition-colors hover:bg-slate-700"
-          >
-            {item.label}
-          </a>
-        ))}
-      </div>
 
       <button
         className="hidden md:block bg-slate-900 text-white text-sm font-semibold px-6 py-2.5 rounded-full shadow-[0_16px_40px_rgba(15,23,42,0.16)] transition-all hover:bg-slate-700 hover:shadow-[0_18px_48px_rgba(56,189,248,0.24)]"

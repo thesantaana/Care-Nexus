@@ -93,7 +93,7 @@ public class AuthUserService implements CurrentUserService, PermissionService {
             throw new BusinessException(ErrorCode.AUTH_FORBIDDEN, "Role is not available");
         }
         Set<String> permissionCodes = new LinkedHashSet<>(sysPermissionMapper.selectPermissionCodesByRoleId(role.getId()));
-        return new CurrentUser(user.getId(), user.getUsername(), user.getRealName(), role.getRoleCode(),
+        return new CurrentUser(user.getId(), user.getUsername(), user.getRealName(), user.getAvatarUrl(), role.getRoleCode(),
                 role.getRoleName(), user.getAccountStatus(), permissionCodes);
     }
 }

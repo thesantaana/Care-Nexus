@@ -13,6 +13,7 @@ public class LoginResponse {
     private Long userId;
     private String username;
     private String displayName;
+    private String avatarUrl;
     private String mainRoleCode;
     private String mainRoleName;
     private List<String> permissionCodes = new ArrayList<>();
@@ -71,6 +72,14 @@ public class LoginResponse {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public String getMainRoleCode() {

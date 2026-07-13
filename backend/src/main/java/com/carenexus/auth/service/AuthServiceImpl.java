@@ -87,6 +87,7 @@ public class AuthServiceImpl implements AuthService {
         response.setUserId(currentUser.getUserId());
         response.setUsername(currentUser.getUsername());
         response.setDisplayName(currentUser.getDisplayName());
+        response.setAvatarUrl(currentUser.getAvatarUrl());
         response.setMainRoleCode(currentUser.getMainRoleCode());
         response.setMainRoleName(currentUser.getMainRoleName());
         response.setPermissionCodes(new ArrayList<>(currentUser.getPermissionCodes()));
@@ -98,6 +99,7 @@ public class AuthServiceImpl implements AuthService {
         response.setUserId(currentUser.getUserId());
         response.setUsername(currentUser.getUsername());
         response.setDisplayName(currentUser.getDisplayName());
+        response.setAvatarUrl(currentUser.getAvatarUrl());
         response.setMainRoleCode(currentUser.getMainRoleCode());
         response.setMainRoleName(currentUser.getMainRoleName());
         response.setPermissionCodes(new ArrayList<>(currentUser.getPermissionCodes()));

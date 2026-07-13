@@ -23,6 +23,7 @@ type CurrentUser = {
   userId: number;
   username: string;
   displayName: string;
+  avatarUrl: string;
   mainRoleCode: string;
   mainRoleName: string;
   permissionCodes: string[];
@@ -39,6 +40,7 @@ type TrainingResource = {
   summary: string;
   resourceType: string;
   categoryName: string;
+  coverUrl: string;
   status: string;
 };
 
@@ -377,9 +379,9 @@ function CaregiverLearningWorkspace({ user, resources, loading, resourceError, o
   const [profileMessage, setProfileMessage] = useState('');
   const [profile, setProfile] = useState<ProfileCustomization>(() => {
     try {
-      return { displayName: user.displayName, avatarDataUrl: '', ...JSON.parse(localStorage.getItem(profileKey) || '{}') };
+      return { displayName: user.displayName, avatarDataUrl: user.avatarUrl || '/assets/default-avatar.png', ...JSON.parse(localStorage.getItem(profileKey) || '{}') };
     } catch {
-      return { displayName: user.displayName, avatarDataUrl: '' };
+      return { displayName: user.displayName, avatarDataUrl: user.avatarUrl || '/assets/default-avatar.png' };
     }
   });
   const [library, setLibrary] = useState<LearningLibrary>(() => {
@@ -468,7 +470,7 @@ function CaregiverLearningWorkspace({ user, resources, loading, resourceError, o
           {!loading && !resourceError && visibleResources.length > 0 && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleResources.map((resource) => {
             const favorite = library.favorites.includes(resource.id);
             const completed = library.completed.includes(resource.id);
-            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className={`flex h-40 flex-col justify-between p-5 text-white ${resource.resourceType === 'VIDEO' ? 'bg-[#215d72]' : resource.resourceType === 'PPT' ? 'bg-[#755f2a]' : 'bg-[#12675f]'}`}><span className="text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong><small className="self-end text-white/60">CareNexus</small></div><button className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/30 backdrop-blur ${favorite ? 'bg-teal-600 text-white' : 'bg-slate-900/25 text-white'}`} type="button" aria-label={favorite ? '移出我的课程' : '加入我的课程'} onClick={() => toggleList('favorites', resource.id)}><Plus className={`transition ${favorite ? 'rotate-45' : ''}`} size={19} /></button><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs ${completed ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>{completed ? '已完成' : favorite ? '已加入' : '未加入'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="text-xs font-semibold text-teal-700" type="button" onClick={() => toggleList('completed', resource.id)}>{completed ? '重新学习' : '标记完成'}</button></div></div></div></article>;
+            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className="relative flex h-40 flex-col justify-between overflow-hidden bg-cover bg-center p-5 text-white" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.86), rgba(15,118,110,.55)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong><small className="relative z-10 self-end text-white/70">CareNexus</small></div><button className={`absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-white/30 backdrop-blur ${favorite ? 'bg-teal-600 text-white' : 'bg-slate-900/25 text-white'}`} type="button" aria-label={favorite ? '移出我的课程' : '加入我的课程'} onClick={() => toggleList('favorites', resource.id)}><Plus className={`transition ${favorite ? 'rotate-45' : ''}`} size={19} /></button><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs ${completed ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>{completed ? '已完成' : favorite ? '已加入' : '未加入'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="text-xs font-semibold text-teal-700" type="button" onClick={() => toggleList('completed', resource.id)}>{completed ? '重新学习' : '标记完成'}</button></div></div></div></article>;
           })}</div>}
           {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">可以切换到全部课程继续浏览。</p></div>}
         </>}

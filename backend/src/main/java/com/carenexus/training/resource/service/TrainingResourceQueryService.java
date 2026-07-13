@@ -162,6 +162,7 @@ public class TrainingResourceQueryService {
         response.setCategory(toCategoryResponse(categories.get(resource.getCategoryId())));
         response.setTitle(resource.getTitle());
         response.setSummary(resource.getSummary());
+        response.setCoverUrl(resource.getCoverUrl());
         response.setContent(resource.getContent());
         response.setFileResourceId(resource.getFileResourceId());
         response.setExternalUrl(resource.getExternalUrl());
@@ -185,6 +186,7 @@ public class TrainingResourceQueryService {
         response.setCategoryName(category == null ? null : category.getCategoryName());
         response.setTitle(resource.getTitle());
         response.setSummary(resource.getSummary());
+        response.setCoverUrl(resource.getCoverUrl());
         response.setDurationSeconds(resource.getDurationSeconds());
         response.setStatus(resource.getResourceStatus());
         response.setPublishedAt(resource.getPublishedAt());

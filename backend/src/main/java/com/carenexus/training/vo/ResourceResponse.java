@@ -13,6 +13,7 @@ public class ResourceResponse {
     private CategoryResponse category;
     private String title;
     private String summary;
+    private String coverUrl;
     private String content;
     private Long fileResourceId;
     private String externalUrl;
@@ -77,6 +78,14 @@ public class ResourceResponse {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
+    }
+
+    public void setCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
     }
 
     public String getContent() {

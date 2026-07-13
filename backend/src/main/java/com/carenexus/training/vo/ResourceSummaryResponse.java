@@ -13,6 +13,7 @@ public class ResourceSummaryResponse {
     private String categoryName;
     private String title;
     private String summary;
+    private String coverUrl;
     private Integer durationSeconds;
     private String status;
     private LocalDateTime publishedAt;
@@ -72,6 +73,14 @@ public class ResourceSummaryResponse {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
+    }
+
+    public void setCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
     }
 
     public Integer getDurationSeconds() {

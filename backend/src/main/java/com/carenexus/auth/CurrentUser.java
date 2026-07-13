@@ -9,6 +9,7 @@ public class CurrentUser {
     private Long userId;
     private String username;
     private String displayName;
+    private String avatarUrl;
     private String mainRoleCode;
     private String mainRoleName;
     private String accountStatus;
@@ -19,9 +20,16 @@ public class CurrentUser {
 
     public CurrentUser(Long userId, String username, String displayName, String mainRoleCode,
             String mainRoleName, String accountStatus, Set<String> permissionCodes) {
+        this(userId, username, displayName, "/assets/default-avatar.png", mainRoleCode, mainRoleName,
+                accountStatus, permissionCodes);
+    }
+
+    public CurrentUser(Long userId, String username, String displayName, String avatarUrl, String mainRoleCode,
+            String mainRoleName, String accountStatus, Set<String> permissionCodes) {
         this.userId = userId;
         this.username = username;
         this.displayName = displayName;
+        this.avatarUrl = avatarUrl;
         this.mainRoleCode = mainRoleCode;
         this.mainRoleName = mainRoleName;
         this.accountStatus = accountStatus;
@@ -40,6 +48,10 @@ public class CurrentUser {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
     }
 
     public String getMainRoleCode() {

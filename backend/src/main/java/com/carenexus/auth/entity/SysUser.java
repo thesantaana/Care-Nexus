@@ -9,6 +9,7 @@ public class SysUser {
     private String username;
     private String passwordHash;
     private String realName;
+    private String avatarUrl;
     private Long mainRoleId;
     private String accountStatus;
     private Integer isDeleted;
@@ -43,6 +44,14 @@ public class SysUser {
 
     public void setRealName(String realName) {
         this.realName = realName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public Long getMainRoleId() {

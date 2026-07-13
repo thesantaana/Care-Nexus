@@ -142,6 +142,7 @@
         <RouterLink
           class="course-cover"
           :class="`cover-${resource.resourceType?.toLowerCase() || 'article'}`"
+          :style="{ backgroundImage: `linear-gradient(145deg, rgba(8, 47, 45, .86), rgba(15, 118, 110, .55)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }"
           :to="detailLink(resource)"
         >
           <span class="cover-type"><AppIcon :name="resource.resourceType === 'VIDEO' ? 'progress' : 'book'" />{{ resourceTypeLabel(resource.resourceType) }}</span>
