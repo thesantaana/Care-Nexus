@@ -88,6 +88,71 @@
       </article>
 
       <article
+        class="content-card ai-training-card"
+        aria-labelledby="ai-title"
+      >
+        <div class="section-heading inline-heading">
+          <div>
+            <p class="section-kicker">
+              AI TRAINING
+            </p><h2 id="ai-title">
+              资料学习助手
+            </h2>
+          </div>
+          <span class="storage-badge">仅依据当前资料</span>
+        </div>
+        <div class="ai-quick-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            :disabled="aiLoading"
+            @click="runAi('summary')"
+          >
+            总结要点
+          </button>
+          <button
+            class="secondary-button"
+            type="button"
+            :disabled="aiLoading"
+            @click="runAi('suggestions')"
+          >
+            学习建议
+          </button>
+        </div>
+        <div class="ai-question-row">
+          <textarea
+            v-model="aiQuestion"
+            rows="3"
+            maxlength="500"
+            placeholder="针对这份培训资料提问…"
+          />
+          <button
+            class="primary-button"
+            type="button"
+            :disabled="aiLoading || !aiQuestion.trim()"
+            @click="runAi('qa')"
+          >
+            {{ aiLoading ? '生成中…' : '发送问题' }}
+          </button>
+        </div>
+        <p
+          v-if="aiError"
+          class="inline-feedback error"
+          role="alert"
+        >
+          {{ aiError }}
+        </p>
+        <div
+          v-if="aiAnswer"
+          class="ai-answer"
+          aria-live="polite"
+        >
+          <strong>{{ aiAnswerTitle }}</strong><p>{{ aiAnswer }}</p>
+          <small>AI内容仅作护理培训辅助，请以已发布培训资料为准。</small>
+        </div>
+      </article>
+
+      <article
         class="content-card note-editor"
         aria-labelledby="note-title"
       >
@@ -250,7 +315,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
-import { getTrainingResource, reportLearningAccess } from '../api/training.js'
+import { askTrainingAi, getTrainingResource, getTrainingSuggestions, reportLearningAccess, summarizeTrainingResource } from '../api/training.js'
 import { learningLibrary, loadLearningLibrary, markVisited, saveNote, toggleCompleted, toggleFavorite } from '../learningStore.js'
 
 const props = defineProps({
@@ -266,6 +331,11 @@ const learningMessage = ref('')
 const learningFailed = ref(false)
 const noteContent = ref('')
 const noteMessage = ref('')
+const aiQuestion = ref('')
+const aiAnswer = ref('')
+const aiAnswerTitle = ref('')
+const aiError = ref('')
+const aiLoading = ref(false)
 let timer = null
 let controller = null
 
@@ -313,6 +383,27 @@ function saveCurrentNote() {
   saveNote(props.resourceId, noteContent.value, resource.value?.title || '')
   noteMessage.value = noteContent.value.trim() ? '笔记已保存。' : '空白笔记已删除。'
   window.setTimeout(() => { noteMessage.value = '' }, 2200)
+}
+
+async function runAi(action) {
+  if (aiLoading.value) return
+  aiLoading.value = true
+  aiError.value = ''
+  aiAnswer.value = ''
+  try {
+    const handlers = {
+      qa: () => askTrainingAi(props.resourceId, aiQuestion.value.trim()),
+      summary: () => summarizeTrainingResource(props.resourceId),
+      suggestions: () => getTrainingSuggestions(props.resourceId)
+    }
+    const result = await handlers[action]()
+    aiAnswerTitle.value = ({ qa: '资料回答', summary: '资料要点', suggestions: '学习建议' })[action]
+    aiAnswer.value = result.content
+  } catch (requestError) {
+    aiError.value = requestError.message || 'AI助手暂时不可用，请稍后重试。'
+  } finally {
+    aiLoading.value = false
+  }
 }
 
 async function saveLearningTime() {

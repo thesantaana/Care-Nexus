@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Bot,
   Camera,
   ChartNoAxesColumnIncreasing,
   CheckCircle2,
@@ -317,7 +318,7 @@ function Workspace({ user, token, onHome, onLogout }: {
         };
 
   if (isCaregiver) {
-    return <CaregiverLearningWorkspace user={user} resources={resources} loading={loading} resourceError={resourceError} onLogout={onLogout} />;
+    return <CaregiverLearningWorkspace user={user} token={token} resources={resources} loading={loading} resourceError={resourceError} onLogout={onLogout} />;
   }
 
   return (
@@ -362,8 +363,9 @@ type ProfileCustomization = {
   avatarDataUrl: string;
 };
 
-function CaregiverLearningWorkspace({ user, resources, loading, resourceError, onLogout }: {
+function CaregiverLearningWorkspace({ user, token, resources, loading, resourceError, onLogout }: {
   user: CurrentUser;
+  token: string;
   resources: TrainingResource[];
   loading: boolean;
   resourceError: string;
@@ -375,6 +377,11 @@ function CaregiverLearningWorkspace({ user, resources, loading, resourceError, o
   const [activeTab, setActiveTab] = useState<'mine' | 'all' | 'completed'>('all');
   const [keyword, setKeyword] = useState('');
   const [editingResource, setEditingResource] = useState<TrainingResource | null>(null);
+  const [aiResource, setAiResource] = useState<TrainingResource | null>(null);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiError, setAiError] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
   const [profileMessage, setProfileMessage] = useState('');
   const [profile, setProfile] = useState<ProfileCustomization>(() => {
@@ -436,6 +443,26 @@ function CaregiverLearningWorkspace({ user, resources, loading, resourceError, o
     setEditingResource(null);
   }
 
+  async function runAi(action: 'qa' | 'summary' | 'suggestions') {
+    if (!aiResource || aiLoading) return;
+    setAiLoading(true);
+    setAiError('');
+    setAiAnswer('');
+    try {
+      const body = action === 'qa'
+        ? { sourceResourceIds: [aiResource.id], question: aiQuestion.trim() }
+        : { sourceResourceIds: [aiResource.id] };
+      const result = await api<{ content: string }>(`/training/ai/${action}`, {
+        method: 'POST', body: JSON.stringify(body),
+      }, token);
+      setAiAnswer(result.content);
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'AI助手暂时不可用，请稍后重试。');
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   const visibleResources = resources.filter((resource) => {
     const matchesKeyword = !keyword.trim() || `${resource.title} ${resource.summary || ''}`.toLowerCase().includes(keyword.trim().toLowerCase());
     if (!matchesKeyword) return false;
@@ -470,7 +497,7 @@ function CaregiverLearningWorkspace({ user, resources, loading, resourceError, o
           {!loading && !resourceError && visibleResources.length > 0 && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleResources.map((resource) => {
             const favorite = library.favorites.includes(resource.id);
             const completed = library.completed.includes(resource.id);
-            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><button className={`absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-white/40 backdrop-blur ${favorite ? 'bg-teal-600 text-white' : 'bg-slate-900/30 text-white'}`} type="button" aria-label={favorite ? '移出我的课程' : '加入我的课程'} onClick={() => toggleList('favorites', resource.id)}><Plus className={`transition ${favorite ? 'rotate-45' : ''}`} size={19} /></button><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs ${completed ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>{completed ? '已完成' : favorite ? '已加入' : '未加入'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="text-xs font-semibold text-teal-700" type="button" onClick={() => toggleList('completed', resource.id)}>{completed ? '重新学习' : '标记完成'}</button></div></div></div></article>;
+            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><button className={`absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full border border-white/40 backdrop-blur ${favorite ? 'bg-teal-600 text-white' : 'bg-slate-900/30 text-white'}`} type="button" aria-label={favorite ? '移出我的课程' : '加入我的课程'} onClick={() => toggleList('favorites', resource.id)}><Plus className={`transition ${favorite ? 'rotate-45' : ''}`} size={19} /></button><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs ${completed ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>{completed ? '已完成' : favorite ? '已加入' : '未加入'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button><button className="text-xs font-semibold text-teal-700" type="button" onClick={() => toggleList('completed', resource.id)}>{completed ? '重新学习' : '标记完成'}</button></div></div></div></article>;
           })}</div>}
           {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">可以切换到全部课程继续浏览。</p></div>}
         </>}
@@ -481,6 +508,7 @@ function CaregiverLearningWorkspace({ user, resources, loading, resourceError, o
       </div>
 
       {editingResource && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-5" role="dialog" aria-modal="true" aria-labelledby="note-dialog-title"><div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-2xl"><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">Course note</p><h2 className="mt-2 text-xl font-semibold" id="note-dialog-title">{editingResource.title}</h2><textarea className="mt-5 min-h-40 w-full resize-y rounded-lg border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder="记录课程重点、操作要点或需要复习的内容…" maxLength={2000} /><div className="mt-4 flex justify-end gap-3"><button className="min-h-10 rounded-md px-4 text-sm text-slate-600" type="button" onClick={() => setEditingResource(null)}>取消</button><button className="min-h-10 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white" type="button" onClick={saveCurrentNote}>保存笔记</button></div></div></div>}
+      {aiResource && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-5" role="dialog" aria-modal="true" aria-labelledby="ai-dialog-title"><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-2xl"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">AI training</p><h2 className="mt-2 text-xl font-semibold" id="ai-dialog-title">{aiResource.title}</h2></div><button className="text-sm text-slate-500" type="button" onClick={() => setAiResource(null)}>关闭</button></div><div className="mt-5 flex flex-wrap gap-2"><button className="min-h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold" type="button" disabled={aiLoading} onClick={() => runAi('summary')}>总结要点</button><button className="min-h-10 rounded-md border border-slate-300 px-4 text-sm font-semibold" type="button" disabled={aiLoading} onClick={() => runAi('suggestions')}>学习建议</button></div><textarea className="mt-4 min-h-28 w-full resize-y rounded-lg border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={aiQuestion} onChange={(event) => setAiQuestion(event.target.value)} placeholder="针对当前培训资料提问…" maxLength={500} /><button className="mt-3 min-h-10 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white disabled:opacity-50" type="button" disabled={aiLoading || !aiQuestion.trim()} onClick={() => runAi('qa')}>{aiLoading ? '生成中…' : '发送问题'}</button>{aiError && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">{aiError}</p>}{aiAnswer && <div className="mt-5 whitespace-pre-wrap rounded-md border-l-4 border-teal-600 bg-teal-50 p-4 text-sm leading-7 text-slate-700"><p>{aiAnswer}</p><small className="mt-3 block text-slate-500">AI内容仅作护理培训辅助，请以已发布培训资料为准。</small></div>}</div></div>}
     </main>
   );
 }

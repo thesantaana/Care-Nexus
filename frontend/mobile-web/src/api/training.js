@@ -32,3 +32,24 @@ export function reportLearningAccess(resourceId, accessSeconds) {
 export function getMyLearningRecord(signal) {
   return request('/training/learning/me', { signal })
 }
+
+export function askTrainingAi(resourceId, question) {
+  return request('/training/ai/qa', {
+    method: 'POST',
+    json: { sourceResourceIds: [Number(resourceId)], question }
+  })
+}
+
+export function summarizeTrainingResource(resourceId) {
+  return request('/training/ai/summary', {
+    method: 'POST',
+    json: { sourceResourceIds: [Number(resourceId)] }
+  })
+}
+
+export function getTrainingSuggestions(resourceId) {
+  return request('/training/ai/suggestions', {
+    method: 'POST',
+    json: { sourceResourceIds: [Number(resourceId)] }
+  })
+}
