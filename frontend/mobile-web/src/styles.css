@@ -2124,7 +2124,6 @@ progress::-moz-progress-bar {
   font-weight: 700;
 }
 .cover-type .app-icon { width: 16px; }
-.cover-mark { align-self: flex-end; color: rgba(255, 255, 255, 0.68); font-size: 10px; letter-spacing: 0.08em; }
 .course-cover strong { position: relative; z-index: 1; max-width: 12ch; font-size: 20px; line-height: 1.25; }
 
 .favorite-button {

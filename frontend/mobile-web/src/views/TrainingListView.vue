@@ -146,7 +146,6 @@
           :to="detailLink(resource)"
         >
           <span class="cover-type"><AppIcon :name="resource.resourceType === 'VIDEO' ? 'progress' : 'book'" />{{ resourceTypeLabel(resource.resourceType) }}</span>
-          <span class="cover-mark">CareNexus</span>
           <strong>{{ resource.categoryName || '护理培训' }}</strong>
         </RouterLink>
         <button
