@@ -2100,6 +2100,7 @@ progress::-moz-progress-bar {
   color: #fff;
   text-decoration: none;
   background: #12675f;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 
 .course-cover::after {
