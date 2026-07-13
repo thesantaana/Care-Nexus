@@ -306,7 +306,6 @@ function RevealLayer({ image, cursorX, cursorY }: RevealLayerProps) {
 
 function Navigation({ onOpenPortal }: { onOpenPortal: () => void }) {
   const navItems = [
-    { label: '首页', href: '#home' },
     { label: '护理培训', href: '#liquidity-network' },
   ];
 
@@ -324,11 +323,7 @@ function Navigation({ onOpenPortal }: { onOpenPortal: () => void }) {
           <a
             key={item.label}
             href={item.href}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium ${
-              item.label === '首页'
-                ? 'bg-slate-900 text-white shadow-sm shadow-slate-400/30'
-                : 'text-slate-600 hover:bg-white/80 hover:text-slate-950 transition-colors'
-            }`}
+            className="rounded-full bg-slate-900 px-5 py-1.5 text-sm font-medium text-white shadow-sm shadow-slate-400/30 transition-colors hover:bg-slate-700"
           >
             {item.label}
           </a>

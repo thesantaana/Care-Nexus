@@ -9,6 +9,12 @@ import { ensureSession, hasPermission, sessionState } from '../session.js'
 const routes = [
   { path: '/', redirect: '/workspace' },
   {
+    path: '/notes',
+    name: 'notes',
+    component: () => import('../views/NotesView.vue'),
+    meta: { requiresAuth: true, roles: ['CAREGIVER'], title: '学习笔记' }
+  },
+  {
     path: '/login',
     name: 'login',
     component: LoginView,

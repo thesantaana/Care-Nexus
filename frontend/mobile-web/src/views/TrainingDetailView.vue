@@ -45,12 +45,22 @@
       <article class="resource-detail">
         <div class="resource-card-topline">
           <span class="resource-type">{{ resourceTypeLabel }}</span>
-          <span
-            v-if="resource.durationSeconds"
-            class="resource-duration"
-          >
-            <AppIcon name="clock" />{{ formatDuration(resource.durationSeconds) }}
-          </span>
+          <div class="detail-actions">
+            <button
+              type="button"
+              :class="{ active: isFavorite }"
+              @click="toggleFavorite(resource.id)"
+            >
+              <AppIcon name="bookmark" />{{ isFavorite ? '已收藏' : '收藏' }}
+            </button>
+            <button
+              type="button"
+              :class="{ active: isCompleted }"
+              @click="toggleCompleted(resource.id)"
+            >
+              <AppIcon name="check" />{{ isCompleted ? '已完成' : '标记完成' }}
+            </button>
+          </div>
         </div>
         <h1 tabindex="-1">
           {{ resource.title }}
@@ -75,6 +85,44 @@
             {{ tag.tagName }}
           </li>
         </ul>
+      </article>
+
+      <article
+        class="content-card note-editor"
+        aria-labelledby="note-title"
+      >
+        <div class="section-heading inline-heading">
+          <div>
+            <p class="section-kicker">
+              MY NOTES
+            </p><h2 id="note-title">
+              课程笔记
+            </h2>
+          </div>
+          <span class="storage-badge">仅当前设备可见</span>
+        </div>
+        <textarea
+          v-model="noteContent"
+          rows="6"
+          maxlength="2000"
+          placeholder="记录课程重点、操作要点或需要复习的内容…"
+        />
+        <div class="note-editor-footer">
+          <span>{{ noteContent.length }} / 2000</span><button
+            class="secondary-button"
+            type="button"
+            @click="saveCurrentNote"
+          >
+            <AppIcon name="note" />保存笔记
+          </button>
+        </div>
+        <p
+          v-if="noteMessage"
+          class="inline-feedback"
+          role="status"
+        >
+          {{ noteMessage }}
+        </p>
       </article>
 
       <article
@@ -203,6 +251,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import { getTrainingResource, reportLearningAccess } from '../api/training.js'
+import { learningLibrary, loadLearningLibrary, markVisited, saveNote, toggleCompleted, toggleFavorite } from '../learningStore.js'
 
 const props = defineProps({
   resourceId: { type: String, required: true }
@@ -215,10 +264,14 @@ const elapsedSeconds = ref(0)
 const reporting = ref(false)
 const learningMessage = ref('')
 const learningFailed = ref(false)
+const noteContent = ref('')
+const noteMessage = ref('')
 let timer = null
 let controller = null
 
 const trainingBackLink = computed(() => ({ name: 'training', query: route.query }))
+const isFavorite = computed(() => learningLibrary.favorites.includes(Number(props.resourceId)))
+const isCompleted = computed(() => learningLibrary.completed.includes(Number(props.resourceId)))
 const resourceTypeLabel = computed(() =>
   ({ ARTICLE: '文章', VIDEO: '视频', PPT: 'PPT' })[resource.value?.resourceType] || '培训资料'
 )
@@ -243,6 +296,8 @@ async function loadResource() {
   error.value = ''
   try {
     resource.value = await getTrainingResource(props.resourceId, requestController.signal)
+    markVisited(props.resourceId)
+    noteContent.value = learningLibrary.notes[String(props.resourceId)]?.content || ''
   } catch (requestError) {
     if (requestError.name !== 'AbortError') {
       error.value = requestError.message || '资源详情加载失败。'
@@ -252,6 +307,12 @@ async function loadResource() {
       loading.value = false
     }
   }
+}
+
+function saveCurrentNote() {
+  saveNote(props.resourceId, noteContent.value, resource.value?.title || '')
+  noteMessage.value = noteContent.value.trim() ? '笔记已保存。' : '空白笔记已删除。'
+  window.setTimeout(() => { noteMessage.value = '' }, 2200)
 }
 
 async function saveLearningTime() {
@@ -299,6 +360,7 @@ function formatDateTime(value) {
 }
 
 onMounted(() => {
+  loadLearningLibrary()
   loadResource()
   timer = window.setInterval(() => {
     if (resource.value && document.visibilityState === 'visible') {

@@ -1,12 +1,19 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Camera,
+  ChartNoAxesColumnIncreasing,
   CheckCircle2,
   CircleAlert,
+  LayoutDashboard,
   LogOut,
+  NotebookPen,
+  Plus,
+  Search,
   ShieldCheck,
+  UserRound,
 } from 'lucide-react';
 
 type PortalRoute = 'login' | 'workspace';
@@ -307,6 +314,10 @@ function Workspace({ user, token, onHome, onLogout }: {
           icon: roleIcon(user.mainRoleCode),
         };
 
+  if (isCaregiver) {
+    return <CaregiverLearningWorkspace user={user} resources={resources} loading={loading} resourceError={resourceError} onLogout={onLogout} />;
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f8f8] text-slate-950">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 px-5 py-4 backdrop-blur-xl sm:px-8">
@@ -336,4 +347,146 @@ function Workspace({ user, token, onHome, onLogout }: {
       </div>
     </main>
   );
+}
+
+type LearningLibrary = {
+  favorites: number[];
+  completed: number[];
+  notes: Record<string, string>;
+};
+
+type ProfileCustomization = {
+  displayName: string;
+  avatarDataUrl: string;
+};
+
+function CaregiverLearningWorkspace({ user, resources, loading, resourceError, onLogout }: {
+  user: CurrentUser;
+  resources: TrainingResource[];
+  loading: boolean;
+  resourceError: string;
+  onLogout: () => void;
+}) {
+  const storageKey = `carenexus-portal-learning:${user.userId}`;
+  const profileKey = `carenexus-portal-profile:${user.userId}`;
+  const [activeSection, setActiveSection] = useState<'courses' | 'progress' | 'notes' | 'profile'>('courses');
+  const [activeTab, setActiveTab] = useState<'mine' | 'all' | 'completed'>('all');
+  const [keyword, setKeyword] = useState('');
+  const [editingResource, setEditingResource] = useState<TrainingResource | null>(null);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profile, setProfile] = useState<ProfileCustomization>(() => {
+    try {
+      return { displayName: user.displayName, avatarDataUrl: '', ...JSON.parse(localStorage.getItem(profileKey) || '{}') };
+    } catch {
+      return { displayName: user.displayName, avatarDataUrl: '' };
+    }
+  });
+  const [library, setLibrary] = useState<LearningLibrary>(() => {
+    try {
+      return { favorites: [], completed: [], notes: {}, ...JSON.parse(localStorage.getItem(storageKey) || '{}') };
+    } catch {
+      return { favorites: [], completed: [], notes: {} };
+    }
+  });
+
+  function updateLibrary(next: LearningLibrary) {
+    setLibrary(next);
+    localStorage.setItem(storageKey, JSON.stringify(next));
+  }
+
+  function saveProfile(next: ProfileCustomization) {
+    const normalized = { ...next, displayName: next.displayName.trim() || user.displayName };
+    setProfile(normalized);
+    localStorage.setItem(profileKey, JSON.stringify(normalized));
+    setProfileMessage('个人资料已保存。');
+    window.setTimeout(() => setProfileMessage(''), 2200);
+  }
+
+  function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') || file.size > 2 * 1024 * 1024) {
+      setProfileMessage('请选择不超过 2 MB 的图片文件。');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => saveProfile({ ...profile, avatarDataUrl: String(reader.result || '') });
+    reader.readAsDataURL(file);
+  }
+
+  function toggleList(name: 'favorites' | 'completed', id: number) {
+    const current = library[name];
+    updateLibrary({ ...library, [name]: current.includes(id) ? current.filter((item) => item !== id) : [...current, id] });
+  }
+
+  function openNote(resource: TrainingResource) {
+    setEditingResource(resource);
+    setNoteDraft(library.notes[String(resource.id)] || '');
+  }
+
+  function saveCurrentNote() {
+    if (!editingResource) return;
+    const notes = { ...library.notes };
+    if (noteDraft.trim()) notes[String(editingResource.id)] = noteDraft.trim();
+    else delete notes[String(editingResource.id)];
+    updateLibrary({ ...library, notes });
+    setEditingResource(null);
+  }
+
+  const visibleResources = resources.filter((resource) => {
+    const matchesKeyword = !keyword.trim() || `${resource.title} ${resource.summary || ''}`.toLowerCase().includes(keyword.trim().toLowerCase());
+    if (!matchesKeyword) return false;
+    if (activeTab === 'mine') return library.favorites.includes(resource.id);
+    if (activeTab === 'completed') return library.completed.includes(resource.id);
+    return true;
+  });
+
+  const navigation = [
+    { id: 'courses' as const, label: '培训课程', icon: BookOpen },
+    { id: 'progress' as const, label: '学习进度', icon: ChartNoAxesColumnIncreasing },
+    { id: 'notes' as const, label: '学习笔记', icon: NotebookPen },
+    { id: 'profile' as const, label: '我的账号', icon: UserRound },
+  ];
+
+  return (
+    <main className="min-h-screen bg-[#f3f7f7] pl-[76px] text-slate-950 md:pl-[232px]">
+      <aside className="fixed inset-y-0 left-0 z-30 flex w-[76px] flex-col bg-[#103f43] px-2 py-5 text-white shadow-xl md:w-[232px] md:px-5 md:py-7">
+        <div className="flex items-center justify-center gap-3 md:justify-start"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[#c9f5e9] text-[#103f43]"><CheckCircle2 size={20} /></span><span className="hidden md:block"><strong className="block">CareNexus</strong><small className="text-xs text-teal-200/70">护理学习平台</small></span></div>
+        <div className="my-7 flex flex-col items-center rounded-lg border border-white/10 bg-white/[0.06] px-2 py-4">{profile.avatarDataUrl ? <img className="h-11 w-11 rounded-full object-cover" src={profile.avatarDataUrl} alt="当前头像" /> : <span className="grid h-11 w-11 place-items-center rounded-full bg-[#dff7f2] font-bold text-teal-800">{profile.displayName.slice(0, 1)}</span>}<strong className="mt-2 hidden text-sm md:block">{profile.displayName}</strong><small className="mt-1 hidden text-xs text-teal-200/70 md:block">护工 / 护理人员</small></div>
+        <nav className="grid gap-1" aria-label="护工培训导航">{navigation.map((item) => <button key={item.id} className={`flex min-h-12 items-center justify-center gap-3 rounded-md px-3 text-sm font-medium transition md:justify-start ${activeSection === item.id ? 'bg-teal-600 text-white' : 'text-teal-100/70 hover:bg-white/10 hover:text-white'}`} type="button" onClick={() => setActiveSection(item.id)}><item.icon size={20} /><span className="hidden md:inline">{item.label}</span></button>)}</nav>
+        <button className="mt-auto flex min-h-11 items-center justify-center gap-2 rounded-md text-sm text-teal-100/70 hover:bg-white/10 hover:text-white md:justify-start md:px-3" type="button" onClick={onLogout}><LogOut size={18} /><span className="hidden md:inline">退出登录</span></button>
+      </aside>
+
+      <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-8 lg:px-12">
+        {activeSection === 'courses' && <>
+          <header className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Course library</p><h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">护工培训课程</h1><p className="mt-2 text-sm text-slate-500">学习护理知识，把需要学习的内容加入个人课程并记录笔记。</p></div><div className="flex gap-5 rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm"><span><strong className="mr-1 text-xl text-teal-700">{resources.length}</strong>门课程</span><span><strong className="mr-1 text-xl text-teal-700">{library.favorites.length}</strong>门已加入</span></div></header>
+          <div className="mt-8 flex flex-col-reverse gap-4 border-b border-slate-200 lg:flex-row lg:items-center lg:justify-between"><div className="flex gap-7 overflow-x-auto">{([{ id: 'mine', label: '我的课程' }, { id: 'all', label: '全部课程' }, { id: 'completed', label: '已完成' }] as const).map((tab) => <button key={tab.id} className={`relative min-h-12 shrink-0 text-sm font-semibold ${activeTab === tab.id ? 'text-teal-700 after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:rounded-t after:bg-teal-600' : 'text-slate-500'}`} type="button" onClick={() => setActiveTab(tab.id)}>{tab.label}</button>)}</div><label className="relative mb-3 block w-full lg:w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input className="min-h-11 w-full rounded-full border border-slate-300 bg-white pl-10 pr-4 text-sm outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索课程" /></label></div>
+          <div className="mb-4 mt-8 flex items-end justify-between"><div><h2 className="text-xl font-semibold">{activeTab === 'all' ? '全部课程' : activeTab === 'mine' ? '我的课程' : '已完成课程'}</h2><p className="mt-1 text-xs text-slate-500">{activeTab === 'mine' ? '查看你收藏的课程' : activeTab === 'completed' ? '回顾已经完成的培训内容' : '当前已发布的护理培训内容'}</p></div><span className="text-xs text-slate-500">显示 {visibleResources.length} 项</span></div>
+          {loading && <p className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-500">正在加载培训课程…</p>}
+          {resourceError && <p className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">{resourceError}</p>}
+          {!loading && !resourceError && visibleResources.length > 0 && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleResources.map((resource) => {
+            const favorite = library.favorites.includes(resource.id);
+            const completed = library.completed.includes(resource.id);
+            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className={`flex h-40 flex-col justify-between p-5 text-white ${resource.resourceType === 'VIDEO' ? 'bg-[#215d72]' : resource.resourceType === 'PPT' ? 'bg-[#755f2a]' : 'bg-[#12675f]'}`}><span className="text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong><small className="self-end text-white/60">CareNexus</small></div><button className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-white/30 backdrop-blur ${favorite ? 'bg-teal-600 text-white' : 'bg-slate-900/25 text-white'}`} type="button" aria-label={favorite ? '移出我的课程' : '加入我的课程'} onClick={() => toggleList('favorites', resource.id)}><Plus className={`transition ${favorite ? 'rotate-45' : ''}`} size={19} /></button><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs ${completed ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>{completed ? '已完成' : favorite ? '已加入' : '未加入'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="text-xs font-semibold text-teal-700" type="button" onClick={() => toggleList('completed', resource.id)}>{completed ? '重新学习' : '标记完成'}</button></div></div></div></article>;
+          })}</div>}
+          {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">可以切换到全部课程继续浏览。</p></div>}
+        </>}
+
+        {activeSection === 'progress' && <SimpleLearningSection icon={<ChartNoAxesColumnIncreasing />} title="学习进度" description="集中查看当前账号的课程完成情况。"><div className="grid gap-4 sm:grid-cols-3"><Metric label="课程总数" value={resources.length} /><Metric label="已加入课程" value={library.favorites.length} /><Metric label="已完成" value={library.completed.length} /></div></SimpleLearningSection>}
+        {activeSection === 'notes' && <SimpleLearningSection icon={<NotebookPen />} title="学习笔记" description="笔记仅保存在当前设备和账号下。"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{Object.entries(library.notes).map(([id, note]) => { const resource = resources.find((item) => item.id === Number(id)); return <article className="rounded-lg border border-slate-200 bg-white p-5" key={id}><small className="text-teal-700">课程笔记</small><h3 className="mt-2 font-semibold">{resource?.title || `培训课程 #${id}`}</h3><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-500">{note}</p>{resource && <button className="mt-4 text-xs font-semibold text-teal-700" type="button" onClick={() => openNote(resource)}>编辑笔记</button>}</article>; })}{Object.keys(library.notes).length === 0 && <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-sm text-slate-500">还没有笔记，请从课程卡片点击“记笔记”。</p>}</div></SimpleLearningSection>}
+        {activeSection === 'profile' && <SimpleLearningSection icon={<UserRound />} title="我的账号" description="维护当前设备上显示的头像和姓名。"><div className="max-w-2xl rounded-lg border border-slate-200 bg-white p-6 sm:p-8"><div className="flex flex-col gap-7 sm:flex-row"><div className="relative h-24 w-24 shrink-0">{profile.avatarDataUrl ? <img className="h-24 w-24 rounded-full object-cover" src={profile.avatarDataUrl} alt="个人头像" /> : <span className="grid h-24 w-24 place-items-center rounded-full bg-teal-100 text-3xl font-bold text-teal-800">{profile.displayName.slice(0, 1)}</span>}<label className="absolute bottom-0 right-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-teal-700 text-white shadow-lg" title="更换头像"><Camera size={17} /><input className="sr-only" type="file" accept="image/*" onChange={handleAvatarChange} /></label></div><div className="grid flex-1 gap-5"><label className="grid gap-2 text-sm font-medium text-slate-700">显示姓名<input className="min-h-11 rounded-md border border-slate-300 px-3 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={profile.displayName} maxLength={30} onChange={(event) => setProfile({ ...profile, displayName: event.target.value })} /></label><div className="grid gap-1 text-sm"><span className="text-slate-500">登录账号</span><strong>{user.username}</strong></div><div className="grid gap-1 text-sm"><span className="text-slate-500">身份</span><strong>{user.mainRoleName}</strong></div><button className="min-h-11 justify-self-start rounded-md bg-teal-700 px-5 text-sm font-semibold text-white" type="button" onClick={() => saveProfile(profile)}>保存个人资料</button>{profileMessage && <p className="text-sm text-teal-700" role="status">{profileMessage}</p>}</div></div></div></SimpleLearningSection>}
+      </div>
+
+      {editingResource && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-5" role="dialog" aria-modal="true" aria-labelledby="note-dialog-title"><div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-2xl"><p className="text-xs font-bold uppercase tracking-[0.16em] text-teal-700">Course note</p><h2 className="mt-2 text-xl font-semibold" id="note-dialog-title">{editingResource.title}</h2><textarea className="mt-5 min-h-40 w-full resize-y rounded-lg border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder="记录课程重点、操作要点或需要复习的内容…" maxLength={2000} /><div className="mt-4 flex justify-end gap-3"><button className="min-h-10 rounded-md px-4 text-sm text-slate-600" type="button" onClick={() => setEditingResource(null)}>取消</button><button className="min-h-10 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white" type="button" onClick={saveCurrentNote}>保存笔记</button></div></div></div>}
+    </main>
+  );
+}
+
+function SimpleLearningSection({ icon, title, description, children }: { icon: ReactNode; title: string; description: string; children: ReactNode }) {
+  return <section><header className="mb-8 flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-lg bg-teal-100 text-teal-700">{icon}</span><div><h1 className="text-3xl font-semibold tracking-[-0.04em]">{title}</h1><p className="mt-1 text-sm text-slate-500">{description}</p></div></header>{children}</section>;
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return <article className="rounded-lg border border-slate-200 bg-white p-6"><LayoutDashboard className="text-teal-700" size={21} /><strong className="mt-5 block text-3xl">{value}</strong><span className="mt-1 block text-sm text-slate-500">{label}</span></article>;
 }

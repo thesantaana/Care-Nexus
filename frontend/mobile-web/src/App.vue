@@ -7,23 +7,23 @@
     class="mobile-shell"
     :class="{ 'public-shell': isPublicRoute }"
   >
-    <header
+    <aside
       v-if="!isPublicRoute"
-      class="app-header"
+      class="learning-sidebar"
     >
       <RouterLink
         class="brand-link"
         to="/workspace"
-        aria-label="CareNexus 移动工作台"
+        aria-label="CareNexus 护工培训"
       >
         <span class="brand-symbol"><AppIcon name="pulse" /></span>
         <span>
           <strong>CareNexus</strong>
-          <small>颐联移动工作台</small>
+          <small>护理学习平台</small>
         </span>
       </RouterLink>
       <RouterLink
-        class="user-chip"
+        class="sidebar-profile"
         to="/profile"
         aria-label="查看我的账号"
       >
@@ -36,7 +36,24 @@
           <small>{{ sessionState.user?.mainRoleName || '身份校验中' }}</small>
         </span>
       </RouterLink>
-    </header>
+
+      <nav
+        class="sidebar-nav"
+        aria-label="学习平台导航"
+      >
+        <RouterLink
+          v-for="item in navigationItems"
+          :key="item.path"
+          :to="item.path"
+        >
+          <AppIcon :name="item.icon" />
+          <span>{{ item.label }}</span>
+        </RouterLink>
+      </nav>
+      <div class="sidebar-footer">
+        <span>CareNexus</span><small>持续学习，专业照护</small>
+      </div>
+    </aside>
 
     <main
       id="main-content"
@@ -52,22 +69,6 @@
         </Transition>
       </RouterView>
     </main>
-
-    <nav
-      v-if="!isPublicRoute"
-      class="bottom-nav"
-      aria-label="主要导航"
-    >
-      <RouterLink
-        v-for="item in navigationItems"
-        :key="item.path"
-        :to="item.path"
-        :aria-label="item.label"
-      >
-        <AppIcon :name="item.icon" />
-        <span>{{ item.label }}</span>
-      </RouterLink>
-    </nav>
   </div>
 </template>
 
@@ -89,10 +90,11 @@ const userInitial = computed(() => {
 const navigationItems = computed(() => {
   const items = [{ label: '工作台', path: '/workspace', icon: 'home' }]
   items.push(
-    { label: '学习', path: '/training', icon: 'book' },
-    { label: '进度', path: '/learning', icon: 'progress' }
+    { label: '培训课程', path: '/training', icon: 'book' },
+    { label: '学习进度', path: '/learning', icon: 'progress' },
+    { label: '学习笔记', path: '/notes', icon: 'note' }
   )
-  items.push({ label: '我的', path: '/profile', icon: 'user' })
+  items.push({ label: '我的账号', path: '/profile', icon: 'user' })
   return items.slice(0, 5)
 })
 

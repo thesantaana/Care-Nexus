@@ -39,6 +39,16 @@
     <template v-else-if="name === 'heart'">
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8z" />
     </template>
+    <template v-else-if="name === 'bookmark'">
+      <path d="M6 3h12v18l-6-4-6 4z" />
+    </template>
+    <template v-else-if="name === 'plus'">
+      <path d="M12 5v14M5 12h14" />
+    </template>
+    <template v-else-if="name === 'note'">
+      <path d="M5 3h14v18H5z" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </template>
     <template v-else-if="name === 'services'">
       <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z" />
       <path d="M9 12h6M12 9v6" />
