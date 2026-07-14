@@ -14,6 +14,7 @@ import com.carenexus.training.mapper.TrainingResourceMapper;
 import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.vo.LearningAccessResponse;
 import com.carenexus.training.vo.LearningRecordResponse;
+import com.carenexus.training.vo.CourseLearningStatusResponse;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -69,6 +70,22 @@ public class TrainingLearningService {
     public LearningRecordResponse myLearningRecord() {
         CurrentUser currentUser = accessPolicy.requireViewOrManage();
         return toLearningRecordResponse(getOrCreateLearningRecord(currentUser.getUserId()));
+    }
+
+    public CourseLearningStatusResponse myCourseLearningStatus(Long resourceId) {
+        CurrentUser currentUser = accessPolicy.requireViewOrManage();
+        support.requirePublishedResource(resourceId);
+        int learnedSeconds = courseLearningSeconds(currentUser.getUserId(), resourceId);
+        CourseLearningStatusResponse response = new CourseLearningStatusResponse();
+        response.setResourceId(resourceId);
+        response.setLearnedSeconds(learnedSeconds);
+        response.setRequiredSeconds(REQUIRED_LEARNING_SECONDS);
+        response.setCompleted(learnedSeconds >= REQUIRED_LEARNING_SECONDS);
+        return response;
+    }
+
+    public boolean isCourseCompleted(Long userId, Long resourceId) {
+        return courseLearningSeconds(userId, resourceId) >= REQUIRED_LEARNING_SECONDS;
     }
 
     public LearningRecord getOrCreateLearningRecord(Long userId) {
@@ -131,6 +148,17 @@ public class TrainingLearningService {
             }
         }
         return visited.size();
+    }
+
+    private int courseLearningSeconds(Long userId, Long resourceId) {
+        List<LearningAccessLog> logs = learningAccessLogMapper.selectList(new QueryWrapper<LearningAccessLog>()
+                .eq("user_id", userId)
+                .eq("resource_id", resourceId));
+        int total = 0;
+        for (LearningAccessLog log : logs) {
+            total += safeInt(log.getAccessSeconds());
+        }
+        return total;
     }
 
     private List<TrainingResource> publishedResources() {

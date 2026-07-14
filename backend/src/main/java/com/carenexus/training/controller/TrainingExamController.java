@@ -16,6 +16,7 @@ import com.carenexus.training.vo.ExamRecordResponse;
 import com.carenexus.training.vo.ExamResponse;
 import com.carenexus.training.vo.LearningAccessResponse;
 import com.carenexus.training.vo.LearningRecordResponse;
+import com.carenexus.training.vo.CourseLearningStatusResponse;
 import com.carenexus.training.vo.QuestionResponse;
 import com.carenexus.training.vo.TrainingScoreSummaryResponse;
 import com.carenexus.training.vo.CaregiverTrainingScoreResponse;
@@ -98,6 +99,11 @@ public class TrainingExamController {
     @GetMapping("/learning/me")
     public ApiResponse<LearningRecordResponse> myLearningRecord() {
         return ApiResponse.success(learningService.myLearningRecord());
+    }
+
+    @GetMapping("/learning/resources/{resourceId}")
+    public ApiResponse<CourseLearningStatusResponse> myCourseLearningStatus(@PathVariable Long resourceId) {
+        return ApiResponse.success(learningService.myCourseLearningStatus(resourceId));
     }
 
     @GetMapping("/exams")

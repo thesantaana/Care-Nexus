@@ -24,7 +24,6 @@ import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.support.TrainingText;
 import com.carenexus.training.vo.ExamRecordResponse;
 import com.carenexus.training.vo.ExamResponse;
-import com.carenexus.training.vo.LearningRecordResponse;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -75,8 +74,7 @@ public class TrainingExamTakingService {
         CurrentUser currentUser = accessPolicy.requireViewOrManage();
         TrainingExam exam = support.requirePublishedExam(examId);
         LearningRecord learningRecord = learningService.getOrCreateLearningRecord(currentUser.getUserId());
-        LearningRecordResponse learning = learningService.toLearningRecordResponse(learningRecord);
-        if (!Boolean.TRUE.equals(learning.getExamAllowed())) {
+        if (!learningService.isCourseCompleted(currentUser.getUserId(), exam.getResourceId())) {
             throw new BusinessException(ErrorCode.CONFLICT, "Learning requirement is not met");
         }
         int nextAttempt = examRecordMapper.selectMaxAttemptNo(currentUser.getUserId(), examId) + 1;
