@@ -15,11 +15,12 @@ import {
   UserRound,
 } from 'lucide-react';
 import { RichNoteEditor } from './RichNoteEditor';
+import { CourseWorkspace } from './CourseWorkspace';
 
 type PortalRoute = 'login' | 'workspace';
 type LoginRole = 'ADMIN' | 'CAREGIVER';
 
-type CurrentUser = {
+export type CurrentUser = {
   userId: number;
   username: string;
   displayName: string;
@@ -34,7 +35,7 @@ type LoginResponse = CurrentUser & {
   token: string;
 };
 
-type TrainingResource = {
+export type TrainingResource = {
   id: number;
   title: string;
   summary: string;
@@ -58,7 +59,7 @@ function hasTrainingAccess(user: CurrentUser) {
     user.permissionCodes.includes('training:resource:manage');
 }
 
-async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
+export async function api<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
   const headers = new Headers(options.headers);
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -398,6 +399,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
 }) {
   const profileKey = `carenexus-portal-profile:${user.userId}`;
   const [activeSection, setActiveSection] = useState<'courses' | 'progress' | 'notes' | 'profile'>('courses');
+  const [selectedCourse, setSelectedCourse] = useState<TrainingResource | null>(null);
   const [keyword, setKeyword] = useState('');
   const [editingResource, setEditingResource] = useState<TrainingResource | null>(null);
   const [aiResource, setAiResource] = useState<TrainingResource | null>(null);
@@ -488,6 +490,10 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
     { id: 'profile' as const, label: '我的账号', icon: UserRound },
   ];
 
+  if (selectedCourse) {
+    return <CourseWorkspace user={user} token={token} resource={selectedCourse} scoreSummary={scoreSummary} onBack={() => setSelectedCourse(null)} onLogout={onLogout} />;
+  }
+
   return (
     <main className="min-h-screen bg-[#f3f7f7] pl-[76px] text-slate-950 md:pl-[232px]">
       <aside className="fixed inset-y-0 left-0 z-30 flex w-[76px] flex-col bg-[#103f43] px-2 py-5 text-white shadow-xl md:w-[232px] md:px-5 md:py-7">
@@ -505,7 +511,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
           {resourceError && <p className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">{resourceError}</p>}
           {!loading && !resourceError && visibleResources.length > 0 && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleResources.map((resource) => {
             const score = scoreSummary?.courseScores.find((item) => item.resourceId === resource.id);
-            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs font-semibold ${score?.passed ? 'text-emerald-700' : 'text-slate-500'}`}>{score?.examId ? `${score.bestScore}分 · ${score.passed ? '已通过' : '未通过'}` : '考核待发布'}</span><div className="flex gap-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button></div></div></div></article>;
+            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><button className="block w-full text-left" type="button" onClick={() => setSelectedCourse(resource)}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs font-semibold ${score?.passed ? 'text-emerald-700' : 'text-slate-500'}`}>{score?.examId ? `${score.bestScore}分 · ${score.passed ? '已通过' : '未通过'}` : '考核待发布'}</span><span className="text-xs font-semibold text-teal-700">进入课程 →</span></div></div></button><div className="flex justify-end gap-3 border-t border-slate-100 px-5 py-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button></div></article>;
           })}</div>}
           {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">请尝试其他搜索关键词。</p></div>}
         </>}

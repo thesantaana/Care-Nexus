@@ -59,6 +59,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
+        "care-nexus.course-interactions.enabled=false",
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,"
                 + "com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration",
         "care-nexus.jwt.secret=test-demo-secret-for-t016-exam-learning-32",
