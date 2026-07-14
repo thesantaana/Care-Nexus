@@ -27,10 +27,12 @@
         to="/profile"
         aria-label="查看我的账号"
       >
-        <span
+        <img
           class="user-avatar"
-          aria-hidden="true"
-        >{{ userInitial }}</span>
+          :src="sessionState.user?.avatarUrl || '/assets/default-avatar.png'"
+          alt="当前用户头像"
+          @error="$event.currentTarget.src = '/assets/default-avatar.png'"
+        >
         <span class="user-chip-copy">
           <strong>{{ sessionState.user?.displayName || '当前用户' }}</strong>
           <small>{{ sessionState.user?.mainRoleName || '身份校验中' }}</small>
@@ -82,11 +84,6 @@ const route = useRoute()
 const mainContent = ref(null)
 
 const isPublicRoute = computed(() => Boolean(route.meta.public))
-const userInitial = computed(() => {
-  const name = sessionState.user?.displayName || sessionState.user?.username || 'C'
-  return name.trim().slice(0, 1).toUpperCase()
-})
-
 const navigationItems = computed(() => {
   const items = [{ label: '工作台', path: '/workspace', icon: 'home' }]
   items.push(

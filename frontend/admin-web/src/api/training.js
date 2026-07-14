@@ -78,6 +78,15 @@ export function updateResource(id, payload) {
   })
 }
 
+export function uploadResourceCover(file) {
+  const body = new FormData()
+  body.append('file', file)
+  return request('/training/resources/covers', {
+    method: 'POST',
+    body
+  })
+}
+
 export function publishResource(id) {
   return request(`/training/resources/${id}/publish`, {
     method: 'PUT'

@@ -12,10 +12,12 @@
 
     <article class="profile-card">
       <div class="profile-identity">
-        <span
+        <img
           class="large-avatar"
-          aria-hidden="true"
-        >{{ initial }}</span>
+          :src="sessionState.user?.avatarUrl || '/assets/default-avatar.png'"
+          alt="当前用户头像"
+          @error="$event.currentTarget.src = '/assets/default-avatar.png'"
+        >
         <div>
           <h2>{{ sessionState.user?.displayName }}</h2>
           <p>@{{ sessionState.user?.username }}</p>
@@ -116,7 +118,6 @@ const loggingOut = ref(false)
 const refreshMessage = ref('')
 const refreshFailed = ref(false)
 
-const initial = computed(() => (sessionState.user?.displayName || sessionState.user?.username || 'C').slice(0, 1))
 const permissions = computed(() => sessionState.user?.permissionCodes || [])
 
 async function refresh() {

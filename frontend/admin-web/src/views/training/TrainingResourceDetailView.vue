@@ -388,9 +388,7 @@ const action = reactive({
   busy: false
 })
 
-const canEdit = computed(() => canManage.value &&
-  resource.value?.status !== 'PUBLISHED' &&
-  resource.value?.storageMode !== 'LOCAL_FILE')
+const canEdit = computed(() => canManage.value)
 
 const editPath = computed(() => `${resourcePath(currentResourceId.value)}/edit`)
 
@@ -399,7 +397,8 @@ const durationLabel = computed(() => {
   if (seconds === null || seconds === undefined) {
     return '未设置'
   }
-  return `${seconds} 秒`
+  const minutes = seconds / 60
+  return `${Number.isInteger(minutes) ? minutes : minutes.toFixed(1)} 分钟`
 })
 
 const actionDescription = computed(() => {

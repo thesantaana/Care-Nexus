@@ -12,6 +12,10 @@ export default defineConfig({
         configure(proxy) {
           proxy.on('proxyReq', (proxyRequest) => proxyRequest.removeHeader('origin'))
         }
+      },
+      '/note-media': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true
       }
     }
   }

@@ -22,10 +22,11 @@
       class="sidebar"
       :class="{ 'is-open': mobileNavigationOpen }"
     >
-      <RouterLink
+      <a
         class="brand"
-        to="/"
-        aria-label="CareNexus 管理平台"
+        :href="portalHomeUrl"
+        aria-label="返回 CareNexus 主页"
+        title="返回主页"
       >
         <span
           class="brand-mark"
@@ -38,7 +39,7 @@
           <strong>CareNexus</strong>
           <small>颐联协作平台</small>
         </span>
-      </RouterLink>
+      </a>
 
       <p class="nav-section-label">
         工作空间
@@ -83,10 +84,12 @@
         </div>
 
         <div class="account-menu">
-          <span
+          <img
             class="account-avatar"
-            aria-hidden="true"
-          >{{ userInitial }}</span>
+            :src="session.user?.avatarUrl || '/assets/default-avatar.png'"
+            alt="当前用户头像"
+            @error="$event.currentTarget.src = '/assets/default-avatar.png'"
+          >
           <span class="account-copy">
             <strong>{{ session.user?.displayName || session.user?.username }}</strong>
             <small>{{ session.user?.mainRoleName }}</small>
@@ -144,7 +147,7 @@ import { useRoute } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
 import { navigationItems } from './config/navigation.js'
 import { hasAnyPermission, hasRole, session, signOut } from './auth/session.js'
-import { redirectToPortal } from './auth/portal.js'
+import { portalHomeUrl, redirectToPortal } from './auth/portal.js'
 import { dismissMessage, feedback, notify } from './ui/feedback.js'
 
 const route = useRoute()
@@ -155,10 +158,6 @@ const isPublicLayout = computed(() => route.meta.layout === 'auth')
 const visibleNavigation = computed(() => navigationItems.filter((item) => (
   hasAnyPermission(item.permissions) && hasRole(item.roles)
 )))
-const userInitial = computed(() => (
-  session.user?.displayName || session.user?.username || 'C'
-).trim().slice(0, 1).toUpperCase())
-
 watch(() => route.fullPath, async () => {
   mobileNavigationOpen.value = false
   await nextTick()

@@ -20,6 +20,7 @@ import com.carenexus.training.vo.CourseLearningStatusResponse;
 import com.carenexus.training.vo.QuestionResponse;
 import com.carenexus.training.vo.TrainingScoreSummaryResponse;
 import com.carenexus.training.vo.CaregiverTrainingScoreResponse;
+import com.carenexus.training.vo.MistakeQuestionResponse;
 import javax.validation.Valid;
 import java.util.List;
 import org.springframework.validation.annotation.Validated;
@@ -124,6 +125,11 @@ public class TrainingExamController {
     @GetMapping("/exams/{examId}")
     public ApiResponse<ExamResponse> getPublishedExam(@PathVariable Long examId) {
         return ApiResponse.success(examTakingService.getPublishedExam(examId));
+    }
+
+    @GetMapping("/learning/resources/{resourceId}/mistakes")
+    public ApiResponse<List<MistakeQuestionResponse>> myMistakes(@PathVariable Long resourceId) {
+        return ApiResponse.success(examTakingService.myMistakes(resourceId));
     }
 
     @PostMapping("/exams/{examId}/records")

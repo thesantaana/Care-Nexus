@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
+  ArrowLeft,
   ArrowUpRight,
   Bot,
   BrainCircuit,
@@ -36,6 +37,8 @@ type Point = {
   x: number;
   y: number;
 };
+
+type AppRoute = 'home' | 'concept' | 'assistant' | 'login' | 'workspace';
 
 type RevealLayerProps = {
   image: string;
@@ -615,7 +618,7 @@ function ServiceModules() {
   );
 }
 
-function CyberVideoModule() {
+function CyberVideoModule({ onOpenConcept }: { onOpenConcept: () => void }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLElement | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -711,13 +714,14 @@ function CyberVideoModule() {
             Nexus 让 AI 助手参与培训学习，把分散资料整理成清晰、可靠的护理知识支持。
           </p>
           <div className="mt-8">
-            <a
-              href="#liquidity-network"
+            <button
+              type="button"
+              onClick={onOpenConcept}
               className="inline-flex min-h-12 items-center gap-2 rounded-full bg-slate-950 px-7 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(15,23,42,0.18)] transition-all hover:bg-slate-800 hover:scale-[1.03] active:scale-95"
             >
               了解理念
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -774,19 +778,12 @@ function CryptoModuleCard({ module, index }: { module: CryptoModule; index: numb
           ))}
         </div>
 
-        <a
-          href={`#${module.id}`}
-          className="mt-auto inline-flex min-h-11 w-fit items-center gap-2 rounded-full border border-slate-950/10 bg-white/52 px-5 text-sm font-semibold text-slate-950 shadow-[0_12px_34px_rgba(15,23,42,0.08)] transition-colors hover:bg-white"
-        >
-          查看能力
-          <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-        </a>
       </div>
     </article>
   );
 }
 
-function AssistantDetailModule() {
+function AssistantDetailModule({ onOpenCapabilities }: { onOpenCapabilities: () => void }) {
   const containerRef = useRef<HTMLElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const wasVisibleRef = useRef(false);
@@ -858,13 +855,14 @@ function AssistantDetailModule() {
             它基于已发布培训资料提供问答、知识总结和学习建议，帮助护工更快理解重点内容。
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
-            <a
-              href="#liquidity-network"
+            <button
+              type="button"
+              onClick={onOpenCapabilities}
               className="inline-flex min-h-14 items-center gap-2 rounded-full border border-slate-950/15 bg-white/60 px-7 text-sm font-semibold text-slate-950 shadow-[0_18px_52px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all hover:border-sky-400/70 hover:bg-white hover:shadow-[0_22px_60px_rgba(56,189,248,0.18)] active:scale-95"
             >
               查看助手能力
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-            </a>
+            </button>
             <span className="text-sm font-medium text-slate-500">
               问答 / 总结 / 学习建议
             </span>
@@ -1077,18 +1075,177 @@ function CryptoBlueprintModules() {
   );
 }
 
+function DetailPageHeader({ label, onHome }: { label: string; onHome: () => void }) {
+  return (
+    <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12">
+        <button
+          type="button"
+          onClick={onHome}
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-700 transition-colors hover:text-teal-700"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          返回主页
+        </button>
+        <div className="text-right">
+          <p className="text-sm font-semibold text-slate-950">CareNexus</p>
+          <p className="text-xs text-slate-500">{label}</p>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function ConceptPage({ onHome, onAssistant }: { onHome: () => void; onAssistant: () => void }) {
+  const stages = [
+    { number: '01', title: '可信资料', text: '由管理员维护护理培训资料、分类和发布状态，为学习与考核提供统一内容来源。' },
+    { number: '02', title: '持续学习', text: '护工按课程章节学习，系统记录学习进度、笔记与完成情况，让成长过程清晰可见。' },
+    { number: '03', title: '知识考核', text: '课程作业与考试检验掌握程度，客观题自动评分，成绩与培训状态同步留存。' },
+    { number: '04', title: '智能辅助', text: 'AI围绕已发布资料提供问答、总结和建议，帮助理解知识，但不替代专业判断。' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#eef4f7] text-slate-950">
+      <DetailPageHeader label="项目理念" onHome={onHome} />
+      <main>
+        <section className="border-b border-slate-200/80 bg-white/55">
+          <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28 lg:px-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-700">CARE WITH CLARITY</p>
+            <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.06em] sm:text-7xl">
+              让护理知识真正进入日常工作
+            </h1>
+            <p className="mt-8 max-w-2xl text-lg leading-8 text-slate-600">
+              CareNexus以护理培训为核心，把内容管理、学习过程、知识考核和智能辅助连接成完整闭环，让管理员更容易维护可信内容，让护工更专注地学习和应用。
+            </p>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">TRAINING LOOP</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">一条清晰、可追踪的培训路径</h2>
+          </div>
+          <div className="grid gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 md:grid-cols-2">
+            {stages.map((stage) => (
+              <article key={stage.number} className="min-h-64 bg-white p-8 sm:p-10">
+                <p className="text-sm font-semibold text-teal-700">{stage.number}</p>
+                <h3 className="mt-8 text-2xl font-semibold">{stage.title}</h3>
+                <p className="mt-4 max-w-md leading-7 text-slate-600">{stage.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-y border-slate-200 bg-slate-950 text-white">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-2 lg:px-12">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-300">ADMINISTRATOR</p>
+              <h2 className="mt-4 text-3xl font-semibold">管理员维护标准</h2>
+              <p className="mt-5 max-w-lg leading-7 text-slate-300">统一管理课程资料、题库、考试和AI题目草稿，保证培训内容经过审核后再进入正式学习流程。</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-300">CAREGIVER</p>
+              <h2 className="mt-4 text-3xl font-semibold">护工专注成长</h2>
+              <p className="mt-5 max-w-lg leading-7 text-slate-300">通过章节、作业、考试、笔记和学习记录持续积累专业能力，并在需要时获得基于资料的AI辅助。</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-5 py-20 sm:px-8 md:flex-row md:items-center lg:px-12">
+          <div>
+            <p className="text-sm font-semibold text-teal-700">下一步</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em]">了解AI如何辅助护理学习</h2>
+          </div>
+          <button type="button" onClick={onAssistant} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-slate-950 px-7 text-sm font-semibold text-white transition-colors hover:bg-teal-700">
+            查看助手能力 <ArrowUpRight className="h-4 w-4" />
+          </button>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function AssistantCapabilitiesPage({ onHome }: { onHome: () => void }) {
+  const capabilities = [
+    { icon: Bot, title: '资料问答', text: '围绕当前课程已发布资料回答问题，并保留资料来源，便于学习者核对重要信息。' },
+    { icon: Database, title: '知识总结', text: '从课程内容中提炼关键步骤、注意事项和复习重点，帮助快速建立知识结构。' },
+    { icon: Activity, title: '学习建议', text: '结合课程完成情况和练习表现，给出下一步复习方向与学习顺序建议。' },
+    { icon: BrainCircuit, title: '练习辅助', text: '依据培训资料生成选择题和判断题草稿，经管理员审核后才可进入正式题库。' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#eef4f7] text-slate-950">
+      <DetailPageHeader label="AI学习助手" onHome={onHome} />
+      <main>
+        <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28 lg:px-12">
+          <div className="grid items-end gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-700">AI LEARNING ASSISTANT</p>
+              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-[-0.06em] sm:text-7xl">让每一次提问都有资料依据</h1>
+            </div>
+            <p className="max-w-xl text-lg leading-8 text-slate-600">
+              AI学习助手服务于护理培训过程，帮助护工理解资料、提炼重点和安排复习。它不提供疾病诊断、处方或自动医疗决策。
+            </p>
+          </div>
+        </section>
+
+        <section className="border-y border-slate-200 bg-white/65">
+          <div className="mx-auto grid max-w-7xl gap-px bg-slate-200 md:grid-cols-2 lg:grid-cols-4">
+            {capabilities.map(({ icon: Icon, title, text }) => (
+              <article key={title} className="min-h-80 bg-white p-8">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-950 text-white">
+                  <Icon className="h-6 w-6" strokeWidth={1.8} />
+                </div>
+                <h2 className="mt-10 text-2xl font-semibold">{title}</h2>
+                <p className="mt-5 leading-7 text-slate-600">{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto grid max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-2 lg:px-12">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">HOW IT WORKS</p>
+            <h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em]">从可信资料到清晰回答</h2>
+          </div>
+          <ol className="space-y-8">
+            {['选择当前课程的已发布培训资料', '提出问题或选择总结、建议等能力', '助手依据资料生成内容并标注来源', '学习者核查重点信息后用于复习'].map((item, index) => (
+              <li key={item} className="flex gap-5 border-b border-slate-200 pb-7">
+                <span className="font-semibold text-teal-700">0{index + 1}</span>
+                <span className="text-lg font-medium">{item}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="bg-slate-950 text-white">
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300">RESPONSIBLE BOUNDARY</p>
+            <h2 className="mt-4 text-3xl font-semibold">辅助学习，不替代专业判断</h2>
+            <p className="mt-5 max-w-3xl leading-8 text-slate-300">助手内容来自培训资料，可能存在遗漏或偏差。护理人员应核查重要信息，并始终遵循机构制度、课程规范以及专业医护人员指导。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
 function App() {
   const mouse = useRef<Point>({ x: -999, y: -999 });
   const smooth = useRef<Point>({ x: -999, y: -999 });
   const rafRef = useRef<number | null>(null);
   const [cursorPos, setCursorPos] = useState<Point>({ x: -999, y: -999 });
-  const [portalRoute, setPortalRoute] = useState<'home' | 'login' | 'workspace'>(() => readPortalRoute());
+  const [portalRoute, setPortalRoute] = useState<AppRoute>(() => readPortalRoute());
 
   useEffect(() => {
     const syncRoute = () => setPortalRoute(readPortalRoute());
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [portalRoute]);
 
   useEffect(() => {
     if (portalRoute !== 'home') {
@@ -1117,12 +1274,20 @@ function App() {
     };
   }, [portalRoute]);
 
-  function navigate(route: 'home' | 'login' | 'workspace') {
+  function navigate(route: AppRoute) {
     setPortalRoute(route);
     window.location.hash = route === 'home' ? 'home' : route;
   }
 
-  if (portalRoute !== 'home') {
+  if (portalRoute === 'concept') {
+    return <ConceptPage onHome={() => navigate('home')} onAssistant={() => navigate('assistant')} />;
+  }
+
+  if (portalRoute === 'assistant') {
+    return <AssistantCapabilitiesPage onHome={() => navigate('home')} />;
+  }
+
+  if (portalRoute === 'login' || portalRoute === 'workspace') {
     return <Portal route={portalRoute} onHome={() => navigate('home')} onRouteChange={navigate} />;
   }
 
@@ -1185,18 +1350,11 @@ function App() {
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               探索护理培训、知识考核与AI辅助，让专业知识在日常学习中持续生长。
             </p>
-            <button
-              className="bg-slate-900 hover:bg-sky-500 text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-sky-300/45"
-              type="button"
-              onClick={() => navigate('login')}
-            >
-              登录并进入
-            </button>
           </div>
         </section>
 
-        <CyberVideoModule />
-        <AssistantDetailModule />
+        <CyberVideoModule onOpenConcept={() => navigate('concept')} />
+        <AssistantDetailModule onOpenCapabilities={() => navigate('assistant')} />
         <CryptoBlueprintModules />
       </div>
     </div>
@@ -1204,6 +1362,8 @@ function App() {
 }
 
 function readPortalRoute() {
+  if (window.location.hash === '#concept') return 'concept';
+  if (window.location.hash === '#assistant') return 'assistant';
   if (window.location.hash === '#login') return 'login';
   if (window.location.hash === '#workspace') return 'workspace';
   return 'home';

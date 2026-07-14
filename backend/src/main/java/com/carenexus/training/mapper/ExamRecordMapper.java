@@ -31,7 +31,7 @@ public interface ExamRecordMapper extends BaseMapper<ExamRecord> {
             + "CROSS JOIN training_resource r "
             + "LEFT JOIN training_exam e ON e.resource_id = r.id AND e.exam_status = 'PUBLISHED' "
             + "AND e.is_deleted = 0 LEFT JOIN exam_record er ON er.exam_id = e.id AND er.user_id = u.id "
-            + "WHERE u.account_status = 'ACTIVE' AND u.is_deleted = 0 "
+            + "WHERE u.account_status = 'NORMAL' AND u.is_deleted = 0 "
             + "AND r.resource_status = 'PUBLISHED' AND r.is_deleted = 0 "
             + "GROUP BY u.id, u.real_name, r.id, r.title, e.id, e.pass_score ORDER BY u.id, r.id")
     List<CaregiverCourseScoreRow> selectAllCaregiverCourseScores();

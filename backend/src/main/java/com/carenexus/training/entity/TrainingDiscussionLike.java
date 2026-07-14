@@ -3,13 +3,11 @@ package com.carenexus.training.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 
-@TableName("training_discussion_reply")
-public class TrainingDiscussionReply {
+@TableName("training_discussion_like")
+public class TrainingDiscussionLike {
     private Long id;
     private Long discussionId;
-    private Long parentReplyId;
     private Long userId;
-    private String content;
     private LocalDateTime createdAt;
 
     public Long getId() { return id; }
@@ -20,20 +18,11 @@ public class TrainingDiscussionReply {
 
     public void setDiscussionId(Long value) { discussionId = value; }
 
-    public Long getParentReplyId() { return parentReplyId; }
-
-    public void setParentReplyId(Long value) { parentReplyId = value; }
-
     public Long getUserId() { return userId; }
 
     public void setUserId(Long value) { userId = value; }
-
-    public String getContent() { return content; }
-
-    public void setContent(String value) { content = value; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setCreatedAt(LocalDateTime value) { createdAt = value; }
 }
-

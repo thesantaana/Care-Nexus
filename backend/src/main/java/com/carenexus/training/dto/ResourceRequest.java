@@ -28,6 +28,9 @@ public class ResourceRequest {
     @Size(max = 500)
     private String summary;
 
+    @Size(max = 500)
+    private String coverUrl;
+
     private String content;
     private Long fileResourceId;
 
@@ -78,6 +81,14 @@ public class ResourceRequest {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getCoverUrl() {
+        return coverUrl;
+    }
+
+    public void setCoverUrl(String coverUrl) {
+        this.coverUrl = coverUrl;
     }
 
     public String getContent() {

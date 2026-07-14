@@ -1,8 +1,8 @@
-const portalWebUrl = import.meta.env.VITE_PORTAL_WEB_URL ||
+export const portalHomeUrl = import.meta.env.VITE_PORTAL_WEB_URL ||
   `${window.location.protocol}//${window.location.hostname}:5175`
 
 export function redirectToPortal() {
-  window.location.replace(`${portalWebUrl}/#login`)
+  window.location.replace(`${portalHomeUrl}/#login`)
 }
 
 export function readPortalToken() {

@@ -12,11 +12,11 @@ INSERT INTO sys_permission (permission_code, permission_name, permission_type) V
 ('training:resource:manage', '培训资源管理', 'ACTION');
 
 INSERT INTO sys_user (username, password_hash, real_name, main_role_id, account_status)
-SELECT 'admin_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示管理员', id, 'NORMAL'
+SELECT 'admin_demo', '$2a$12$zct9XfU0FO2hmGJQuoyoruefDvq1vzdJd/LNjuQTn/o5o/lbROfkG', '演示管理员', id, 'NORMAL'
 FROM sys_role WHERE role_code = 'ADMIN';
 
 INSERT INTO sys_user (username, password_hash, real_name, main_role_id, account_status)
-SELECT 'caregiver_demo', '$2a$12$e/jPGifBDKCTBu0Yenv2leiX7KQ18J5P7r48W0Zu4CCAWH0JVmP5u', '演示护工', id, 'NORMAL'
+SELECT 'caregiver_demo', '$2a$12$zct9XfU0FO2hmGJQuoyoruefDvq1vzdJd/LNjuQTn/o5o/lbROfkG', '演示护工', id, 'NORMAL'
 FROM sys_role WHERE role_code = 'CAREGIVER';
 
 INSERT INTO sys_user (username, password_hash, real_name, main_role_id, account_status)

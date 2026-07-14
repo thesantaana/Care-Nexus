@@ -13,7 +13,7 @@
             {{ isEdit ? '编辑培训资源' : '新建培训资源' }}
           </h1>
           <p class="tn-page-description">
-            当前支持文本内容和外部链接。本地文件上传不在本次前端接入范围内。
+            支持文本内容、外部链接和课程封面上传。
           </p>
         </div>
         <div class="tn-page-actions">
@@ -94,10 +94,10 @@
       >
         <div
           v-if="isPublished"
-          class="tn-alert tn-alert--warning"
-          role="alert"
+          class="tn-alert tn-alert--success"
+          role="status"
         >
-          <p>已发布资源不能直接修改。请先在资源详情页下架，再编辑核心内容。</p>
+          <p>当前资源已发布。保存修改后，护理人员将看到更新后的内容，发布状态保持不变。</p>
         </div>
         <div
           v-if="isLocalFile"
@@ -257,32 +257,32 @@
             </div>
 
             <div class="tn-field">
-              <label for="training-resource-duration">建议学习时长（秒）</label>
+              <label for="training-resource-duration">建议学习时长（分钟）</label>
               <input
                 id="training-resource-duration"
-                v-model="form.durationSeconds"
+                v-model="form.durationMinutes"
                 type="number"
                 min="0"
-                max="86400"
+                max="1440"
                 step="1"
                 inputmode="numeric"
                 placeholder="可选，例如 900"
                 :readonly="!isEditable"
-                :aria-invalid="Boolean(errors.durationSeconds)"
-                :aria-describedby="errors.durationSeconds ? 'training-resource-duration-error' : 'training-resource-duration-help'"
+                :aria-invalid="Boolean(errors.durationMinutes)"
+                :aria-describedby="errors.durationMinutes ? 'training-resource-duration-error' : 'training-resource-duration-help'"
               >
               <p
                 id="training-resource-duration-help"
                 class="tn-field-help"
               >
-                范围 0–86400，不填写表示未设置。
+                范围 0–1440 分钟，不填写表示未设置。
               </p>
               <p
-                v-if="errors.durationSeconds"
+                v-if="errors.durationMinutes"
                 id="training-resource-duration-error"
                 class="tn-field-error"
               >
-                {{ errors.durationSeconds }}
+                {{ errors.durationMinutes }}
               </p>
             </div>
 
@@ -310,6 +310,65 @@
                 class="tn-character-count"
               >
                 {{ form.summary.length }}/500
+              </p>
+            </div>
+
+            <div class="tn-field tn-field--wide">
+              <label>课程封面</label>
+              <div
+                class="tn-cover-uploader"
+                :class="{ 'tn-cover-uploader--dragging': coverDragging, 'tn-cover-uploader--disabled': !isEditable || coverUploading }"
+                @dragenter.prevent="coverDragging = true"
+                @dragover.prevent="coverDragging = true"
+                @dragleave.prevent="coverDragging = false"
+                @drop.prevent="handleCoverDrop"
+              >
+                <input
+                  ref="coverFileInput"
+                  class="tn-sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  :disabled="!isEditable || coverUploading"
+                  @change="handleCoverSelection"
+                >
+                <strong>{{ coverUploading ? '正在上传…' : '拖入课程封面' }}</strong>
+                <span>支持 JPG、PNG、WebP，单张不超过 10 MB</span>
+                <button
+                  class="tn-button tn-button--secondary"
+                  type="button"
+                  :disabled="!isEditable || coverUploading"
+                  @click="coverFileInput?.click()"
+                >
+                  选择本机图片
+                </button>
+              </div>
+              <p
+                v-if="coverUploadError"
+                class="tn-field-error"
+                role="alert"
+              >
+                {{ coverUploadError }}
+              </p>
+              <p
+                v-if="errors.coverUrl"
+                id="training-resource-cover-error"
+                class="tn-field-error"
+              >
+                {{ errors.coverUrl }}
+              </p>
+              <img
+                v-if="form.coverUrl && !coverPreviewError"
+                class="tn-cover-preview"
+                :src="form.coverUrl"
+                alt="课程封面预览"
+                @load="coverPreviewError = false"
+                @error="coverPreviewError = true"
+              >
+              <p
+                v-else-if="form.coverUrl"
+                class="tn-cover-preview-error"
+              >
+                当前地址无法加载图片，请重新上传或检查地址。
               </p>
             </div>
           </div>
@@ -585,6 +644,7 @@ import {
   getResource,
   listCategories,
   listTags,
+  uploadResourceCover,
   updateResource
 } from '../../api/training.js'
 import {
@@ -627,9 +687,14 @@ const currentResourceId = computed(() => props.resourceId ?? route.params.id ?? 
 const isEdit = computed(() => currentResourceId.value !== null && currentResourceId.value !== undefined)
 const isPublished = computed(() => resourceStatus.value === 'PUBLISHED')
 const isLocalFile = computed(() => loadedResource.value?.storageMode === 'LOCAL_FILE')
-const isEditable = computed(() => canManage.value && !isPublished.value && !isLocalFile.value)
+const isEditable = computed(() => canManage.value)
 const loading = ref(false)
 const saving = ref(false)
+const coverUploading = ref(false)
+const coverDragging = ref(false)
+const coverUploadError = ref('')
+const coverPreviewError = ref(false)
+const coverFileInput = ref(null)
 const loadError = ref('')
 const submitError = ref('')
 const successMessage = ref('')
@@ -646,9 +711,10 @@ const form = reactive({
   categoryId: '',
   title: '',
   summary: '',
+  coverUrl: '/assets/default-course-cover.png',
   content: '',
   externalUrl: '',
-  durationSeconds: '',
+  durationMinutes: '',
   tagIds: []
 })
 
@@ -660,9 +726,10 @@ const normalizedForm = computed(() => ({
   categoryId: form.categoryId,
   title: form.title,
   summary: form.summary,
+  coverUrl: form.coverUrl,
   content: form.content,
   externalUrl: form.externalUrl,
-  durationSeconds: form.durationSeconds,
+  durationMinutes: form.durationMinutes,
   tagIds: [...form.tagIds].map(Number).sort((left, right) => left - right)
 }))
 
@@ -706,9 +773,10 @@ function defaultForm() {
     categoryId: '',
     title: '',
     summary: '',
+    coverUrl: '/assets/default-course-cover.png',
     content: '',
     externalUrl: '',
-    durationSeconds: '',
+    durationMinutes: '',
     tagIds: []
   }
 }
@@ -726,9 +794,12 @@ function hydrate(resource) {
     categoryId: resource.categoryId ?? '',
     title: resource.title || '',
     summary: resource.summary || '',
+    coverUrl: resource.coverUrl || '/assets/default-course-cover.png',
     content: resource.content || '',
     externalUrl: resource.externalUrl || '',
-    durationSeconds: resource.durationSeconds ?? '',
+    durationMinutes: resource.durationSeconds === null || resource.durationSeconds === undefined
+      ? ''
+      : resource.durationSeconds / 60,
     tagIds: (resource.tags || []).map((tag) => tag.id)
   })
   clearErrors()
@@ -742,6 +813,40 @@ function validExternalUrl(value) {
   } catch {
     return false
   }
+}
+
+async function uploadCover(file) {
+  coverUploadError.value = ''
+  coverPreviewError.value = false
+  if (!file) return
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    coverUploadError.value = '请选择 JPG、PNG 或 WebP 图片。'
+    return
+  }
+  if (file.size <= 0 || file.size > 10 * 1024 * 1024) {
+    coverUploadError.value = '图片必须大于 0 且不超过 10 MB。'
+    return
+  }
+  coverUploading.value = true
+  try {
+    const result = await uploadResourceCover(file)
+    form.coverUrl = result.url
+  } catch (error) {
+    coverUploadError.value = errorMessage(error, '课程封面上传失败。')
+  } finally {
+    coverUploading.value = false
+    if (coverFileInput.value) coverFileInput.value.value = ''
+  }
+}
+
+function handleCoverSelection(event) {
+  uploadCover(event.target.files?.[0])
+}
+
+function handleCoverDrop(event) {
+  coverDragging.value = false
+  if (!isEditable.value || coverUploading.value) return
+  uploadCover(event.dataTransfer?.files?.[0])
 }
 
 function validateForm() {
@@ -767,10 +872,16 @@ function validateForm() {
   if (summary.length > 500) {
     errors.summary = '资源摘要不能超过 500 个字符。'
   }
-  if (form.durationSeconds !== '') {
-    const duration = Number(form.durationSeconds)
-    if (!Number.isInteger(duration) || duration < 0 || duration > 86400) {
-      errors.durationSeconds = '建议学习时长必须是 0–86400 之间的整数。'
+  const coverUrl = form.coverUrl.trim()
+  if (coverUrl.length > 500) {
+    errors.coverUrl = '课程封面地址不能超过 500 个字符。'
+  } else if (coverUrl && !coverUrl.startsWith('/assets/') && !coverUrl.startsWith('/note-media/') && !validExternalUrl(coverUrl)) {
+    errors.coverUrl = '请输入有效的站内图片路径或 http、https 地址。'
+  }
+  if (form.durationMinutes !== '') {
+    const duration = Number(form.durationMinutes)
+    if (!Number.isInteger(duration) || duration < 0 || duration > 1440) {
+      errors.durationMinutes = '建议学习时长必须是 0–1440 之间的整分钟。'
     }
   }
   if (!STORAGE_MODES.some((mode) => mode.value === form.storageMode)) {
@@ -793,7 +904,8 @@ function fieldId(field) {
     resourceType: 'training-resource-type',
     categoryId: 'training-resource-category',
     summary: 'training-resource-summary',
-    durationSeconds: 'training-resource-duration',
+    coverUrl: 'training-resource-cover',
+    durationMinutes: 'training-resource-duration',
     storageMode: 'training-resource-storage',
     content: 'training-resource-content',
     externalUrl: 'training-resource-url',
@@ -812,10 +924,11 @@ function buildPayload() {
     categoryId: Number(form.categoryId),
     title: form.title.trim(),
     summary: form.summary.trim() || null,
+    coverUrl: form.coverUrl.trim() || '/assets/default-course-cover.png',
     content: form.storageMode === 'TEXT' ? form.content.trim() : null,
     fileResourceId: null,
     externalUrl: form.storageMode === 'EXTERNAL_LINK' ? form.externalUrl.trim() : null,
-    durationSeconds: form.durationSeconds === '' ? null : Number(form.durationSeconds),
+    durationSeconds: form.durationMinutes === '' ? null : Number(form.durationMinutes) * 60,
     tagIds: form.tagIds.map(Number)
   }
 }
@@ -927,6 +1040,10 @@ watch([currentResourceId, canManage], ([, hasManage], previous) => {
     loadForm()
   }
 }, { immediate: true })
+
+watch(() => form.coverUrl, () => {
+  coverPreviewError.value = false
+})
 </script>
 
 <style scoped>
@@ -937,6 +1054,51 @@ watch([currentResourceId, canManage], ([, hasManage], previous) => {
 
 .tn-error-summary a {
   color: inherit;
+}
+
+.tn-cover-preview {
+  width: min(100%, 420px);
+  aspect-ratio: 16 / 9;
+  margin-top: 10px;
+  border: 1px solid var(--tn-border);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.tn-cover-uploader {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 22px;
+  border: 2px dashed #9bbdb8;
+  border-radius: 8px;
+  background: #f5fbfa;
+  color: var(--tn-muted);
+  text-align: center;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.tn-cover-uploader strong {
+  color: var(--tn-text);
+  font-size: 16px;
+}
+
+.tn-cover-uploader--dragging {
+  border-color: var(--tn-primary);
+  background: #e8f8f5;
+}
+
+.tn-cover-uploader--disabled {
+  opacity: 0.65;
+}
+
+.tn-cover-preview-error {
+  margin: 10px 0 0;
+  padding: 14px;
+  border: 1px solid #efb5b5;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #a32727;
 }
 
 .tn-tag-fieldset {

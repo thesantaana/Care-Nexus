@@ -350,7 +350,7 @@ class TrainingResourceControllerIntegrationTest {
     }
 
     @Test
-    void updateDraftResourceSuccessButPublishedUpdateConflicts() throws Exception {
+    void updateDraftAndPublishedResourcesSuccessfully() throws Exception {
         when(resourceMapper.selectById(1L)).thenReturn(resource(1L, TrainingResourceStatus.DRAFT));
         mockMvc.perform(put("/api/v1/training/resources/1").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -361,7 +361,8 @@ class TrainingResourceControllerIntegrationTest {
         mockMvc.perform(put("/api/v1/training/resources/2").header("Authorization", bearer(trainerToken()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(TEXT_RESOURCE_JSON))
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value(TrainingResourceStatus.PUBLISHED));
     }
 
     @Test

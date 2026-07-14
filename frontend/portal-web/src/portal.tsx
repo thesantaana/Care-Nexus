@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { RichNoteEditor } from './RichNoteEditor';
 import { CourseWorkspace } from './CourseWorkspace';
+import { profileStorageKey, resolveUserProfile } from './userProfile';
 
 type PortalRoute = 'login' | 'workspace';
 type LoginRole = 'ADMIN' | 'CAREGIVER';
@@ -42,6 +43,8 @@ export type TrainingResource = {
   resourceType: string;
   categoryName: string;
   coverUrl: string;
+  content?: string;
+  durationSeconds?: number;
   status: string;
 };
 
@@ -389,6 +392,13 @@ type ProfileCustomization = {
   avatarDataUrl: string;
 };
 
+type CourseLearningStatus = {
+  resourceId: number;
+  learnedSeconds: number;
+  requiredSeconds: number;
+  completed: boolean;
+};
+
 function CaregiverLearningWorkspace({ user, token, resources, loading, resourceError, onLogout }: {
   user: CurrentUser;
   token: string;
@@ -397,7 +407,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   resourceError: string;
   onLogout: () => void;
 }) {
-  const profileKey = `carenexus-portal-profile:${user.userId}`;
+  const profileKey = profileStorageKey(user.userId);
   const [activeSection, setActiveSection] = useState<'courses' | 'progress' | 'notes' | 'profile'>('courses');
   const [selectedCourse, setSelectedCourse] = useState<TrainingResource | null>(null);
   const [keyword, setKeyword] = useState('');
@@ -409,14 +419,9 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   const [aiLoading, setAiLoading] = useState(false);
   const [notes, setNotes] = useState<TrainingNote[]>([]);
   const [scoreSummary, setScoreSummary] = useState<TrainingScoreSummary | null>(null);
+  const [learningStatusByResource, setLearningStatusByResource] = useState<Record<number, CourseLearningStatus>>({});
   const [profileMessage, setProfileMessage] = useState('');
-  const [profile, setProfile] = useState<ProfileCustomization>(() => {
-    try {
-      return { displayName: user.displayName, avatarDataUrl: user.avatarUrl || '/assets/default-avatar.png', ...JSON.parse(localStorage.getItem(profileKey) || '{}') };
-    } catch {
-      return { displayName: user.displayName, avatarDataUrl: user.avatarUrl || '/assets/default-avatar.png' };
-    }
-  });
+  const [profile, setProfile] = useState<ProfileCustomization>(() => resolveUserProfile(user));
   function saveProfile(next: ProfileCustomization) {
     const normalized = { ...next, displayName: next.displayName.trim() || user.displayName };
     setProfile(normalized);
@@ -459,6 +464,25 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
 
   useEffect(() => { refreshNotes(); refreshScores(); }, [token]);
 
+  useEffect(() => {
+    if (resources.length === 0) {
+      setLearningStatusByResource({});
+      return;
+    }
+    Promise.all(resources.map(async (resource) => {
+      try {
+        return await api<CourseLearningStatus>(`/training/learning/resources/${resource.id}`, {}, token);
+      } catch {
+        return null;
+      }
+    })).then((statuses) => {
+      setLearningStatusByResource(Object.fromEntries(
+        statuses.filter((status): status is CourseLearningStatus => status !== null)
+          .map((status) => [status.resourceId, status]),
+      ));
+    });
+  }, [resources, token]);
+
   async function runAi(action: 'qa' | 'summary' | 'suggestions') {
     if (!aiResource || aiLoading) return;
     setAiLoading(true);
@@ -497,7 +521,7 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
   return (
     <main className="min-h-screen bg-[#f3f7f7] pl-[76px] text-slate-950 md:pl-[232px]">
       <aside className="fixed inset-y-0 left-0 z-30 flex w-[76px] flex-col bg-[#103f43] px-2 py-5 text-white shadow-xl md:w-[232px] md:px-5 md:py-7">
-        <div className="flex items-center justify-center gap-3 md:justify-start"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[#c9f5e9] text-[#103f43]"><CheckCircle2 size={20} /></span><span className="hidden md:block"><strong className="block">CareNexus</strong><small className="text-xs text-teal-200/70">护理学习平台</small></span></div>
+        <a className="flex items-center justify-center gap-3 rounded-md outline-none transition hover:opacity-85 focus-visible:ring-2 focus-visible:ring-teal-200 md:justify-start" href="/" aria-label="返回 CareNexus 主页" title="返回主页"><span className="grid h-10 w-10 place-items-center rounded-lg bg-[#c9f5e9] text-[#103f43]"><CheckCircle2 size={20} /></span><span className="hidden md:block"><strong className="block">CareNexus</strong><small className="text-xs text-teal-200/70">护理学习平台</small></span></a>
         <div className="my-7 flex flex-col items-center rounded-lg border border-white/10 bg-white/[0.06] px-2 py-4">{profile.avatarDataUrl ? <img className="h-11 w-11 rounded-full object-cover" src={profile.avatarDataUrl} alt="当前头像" /> : <span className="grid h-11 w-11 place-items-center rounded-full bg-[#dff7f2] font-bold text-teal-800">{profile.displayName.slice(0, 1)}</span>}<strong className="mt-2 hidden text-sm md:block">{profile.displayName}</strong><small className="mt-1 hidden text-xs text-teal-200/70 md:block">护工 / 护理人员</small></div>
         <nav className="grid gap-1" aria-label="护工培训导航">{navigation.map((item) => <button key={item.id} className={`flex min-h-12 items-center justify-center gap-3 rounded-md px-3 text-sm font-medium transition md:justify-start ${activeSection === item.id ? 'bg-teal-600 text-white' : 'text-teal-100/70 hover:bg-white/10 hover:text-white'}`} type="button" onClick={() => setActiveSection(item.id)}><item.icon size={20} /><span className="hidden md:inline">{item.label}</span></button>)}</nav>
         <button className="mt-auto flex min-h-11 items-center justify-center gap-2 rounded-md text-sm text-teal-100/70 hover:bg-white/10 hover:text-white md:justify-start md:px-3" type="button" onClick={onLogout}><LogOut size={18} /><span className="hidden md:inline">退出登录</span></button>
@@ -511,7 +535,11 @@ function CaregiverLearningWorkspace({ user, token, resources, loading, resourceE
           {resourceError && <p className="rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">{resourceError}</p>}
           {!loading && !resourceError && visibleResources.length > 0 && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{visibleResources.map((resource) => {
             const score = scoreSummary?.courseScores.find((item) => item.resourceId === resource.id);
-            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><button className="block w-full text-left" type="button" onClick={() => setSelectedCourse(resource)}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className={`text-xs font-semibold ${score?.passed ? 'text-emerald-700' : 'text-slate-500'}`}>{score?.examId ? `${score.bestScore}分 · ${score.passed ? '已通过' : '未通过'}` : '考核待发布'}</span><span className="text-xs font-semibold text-teal-700">进入课程 →</span></div></div></button><div className="flex justify-end gap-3 border-t border-slate-100 px-5 py-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button></div></article>;
+            const learning = learningStatusByResource[resource.id];
+            const progress = learning?.requiredSeconds
+              ? Math.min(100, Math.round((learning.learnedSeconds / learning.requiredSeconds) * 100))
+              : 0;
+            return <article className="group relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl" key={resource.id}><button className="block w-full text-left" type="button" onClick={() => setSelectedCourse(resource)}><div className="relative flex h-40 flex-col gap-8 overflow-hidden bg-cover bg-center p-5 text-white [text-shadow:0_1px_5px_rgba(0,0,0,.65)]" style={{ backgroundImage: `linear-gradient(145deg, rgba(8,47,45,.34), rgba(15,118,110,.10)), url('${resource.coverUrl || '/assets/default-course-cover.png'}')` }}><span className="relative z-10 text-xs font-semibold">{resource.resourceType === 'VIDEO' ? '视频课程' : resource.resourceType === 'PPT' ? 'PPT课程' : '文章课程'}</span><strong className="relative z-10 max-w-[12ch] text-xl">{resource.categoryName || '护理培训'}</strong></div><div className="p-5"><h3 className="min-h-12 font-semibold leading-6">{resource.title}</h3><p className="mt-2 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{resource.summary || '进入课程查看完整培训内容。'}</p><div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4"><span className="flex items-center gap-3 text-xs font-semibold text-slate-600"><span>学习进度：{progress}%</span><span className="text-slate-300">|</span><span className={score?.passed ? 'text-emerald-700' : ''}>考试：{score?.bestScore || 0}分</span></span><span className="text-xs font-semibold text-teal-700">进入课程 →</span></div></div></button><div className="flex justify-end gap-3 border-t border-slate-100 px-5 py-3"><button className="text-xs font-semibold text-slate-500 hover:text-teal-700" type="button" onClick={() => openNote(resource)}>记笔记</button><button className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700" type="button" onClick={() => { setAiResource(resource); setAiQuestion(''); setAiAnswer(''); setAiError(''); }}><Bot size={14} />AI助手</button></div></article>;
           })}</div>}
           {!loading && !resourceError && visibleResources.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-10 text-center"><BookOpen className="mx-auto text-teal-600" /><h3 className="mt-4 font-semibold">暂无对应课程</h3><p className="mt-2 text-sm text-slate-500">请尝试其他搜索关键词。</p></div>}
         </>}

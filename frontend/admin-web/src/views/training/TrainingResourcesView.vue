@@ -323,7 +323,7 @@
                       v-if="resource.durationSeconds !== null && resource.durationSeconds !== undefined"
                       class="tn-muted"
                     >
-                      建议学习 {{ resource.durationSeconds }} 秒
+                      建议学习 {{ Math.ceil(resource.durationSeconds / 60) }} 分钟
                     </div>
                   </td>
                   <td>

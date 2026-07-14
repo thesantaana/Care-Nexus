@@ -205,15 +205,11 @@ h1:focus-visible {
 }
 
 .user-avatar {
-  display: grid;
   width: 34px;
   height: 34px;
   flex: 0 0 auto;
-  place-items: center;
-  color: var(--color-primary-strong);
-  font-size: 14px;
-  font-weight: 800;
-  background: var(--color-primary-soft);
+  object-fit: cover;
+  object-position: center;
   border-radius: 50%;
 }
 
@@ -969,14 +965,10 @@ select:focus {
 }
 
 .large-avatar {
-  display: grid;
   width: 56px;
   height: 56px;
-  place-items: center;
-  color: #fff;
-  font-size: 21px;
-  font-weight: 800;
-  background: linear-gradient(145deg, var(--color-accent), var(--color-primary));
+  object-fit: cover;
+  object-position: center;
   border-radius: 18px;
 }
 

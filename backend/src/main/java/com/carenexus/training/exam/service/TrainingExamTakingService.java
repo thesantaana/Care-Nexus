@@ -24,6 +24,7 @@ import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.support.TrainingText;
 import com.carenexus.training.vo.ExamRecordResponse;
 import com.carenexus.training.vo.ExamResponse;
+import com.carenexus.training.vo.MistakeQuestionResponse;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -67,6 +68,11 @@ public class TrainingExamTakingService {
     public ExamResponse getPublishedExam(Long examId) {
         accessPolicy.requireViewOrManage();
         return assembler.toExamResponse(support.requirePublishedExam(examId), false);
+    }
+
+    public List<MistakeQuestionResponse> myMistakes(Long resourceId) {
+        CurrentUser currentUser = accessPolicy.requireViewOrManage();
+        return examAnswerMapper.selectLatestMistakes(currentUser.getUserId(), resourceId);
     }
 
     @Transactional

@@ -72,9 +72,6 @@ public class TrainingResourceService {
     public ResourceResponse updateResource(Long id, ResourceRequest request) {
         CurrentUser currentUser = accessPolicy.requireManage();
         TrainingResource resource = requireResource(id);
-        if (TrainingResourceStatus.PUBLISHED.equals(resource.getResourceStatus())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "Published resource must be offline before update");
-        }
         applyResourceRequest(resource, request);
         resource.setUpdatedBy(currentUser.getUserId());
         resourceMapper.updateById(resource);
@@ -134,6 +131,12 @@ public class TrainingResourceService {
         resource.setCategoryId(category.getId());
         resource.setTitle(TrainingText.required(request.getTitle(), "Resource title is required"));
         resource.setSummary(TrainingText.optional(request.getSummary()));
+        String coverUrl = TrainingText.optional(request.getCoverUrl());
+        if (coverUrl != null) {
+            resource.setCoverUrl(coverUrl);
+        } else if (resource.getId() == null) {
+            resource.setCoverUrl("/assets/default-course-cover.png");
+        }
         resource.setDurationSeconds(request.getDurationSeconds());
         applyStoragePayload(resource, storageMode, request);
     }
