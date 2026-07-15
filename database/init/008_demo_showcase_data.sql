@@ -2,47 +2,63 @@
 SET NAMES utf8mb4;
 
 INSERT INTO sys_user (username, password_hash, real_name, avatar_url, main_role_id, account_status)
-SELECT 'caregiver_chen', u.password_hash, 'Caregiver Chen', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
+SELECT 'caregiver_chen', u.password_hash, '陈护工', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
 FROM sys_user u WHERE u.username = 'caregiver_demo'
 AND NOT EXISTS (SELECT 1 FROM sys_user WHERE username = 'caregiver_chen');
 INSERT INTO sys_user (username, password_hash, real_name, avatar_url, main_role_id, account_status)
-SELECT 'caregiver_li', u.password_hash, 'Caregiver Li', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
+SELECT 'caregiver_li', u.password_hash, '李护工', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
 FROM sys_user u WHERE u.username = 'caregiver_demo'
 AND NOT EXISTS (SELECT 1 FROM sys_user WHERE username = 'caregiver_li');
 INSERT INTO sys_user (username, password_hash, real_name, avatar_url, main_role_id, account_status)
-SELECT 'caregiver_wang', u.password_hash, 'Caregiver Wang', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
+SELECT 'caregiver_wang', u.password_hash, '王护工', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
 FROM sys_user u WHERE u.username = 'caregiver_demo'
 AND NOT EXISTS (SELECT 1 FROM sys_user WHERE username = 'caregiver_wang');
 
-UPDATE sys_user SET real_name = 'Caregiver Chen' WHERE username = 'caregiver_chen';
-UPDATE sys_user SET real_name = 'Caregiver Li' WHERE username = 'caregiver_li';
-UPDATE sys_user SET real_name = 'Caregiver Wang' WHERE username = 'caregiver_wang';
+UPDATE sys_user SET real_name = '陈护工' WHERE username = 'caregiver_chen';
+UPDATE sys_user SET real_name = '李护工' WHERE username = 'caregiver_li';
+UPDATE sys_user SET real_name = '王护工' WHERE username = 'caregiver_wang';
 
 INSERT INTO training_note (user_id, resource_id, note_title, note_content)
-SELECT u.id, r.id, CONCAT(r.title, ' - study notes'),
-       CONCAT('<h2>', r.title, '</h2><p>Review the preparation, risk checks, operating steps and documentation requirements.</p>')
+SELECT u.id, r.id, CONCAT(r.title, ' - 学习笔记'),
+       CONCAT('<h2>', r.title, '</h2><p>复习服务准备、风险核对、规范操作和记录要求。</p>')
 FROM sys_user u CROSS JOIN training_resource r
 WHERE u.username = 'caregiver_demo' AND r.resource_status = 'PUBLISHED' AND r.is_deleted = 0
 ON DUPLICATE KEY UPDATE note_title = VALUES(note_title);
 
+DELETE d FROM training_discussion d
+JOIN sys_user u ON u.id = d.user_id
+WHERE u.username = 'caregiver_demo' AND d.content REGEXP '^[?]+$';
+
+UPDATE training_discussion
+SET title = REPLACE(title, ' - key steps', ' - 学习要点讨论'),
+    content = '我把本课程整理为服务准备、过程观察和服务后记录三个环节，大家认为还需要补充哪些要点？'
+WHERE title LIKE '% - key steps';
+UPDATE training_discussion
+SET title = REPLACE(title, ' - practice reflection', ' - 实践心得'),
+    content = '课程中的风险提示很实用。实际照护时还应结合老人的当前状况，并及时、客观地记录服务过程。'
+WHERE title LIKE '% - practice reflection';
+UPDATE training_discussion_reply
+SET content = '这个结构很清晰。我还会在每次服务后，对照课程检查清单复盘自己的操作。'
+WHERE content = 'This structure is clear. I also compare my work with the course checklist after each service.';
+
 INSERT INTO training_discussion (resource_id, user_id, title, content)
-SELECT r.id, u.id, CONCAT(r.title, ' - key steps'),
-       'I organized this course into preparation, observation and post-service documentation. What else should be added?'
+SELECT r.id, u.id, CONCAT(r.title, ' - 学习要点讨论'),
+       '我把本课程整理为服务准备、过程观察和服务后记录三个环节，大家认为还需要补充哪些要点？'
 FROM training_resource r JOIN sys_user u ON u.username = 'caregiver_demo'
 WHERE r.resource_status = 'PUBLISHED' AND r.is_deleted = 0
-AND NOT EXISTS (SELECT 1 FROM training_discussion d WHERE d.resource_id = r.id AND d.title = CONCAT(r.title, ' - key steps'));
+AND NOT EXISTS (SELECT 1 FROM training_discussion d WHERE d.resource_id = r.id AND d.title = CONCAT(r.title, ' - 学习要点讨论'));
 INSERT INTO training_discussion (resource_id, user_id, title, content)
-SELECT r.id, u.id, CONCAT(r.title, ' - practice reflection'),
-       'The risk reminders are useful. In practice we should also consider the elder current condition and record the service promptly.'
+SELECT r.id, u.id, CONCAT(r.title, ' - 实践心得'),
+       '课程中的风险提示很实用。实际照护时还应结合老人的当前状况，并及时、客观地记录服务过程。'
 FROM training_resource r JOIN sys_user u ON u.username = 'caregiver_chen'
 WHERE r.resource_status = 'PUBLISHED' AND r.is_deleted = 0
-AND NOT EXISTS (SELECT 1 FROM training_discussion d WHERE d.resource_id = r.id AND d.title = CONCAT(r.title, ' - practice reflection'));
+AND NOT EXISTS (SELECT 1 FROM training_discussion d WHERE d.resource_id = r.id AND d.title = CONCAT(r.title, ' - 实践心得'));
 
 INSERT INTO training_discussion_reply (discussion_id, user_id, content)
-SELECT d.id, u.id, 'This structure is clear. I also compare my work with the course checklist after each service.'
+SELECT d.id, u.id, '这个结构很清晰。我还会在每次服务后，对照课程检查清单复盘自己的操作。'
 FROM training_discussion d JOIN sys_user u ON u.username = 'caregiver_li'
-WHERE d.title LIKE '% - key steps'
-AND NOT EXISTS (SELECT 1 FROM training_discussion_reply r WHERE r.discussion_id = d.id AND r.content = 'This structure is clear. I also compare my work with the course checklist after each service.');
+WHERE d.title LIKE '% - 学习要点讨论'
+AND NOT EXISTS (SELECT 1 FROM training_discussion_reply r WHERE r.discussion_id = d.id AND r.content = '这个结构很清晰。我还会在每次服务后，对照课程检查清单复盘自己的操作。');
 
 UPDATE ai_draft
 SET draft_content = JSON_OBJECT('questionType','TRUE_FALSE','questionContent','Identity and risk checks should be completed before care work.','standardAnswer','true','analysis','Pre-operation checks reduce process errors.','options',JSON_ARRAY())
