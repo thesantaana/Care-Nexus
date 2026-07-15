@@ -1,299 +1,211 @@
-# API设计规范
+# API 设计规范
 
-项目名称：CareNexus 颐联
+项目名称：CareNexus 颐联  
+版本：轻量版 2.0  
+更新时间：2026-07-15
 
-任务编号：T-011
+## 1. 基本约定
 
-文档状态：已审核，T-011封板
+- API 前缀：`/api/v1`。
+- 数据格式：UTF-8 JSON；文件上传使用 `multipart/form-data`。
+- 认证：`Authorization: Bearer <token>`。
+- 时间：ISO 8601 字符串或后端统一序列化格式。
+- ID：数据库主键使用 64 位整数，JSON 中按实际接口返回数字。
+- 接口名称使用复数资源名和清晰的状态动作。
 
-更新时间：2026-07-09
+## 2. 统一响应
 
-## 1. 设计目标
-
-本文档定义 CareNexus MVP 阶段 REST API 的统一命名、请求响应、错误码、分页、鉴权、权限校验、状态流转、文件上传、AI 草稿和审计要求。
-
-本文档为接口规范。MVP 业务接口清单见 `docs/api/MVP接口清单.md`，后续具体接口应在本规范基础上实现。
-
-## 2. URL 版本策略
-
-API 统一使用版本前缀：
-
-```text
-/api/v1
-```
-
-示例：
-
-```text
-GET /api/v1/training/resources
-POST /api/v1/care/orders
-PUT /api/v1/care/orders/{id}/confirm
-```
-
-## 3. REST 资源命名
-
-- 使用名词复数。
-- 使用短横线分隔多词。
-- 状态动作接口放在资源下。
-
-| 类型 | 示例 |
-|---|---|
-| 列表 | `GET /api/v1/users` |
-| 详情 | `GET /api/v1/users/{id}` |
-| 新增 | `POST /api/v1/users` |
-| 修改 | `PUT /api/v1/users/{id}` |
-| 状态操作 | `PUT /api/v1/care/orders/{id}/confirm` |
-
-## 4. HTTP 方法
-
-| 方法 | 含义 |
-|---|---|
-| `GET` | 查询 |
-| `POST` | 新增或提交业务动作 |
-| `PUT` | 全量或主要字段更新、状态变更 |
-| `PATCH` | 局部更新，MVP 尽量少用 |
-| `DELETE` | 删除或逻辑删除 |
-
-## 5. 统一响应结构
+### 成功
 
 ```json
 {
   "code": "SUCCESS",
-  "message": "ok",
+  "message": "success",
   "data": {}
 }
 ```
 
-字段说明：
-
-| 字段 | 说明 |
-|---|---|
-| `code` | 业务错误码 |
-| `message` | 可读提示 |
-| `data` | 响应数据 |
-
-## 6. 分页结构
-
-请求参数：
-
-```text
-pageNo=1&pageSize=10
-```
-
-响应数据：
+### 分页数据
 
 ```json
 {
-  "records": [],
-  "pageNo": 1,
-  "pageSize": 10,
-  "total": 0,
-  "pages": 0
+  "code": "SUCCESS",
+  "message": "success",
+  "data": {
+    "records": [],
+    "pageNo": 1,
+    "pageSize": 10,
+    "total": 0,
+    "pages": 0
+  }
 }
 ```
 
-## 7. 错误码
+### 失败
 
-| 错误码 | 含义 |
-|---|---|
-| `SUCCESS` | 成功 |
-| `BAD_REQUEST` | 请求参数错误 |
-| `UNAUTHORIZED` | 未登录或认证失败 |
-| `FORBIDDEN` | 无权限 |
-| `NOT_FOUND` | 资源不存在 |
-| `CONFLICT` | 状态冲突或重复操作 |
-| `VALIDATION_ERROR` | 参数校验失败 |
-| `BUSINESS_ERROR` | 业务规则错误 |
-| `SYSTEM_ERROR` | 系统异常 |
-
-## 8. 参数校验
-
-- Controller 使用 Bean Validation 校验基础字段。
-- Service 校验业务规则、状态流转和数据权限。
-- 外部输入不得直接拼接 SQL。
-- 请求 DTO 与响应 VO 分离，不直接返回 Entity。
-
-## 9. 鉴权头
-
-```text
-Authorization: Bearer <token>
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "请求参数不正确",
+  "data": null
+}
 ```
 
-规则：
+错误响应不得包含 Java 堆栈、SQL、数据库密码、Token、AI Key 或服务器绝对路径。
 
-- 未登录访问业务接口返回 `UNAUTHORIZED`。
-- 权限不足返回 `FORBIDDEN`。
-- 账号停用后不得继续访问业务接口。
+## 3. HTTP 状态码
 
-## 10. 数据权限校验位置
+| 状态码 | 使用场景 |
+|---:|---|
+| 200 | 查询、修改、状态动作成功 |
+| 400 | 参数格式、业务输入或文件校验失败 |
+| 401 | 未登录、Token 无效、账号停用或登录失败 |
+| 403 | 已认证但缺少权限或数据范围不允许 |
+| 404 | 资源不存在或对当前用户不可见 |
+| 409 | 状态冲突、重复发布、重复审核或重复关系 |
+| 500 | 未预期服务器错误 |
 
-数据权限必须在业务模块 Service 层校验，不由 `auth` 模块跨领域查询业务表：
+当前实现大多数创建接口仍返回统一 200，后续如调整为 201 应统一修改前后端和测试，不单独改变某一接口。
 
-| 场景 | 校验 |
-|---|---|
-| 医生访问老人 | `doctor` 模块通过 `DoctorAuthorizationService.canAccessElder(currentUser, elderId)` 校验医生老人授权关系 |
-| 家属代老人操作 | `care` 模块通过 `FamilyElderAccessService` 校验老人家属绑定关系 |
-| 护工处理订单 | `care` 模块通过 `CareOrderAccessService` 校验订单是否分配给本人 |
-| AI 草稿审核 | 培训管理员权限 |
+## 4. 认证与权限
 
-## 11. 幂等性
+### 匿名接口
 
-需要防重复的接口：
+- `POST /api/v1/auth/login`
+- `GET /api/v1/health`
+- 必要的静态文件访问路径
 
-- 订单取消。
-- 护工确认、开始、完成服务。
-- 评价提交。
-- 投诉处理。
-- AI 草稿审核通过或驳回。
+其他业务接口默认需要认证。
 
-MVP 通过状态校验和唯一约束保证基础幂等。
+### 权限码
 
-## 12. 状态流转接口
+- `training:resource:view`：护工学习和查看类能力。
+- `training:resource:manage`：管理员培训管理、题库、AI 草稿和成绩能力。
+- 系统权限码用于基础 RBAC 验证和后续账号管理。
 
-状态变更接口必须：
+个人成绩、笔记、错题和作业必须由后端从认证上下文获取当前用户，不能接受前端传入任意 `userId`。
 
-1. 校验当前状态。
-2. 校验操作角色。
-3. 校验数据权限。
-4. 写入状态变更记录或操作日志。
+## 5. 命名规则
+
+- 请求字段和响应字段：lowerCamelCase。
+- 数据库字段：snake_case。
+- 枚举值：大写下划线，如 `PUBLISHED`、`TRUE_FALSE`。
+- 路径参数使用名词 ID，如 `{resourceId}`、`{examId}`。
+- 状态动作使用子资源风格：`/{id}/publish`、`/{id}/offline`、`/{id}/review`。
+
+## 6. 分页与筛选
+
+统一分页参数：
+
+| 参数 | 默认 | 限制 |
+|---|---:|---:|
+| `pageNo` | 1 | 最小 1 |
+| `pageSize` | 10 | 1–100 |
+
+可选筛选字段使用明确名称，例如：
+
+- `keyword`
+- `resourceType`
+- `categoryId`
+- `tagId`
+- `status`
+- `draftStatus`
+
+空筛选不应被解释为字符串 `null` 或 `undefined`。
+
+## 7. 参数校验
+
+- Controller DTO 使用 Bean Validation。
+- 标题、正文、文件、选项和答案设置合理长度。
+- ID 必须存在且属于当前用户可访问范围。
+- 单选题必须有选项且只能一个正确答案。
+- 判断题不要求选项列表。
+- 不支持 `SHORT_ANSWER`。
+- 上传文件校验大小、扩展名和 MIME。
+- AI 请求至少包含一个可访问的文本资料。
+
+## 8. 状态流转接口
+
+状态动作应具备幂等边界，但重复业务动作通常返回 409 以提示调用方：
+
+- 资源发布、下架。
+- 考核发布。
+- AI 草稿审核。
+- 讨论点赞切换由接口返回当前点赞状态。
+
+状态更新应在 Service 中检查预期旧状态，必要时使用原子更新。
+
+## 9. 文件接口
+
+- 请求字段统一为 `file`。
+- 封面和笔记图片返回可直接访问的相对 URL。
+- 课程本地文件通过 `file_resource` 管理。
+- 客户端不得提交服务器本地路径。
+- 对外不返回 `C:\...`、`/home/...` 等绝对路径。
 
 示例：
 
-```text
-PUT /api/v1/care/orders/{id}/assign
-PUT /api/v1/care/orders/{id}/confirm
-PUT /api/v1/care/orders/{id}/start
-PUT /api/v1/care/orders/{id}/complete
-PUT /api/v1/care/orders/{id}/cancel
+```json
+{
+  "code": "SUCCESS",
+  "message": "success",
+  "data": {
+    "url": "/note-media/安全存储名.png"
+  }
+}
 ```
 
-## 13. 文件上传接口
+## 10. 资源可见性
 
-建议接口：
+- 管理权限可查看全部资源状态。
+- 查看权限只可查看已发布资源。
+- 对无权访问的草稿或下架资源，接口可返回 404，避免泄露资源存在性。
+- AI 来源校验复用同一资源可见性规则。
 
-```text
-POST /api/v1/files
-```
+## 11. 考试接口规则
 
-要求：
+- 获取考核时不向护工泄露标准答案。
+- 提交后可返回分数、通过状态和解析。
+- `attemptNo` 由后端计算，不接受前端指定。
+- 逐题分数由考核题目关系决定。
+- 每次提交保存 `exam_record` 和 `exam_answer`。
+- 成绩汇总从真实考试记录计算。
 
-- 使用 `multipart/form-data`。
-- 校验文件格式白名单。
-- 校验文件大小。
-- 服务端生成存储文件名。
-- 原始文件名仅用于展示。
-- 返回文件资源 ID 和访问路径。
+## 12. AI 接口规则
 
-## 14. AI 草稿接口
+- 默认 Mock，不要求外部网络。
+- DeepSeek 模式由后端环境配置，不允许前端传 API Key。
+- 响应必须包含来源课程信息。
+- 资料不足时返回明确说明。
+- 题目草稿与正式题目分离。
+- 审核通过只创建 `DRAFT` 题目。
+- AI 不提供医疗诊断、处方或治疗建议。
 
-AI 仅用于护理培训辅助。
+## 13. 前端调用规则
 
-建议接口：
+- 公共请求封装自动添加 Token。
+- 401 清除会话并引导重新登录。
+- 403 跳转无权访问页或显示权限提示。
+- 409 显示具体状态冲突，不使用通用“系统错误”。
+- 提交按钮在请求中禁用，防止重复操作。
+- 不用 Mock 业务数据掩盖真实接口错误。
 
-```text
-POST /api/v1/training/ai/question-drafts
-PUT /api/v1/training/ai/question-drafts/{id}/review
-```
+## 14. 版本兼容
 
-要求：
+- 当前版本固定为 `/api/v1`。
+- 兼容性修改优先新增可选字段，不随意删除或重命名字段。
+- 破坏性变更需要新 API 版本或明确迁移计划。
+- 文档和 `MVP接口清单.md` 必须与 Controller 当前路由同步。
 
-- 生成草稿必须选择已入库培训资料。
-- AI 结果保存为草稿。
-- 未审核草稿不得进入正式题库。
-- 草稿审核统一使用 `review` 接口，通过 `reviewResult=APPROVED/REJECTED` 表示通过或驳回。
-- AI 接口不得在医生端、老人端或管理决策场景提供医疗 AI 能力。
+## 15. 安全审查清单
 
-## 15. 日志和审计
+新增接口提交前检查：
 
-必须记录操作日志的接口类型：
-
-- 账号启停。
-- 权限变更。
-- 培训资源发布和下架。
-- AI 草稿审核。
-- 订单分配。
-- 订单取消。
-- 投诉处理。
-- 医生老人授权变更。
-
-日志不得记录密码、Token、完整手机号、身份证号或完整健康隐私。
-
-## 16. 接口文档维护规则
-
-后续新增具体接口时，应记录：
-
-- 接口名称。
-- URL。
-- 方法。
-- 请求参数。
-- 响应结构。
-- 权限要求。
-- 数据权限要求。
-- 错误码。
-- 审计要求。
-## 17. T-012 认证实现补充
-
-T-012 已实现后端账号登录、当前用户、退出登录和 RBAC 功能权限基础。
-
-### 17.1 认证接口
-
-| 接口 | 说明 |
-|---|---|
-| `POST /api/v1/auth/login` | 匿名登录，成功返回 Bearer Token、过期时间、用户、主角色和权限码 |
-| `GET /api/v1/auth/me` | 需要 Bearer Token，重新加载账号状态、主角色和权限 |
-| `POST /api/v1/auth/logout` | 需要 Bearer Token，将当前 JWT 的 `jti` 加入单机内存黑名单 |
-| `GET /api/v1/auth/rbac-check` | T-012 后端权限验证接口，需要 `system:user:view` 权限 |
-
-### 17.2 认证错误码
-
-| 错误码 | 含义 |
-|---|---|
-| `AUTH_INVALID_CREDENTIALS` | 账号或密码错误，对外不区分账号不存在和密码错误 |
-| `AUTH_TOKEN_MISSING` | 缺少 Bearer Token |
-| `AUTH_TOKEN_INVALID` | Token 格式、签名或内容无效 |
-| `AUTH_TOKEN_EXPIRED` | Token 已过期 |
-| `AUTH_TOKEN_REVOKED` | Token 已退出或被加入黑名单 |
-| `AUTH_ACCOUNT_DISABLED` | 账号不可用 |
-| `AUTH_UNAUTHORIZED` | 未认证 |
-| `AUTH_FORBIDDEN` | 已认证但权限不足 |
-
-### 17.3 JWT规则
-
-- JWT 至少包含 `sub`、`jti`、`iat`、`exp`。
-- JWT 不保存密码、密码哈希、手机号、身份证号、健康记录、服务地址等敏感数据。
-- 每次认证根据 JWT 中的用户标识重新查询账号状态、主要业务角色和权限码。
-- `POST /api/v1/auth/login` 和 `GET /api/v1/health` 允许匿名访问。
-- `GET /api/v1/auth/me`、`POST /api/v1/auth/logout` 和其他接口默认需要认证。
-- 退出登录使用单机内存黑名单记录 `jti` 至 Token 过期时间；该机制不代表分布式会话或 Redis 登录状态管理。
-
-## 18. T-014 培训资源管理接口实现记录
-
-T-014 已实现培训类别、标签和资源管理后端接口，均使用统一 `ApiResponse` 和分页结构。
-
-### 18.1 已实现接口
-
-| 接口 | 权限 |
-|---|---|
-| `GET /api/v1/training/categories` | `training:resource:view` 或 `training:resource:manage` |
-| `POST /api/v1/training/categories` | `training:resource:manage` |
-| `PUT /api/v1/training/categories/{id}` | `training:resource:manage` |
-| `PUT /api/v1/training/categories/{id}/status` | `training:resource:manage` |
-| `GET /api/v1/training/tags` | `training:resource:view` 或 `training:resource:manage` |
-| `POST /api/v1/training/tags` | `training:resource:manage` |
-| `PUT /api/v1/training/tags/{id}` | `training:resource:manage` |
-| `PUT /api/v1/training/tags/{id}/status` | `training:resource:manage` |
-| `POST /api/v1/training/resources` | `training:resource:manage` |
-| `PUT /api/v1/training/resources/{id}` | `training:resource:manage` |
-| `GET /api/v1/training/resources` | `training:resource:view` 或 `training:resource:manage` |
-| `GET /api/v1/training/resources/{id}` | `training:resource:view` 或 `training:resource:manage` |
-| `PUT /api/v1/training/resources/{id}/publish` | `training:resource:manage` |
-| `PUT /api/v1/training/resources/{id}/offline` | `training:resource:manage` |
-
-### 18.2 状态和可见性
-
-- 类别和标签状态为 `ENABLED`、`DISABLED`。
-- 培训资源状态为 `DRAFT`、`PUBLISHED`、`OFFLINE`。
-- 资源流转为 `DRAFT -> PUBLISHED -> OFFLINE`，并允许 `OFFLINE -> PUBLISHED`。
-- 只有 `training:resource:view` 的用户只能读取启用类别、启用标签和已发布资源。
-- `training:resource:manage` 用户可以读取全部状态，并执行新增、修改、启停、发布和下架。
-- 培训资源发布和下架写入 `operation_log`。
+1. 是否需要认证。
+2. 使用哪个权限码。
+3. 是否还需要本人/资源范围校验。
+4. 是否会暴露草稿、答案、其他用户数据或文件路径。
+5. 是否记录敏感信息。
+6. 是否处理重复请求和非法状态。
+7. 是否有参数验证和自动化测试。
+8. 是否需要更新接口清单、需求和测试文档。
