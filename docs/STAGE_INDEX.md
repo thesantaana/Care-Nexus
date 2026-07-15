@@ -1,32 +1,57 @@
-# RUP 阶段工件索引
+# 轻量版阶段工件索引
 
-本文件用于说明《软件工程案例分析与实践》实训中各阶段工件在仓库中的唯一存放位置。
+更新时间：2026-07-15
 
-## 先启阶段
+本文件说明 CareNexus 轻量版各阶段工件的唯一存放位置。早期完整版阶段材料仍保留在仓库历史中，但当前开发、测试和交付均以 `lite_develop` 为基线。
 
-- `docs/plans/`：项目开发计划、进度计划、配置管理计划。
-- `docs/requirements/`：软件需求规约、用例模型、关键用例、业务流程、MVP边界。
-- `docs/test/`：测试计划初稿。
-- `docs/management/`：风险、任务、问题、评审和状态记录。
+## 先启与范围收敛
 
-## 精化阶段
+| 工件 | 路径 |
+|---|---|
+| 项目简介 | `README.md` |
+| 轻量版范围 | `docs/management/LITE_SCOPE.md` |
+| 当前项目状态 | `docs/management/PROJECT_STATUS.md` |
+| 模块负责人 | `docs/management/MODULE_OWNERSHIP.md` |
+| 架构决策 | `docs/decisions/ADR-001-总体架构与工程结构.md` |
 
-- `docs/requirements/`：剩余用例和需求细化。
-- `docs/design/`：架构、概要/详细设计、类图、时序图、活动图、CDM/PDM、数据库设计、原型。
-- `docs/api/`：接口设计。
-- `docs/test/`：详细测试用例。
-- `docs/decisions/`：架构决策记录。
+## 需求阶段
 
-## 构建阶段
+| 工件 | 路径 |
+|---|---|
+| 软件需求规约 | `docs/requirements/软件需求规约.md` |
+| 用例模型 | `docs/requirements/用例模型.md` |
+| 业务流程 | `docs/requirements/业务流程.md` |
 
-- 源代码和可执行代码：按后续确认的工程目录存放。
-- `docs/test/`：单元测试、联调、缺陷和测试日志。
-- `docs/logs/`：个人工作日志。
-- `docs/meetings/`：阶段会议记录。
+## 设计与实现阶段
 
-## 产品化阶段
+| 工件 | 路径 |
+|---|---|
+| 系统架构 | `docs/design/系统架构设计.md` |
+| 分析设计模型 | `docs/design/系统分析与设计模型.md` |
+| 原型说明 | `docs/design/原型设计.md` |
+| 数据库设计 | `docs/design/数据库设计.md` |
+| 认证设计 | `docs/design/认证设计说明.md` |
+| 工程结构 | `docs/design/工程骨架说明.md` |
+| API 规范 | `docs/api/API设计规范.md` |
+| 接口清单 | `docs/api/MVP接口清单.md` |
+| 数据库脚本 | `database/init/` |
+| 数据字典 | `database/dict/data-dictionary.md` |
 
-- `docs/test/`：最终测试报告、缺陷关闭情况和测试结果汇总。
-- `docs/delivery/`：部署说明、用户手册、产品说明、答辩材料和交付清单。
+## 测试与交付阶段
 
-交付清单可以引用 `docs/test/` 中的测试报告，不得复制不同版本的测试报告。
+| 工件 | 路径 |
+|---|---|
+| 测试计划 | `docs/test/测试计划.md` |
+| 测试用例 | `docs/test/测试用例.md` |
+| 实际测试日志 | `docs/test/TEST_LOG.md` |
+| 任务路线 | `docs/management/TASKS.md` |
+| 变更记录 | `docs/management/CHANGELOG.md` |
+| 项目进度 | `docs/plans/项目进度计划.md` |
+
+## 历史记录
+
+`docs/logs/`、`docs/meetings/`、`docs/management/tasks/`、需求基线评审记录、Changelog 和 Test Log 可以描述完整版开发过程。它们是审计证据，不是当前轻量版功能清单。
+
+## 当前阶段
+
+当前处于轻量版联调完善、文档归一和交付准备阶段。后续主要工件为全链路回归记录、部署说明、用户手册、最终测试报告、CDM/PDM、答辩材料和版本发布记录。
