@@ -73,6 +73,18 @@ const routes = [
     }
   },
   {
+    path: '/admin/:section(resources|assignments|exams|ai-drafts|scores)',
+    name: 'admin-section',
+    component: () => import('../views/AdminSectionView.vue'),
+    props: true,
+    meta: {
+      requiresAuth: true,
+      roles: ['ADMIN'],
+      permissions: ['training:resource:manage'],
+      title: '移动管理'
+    }
+  },
+  {
     path: '/profile',
     name: 'profile',
     component: ProfileView,

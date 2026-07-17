@@ -14,12 +14,12 @@
       <RouterLink
         class="brand-link"
         to="/workspace"
-        aria-label="CareNexus 护工培训"
+        :aria-label="isAdmin ? 'CareNexus 移动管理工作台' : 'CareNexus 护工培训'"
       >
         <span class="brand-symbol"><AppIcon name="pulse" /></span>
         <span>
           <strong>CareNexus</strong>
-          <small>护理学习平台</small>
+          <small>{{ isAdmin ? '移动管理平台' : '护理学习平台' }}</small>
         </span>
       </RouterLink>
       <RouterLink
@@ -41,7 +41,7 @@
 
       <nav
         class="sidebar-nav"
-        aria-label="学习平台导航"
+        :aria-label="isAdmin ? '移动管理平台导航' : '学习平台导航'"
       >
         <RouterLink
           v-for="item in navigationItems"
@@ -93,15 +93,24 @@ const route = useRoute()
 const mainContent = ref(null)
 
 const isPublicRoute = computed(() => Boolean(route.meta.public))
+const isAdmin = computed(() => sessionState.user?.mainRoleCode === 'ADMIN')
 const navigationItems = computed(() => {
-  const items = [{ label: '工作台', path: '/workspace', icon: 'home' }]
-  items.push(
+  if (isAdmin.value) {
+    return [
+      { label: '工作台', path: '/workspace', icon: 'home' },
+      { label: '课程', path: '/admin/resources', icon: 'book' },
+      { label: 'AI审核', path: '/admin/ai-drafts', icon: 'pulse' },
+      { label: '成绩', path: '/admin/scores', icon: 'progress' },
+      { label: '账户', path: '/profile', icon: 'user' }
+    ]
+  }
+  return [
+    { label: '工作台', path: '/workspace', icon: 'home' },
     { label: '培训课程', path: '/training', icon: 'book' },
     { label: '学习进度', path: '/learning', icon: 'progress' },
-    { label: '学习笔记', path: '/notes', icon: 'note' }
-  )
-  items.push({ label: '我的账号', path: '/profile', icon: 'user' })
-  return items.slice(0, 5)
+    { label: '学习笔记', path: '/notes', icon: 'note' },
+    { label: '我的账号', path: '/profile', icon: 'user' }
+  ]
 })
 
 watch(

@@ -206,9 +206,11 @@ function selectStatus(value) {
 }
 
 async function review(draft, reviewStatus) {
-  const message = reviewStatus === 'APPROVED' ? '审核意见（可选）' : '请输入驳回原因'
-  const reviewComment = window.prompt(message) ?? ''
-  if (reviewStatus === 'REJECTED' && !reviewComment.trim()) return
+  let reviewComment = ''
+  if (reviewStatus === 'REJECTED') {
+    reviewComment = window.prompt('请输入驳回原因') ?? ''
+    if (!reviewComment.trim()) return
+  }
   try {
     await reviewDraft(draft.id, { reviewResult: reviewStatus, comment: reviewComment })
     await load()

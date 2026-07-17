@@ -21,13 +21,9 @@ const BG_IMAGE_1 = '/assets/gene.png';
 
 const BG_IMAGE_2 = '/assets/gene_grass.png';
 
-const VIDEO_WEBM = '/assets/bg-video.webm';
-
 const VIDEO_MP4 = '/assets/bg-video.mp4';
 
 const VIDEO_POSTER = '/assets/first-frame.jpg';
-
-const AI_ASSISTANT_DETAIL_WEBM = '/assets/ai-assistant-detail.webm';
 
 const AI_ASSISTANT_DETAIL_MP4 = '/assets/ai-assistant-detail.mp4';
 
@@ -39,6 +35,57 @@ type Point = {
 };
 
 type AppRoute = 'home' | 'concept' | 'assistant' | 'login' | 'workspace';
+
+const ROUTE_SEO: Record<AppRoute, { title: string; description: string; robots: string }> = {
+  home: {
+    title: 'CareNexus 颐联护理培训平台｜护工课程与 AI 学习助手',
+    description: 'CareNexus 颐联护理培训平台，为护工提供护理课程、资料问答、知识总结、学习建议、练习辅助与在线考核。',
+    robots: 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
+  },
+  concept: {
+    title: '护理培训数字化解决方案｜CareNexus 产品理念',
+    description: '了解 CareNexus 如何连接护理培训资料、学习过程、作业考试和培训结果，形成可追踪的护理能力成长路径。',
+    robots: 'index,follow,max-image-preview:large,max-snippet:-1',
+  },
+  assistant: {
+    title: '护理培训 AI 学习助手｜资料问答、总结与练习辅助',
+    description: 'CareNexus AI 学习助手基于已发布护理培训资料，提供资料问答、知识总结、学习建议和练习辅助。',
+    robots: 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
+  },
+  login: {
+    title: '登录 CareNexus 护理培训平台',
+    description: '登录 CareNexus 管理端或护工学习工作台。',
+    robots: 'noindex,nofollow',
+  },
+  workspace: {
+    title: 'CareNexus 护理培训工作台',
+    description: 'CareNexus 用户工作台。',
+    robots: 'noindex,nofollow',
+  },
+};
+
+function updatePortalSeo(route: AppRoute) {
+  const seo = ROUTE_SEO[route];
+  document.title = seo.title;
+  const values = [
+    ['meta[name="description"]', 'name', 'description', seo.description],
+    ['meta[name="robots"]', 'name', 'robots', seo.robots],
+    ['meta[property="og:title"]', 'property', 'og:title', seo.title],
+    ['meta[property="og:description"]', 'property', 'og:description', seo.description],
+    ['meta[name="twitter:title"]', 'name', 'twitter:title', seo.title],
+    ['meta[name="twitter:description"]', 'name', 'twitter:description', seo.description],
+  ];
+
+  values.forEach(([selector, attribute, key, content]) => {
+    let element = document.head.querySelector<HTMLMetaElement>(selector);
+    if (!element) {
+      element = document.createElement('meta');
+      element.setAttribute(attribute, key);
+      document.head.appendChild(element);
+    }
+    element.content = content;
+  });
+}
 
 type RevealLayerProps = {
   image: string;
@@ -692,7 +739,6 @@ function CyberVideoModule({ onOpenConcept }: { onOpenConcept: () => void }) {
         onLoadedData={() => setIsVideoReady(true)}
         onEnded={handleVideoEnded}
       >
-        <source src={VIDEO_WEBM} type="video/webm" />
         <source src={VIDEO_MP4} type="video/mp4" />
       </video>
 
@@ -896,7 +942,6 @@ function AssistantDetailModule({ onOpenCapabilities }: { onOpenCapabilities: () 
             onCanPlayThrough={() => setIsVideoReady(true)}
             onEnded={() => videoRef.current?.pause()}
           >
-            <source src={AI_ASSISTANT_DETAIL_WEBM} type="video/webm" />
             <source src={AI_ASSISTANT_DETAIL_MP4} type="video/mp4" />
           </video>
 
@@ -1243,6 +1288,10 @@ function App() {
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
+
+  useEffect(() => {
+    updatePortalSeo(portalRoute);
+  }, [portalRoute]);
 
   useEffect(() => {
     if (portalRoute === 'home' && assistantHomeScrollRef.current !== null) {

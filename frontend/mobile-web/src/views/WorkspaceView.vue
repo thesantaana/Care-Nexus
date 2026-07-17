@@ -1,5 +1,6 @@
 <template>
-  <section class="page page-workspace">
+  <AdminMobileDashboard v-if="isAdmin" />
+  <section v-else class="page page-workspace">
     <div class="workspace-hero">
       <div>
         <p class="eyebrow">
@@ -63,9 +64,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import AdminMobileDashboard from '../components/AdminMobileDashboard.vue'
 import AppIcon from '../components/AppIcon.vue'
 import { sessionState } from '../session.js'
 
+const isAdmin = computed(() => sessionState.user?.mainRoleCode === 'ADMIN')
 const hour = new Date().getHours()
 const greeting = hour < 11 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好'
 </script>
