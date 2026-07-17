@@ -5,16 +5,21 @@ import com.carenexus.auth.CurrentUser;
 import com.carenexus.training.constant.LearningStatus;
 import com.carenexus.training.constant.TrainingResourceStatus;
 import com.carenexus.training.dto.LearningAccessRequest;
+import com.carenexus.training.dto.FavoriteUpdateRequest;
 import com.carenexus.training.entity.LearningAccessLog;
 import com.carenexus.training.entity.LearningRecord;
+import com.carenexus.training.entity.LearningResourceFavorite;
 import com.carenexus.training.entity.TrainingResource;
 import com.carenexus.training.mapper.LearningAccessLogMapper;
 import com.carenexus.training.mapper.LearningRecordMapper;
+import com.carenexus.training.mapper.LearningResourceFavoriteMapper;
 import com.carenexus.training.mapper.TrainingResourceMapper;
 import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.vo.LearningAccessResponse;
 import com.carenexus.training.vo.LearningRecordResponse;
 import com.carenexus.training.vo.CourseLearningStatusResponse;
+import com.carenexus.training.vo.CourseFavoriteResponse;
+import com.carenexus.training.vo.LearningLibraryResponse;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,15 +39,17 @@ public class TrainingLearningService {
     private final TrainingExamSupport support;
     private final LearningRecordMapper learningRecordMapper;
     private final LearningAccessLogMapper learningAccessLogMapper;
+    private final LearningResourceFavoriteMapper favoriteMapper;
     private final TrainingResourceMapper resourceMapper;
 
     public TrainingLearningService(TrainingResourceAccessPolicy accessPolicy, TrainingExamSupport support,
             LearningRecordMapper learningRecordMapper, LearningAccessLogMapper learningAccessLogMapper,
-            TrainingResourceMapper resourceMapper) {
+            LearningResourceFavoriteMapper favoriteMapper, TrainingResourceMapper resourceMapper) {
         this.accessPolicy = accessPolicy;
         this.support = support;
         this.learningRecordMapper = learningRecordMapper;
         this.learningAccessLogMapper = learningAccessLogMapper;
+        this.favoriteMapper = favoriteMapper;
         this.resourceMapper = resourceMapper;
     }
 
@@ -86,6 +93,56 @@ public class TrainingLearningService {
 
     public boolean isCourseCompleted(Long userId, Long resourceId) {
         return courseLearningSeconds(userId, resourceId) >= REQUIRED_LEARNING_SECONDS;
+    }
+
+    public LearningLibraryResponse myLearningLibrary() {
+        CurrentUser currentUser = accessPolicy.requireViewOrManage();
+        Long userId = currentUser.getUserId();
+        Set<Long> publishedIds = publishedResources().stream().map(TrainingResource::getId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        List<LearningAccessLog> logs = learningAccessLogMapper.selectList(new QueryWrapper<LearningAccessLog>()
+                .eq("user_id", userId).orderByDesc("accessed_at"));
+        Set<Long> courses = new LinkedHashSet<>();
+        java.util.Map<Long, Integer> learnedSeconds = new java.util.LinkedHashMap<>();
+        for (LearningAccessLog log : logs) {
+            if (publishedIds.contains(log.getResourceId())) {
+                courses.add(log.getResourceId());
+                learnedSeconds.merge(log.getResourceId(), safeInt(log.getAccessSeconds()), Integer::sum);
+            }
+        }
+        List<Long> completed = learnedSeconds.entrySet().stream()
+                .filter(entry -> entry.getValue() >= REQUIRED_LEARNING_SECONDS)
+                .map(java.util.Map.Entry::getKey).collect(Collectors.toList());
+        List<Long> favorites = favoriteMapper.selectList(new QueryWrapper<LearningResourceFavorite>()
+                .eq("user_id", userId).orderByDesc("created_at")).stream()
+                .map(LearningResourceFavorite::getResourceId).filter(publishedIds::contains)
+                .collect(Collectors.toList());
+        LearningLibraryResponse response = new LearningLibraryResponse();
+        response.setCourseResourceIds(new java.util.ArrayList<>(courses));
+        response.setCompletedResourceIds(completed);
+        response.setFavoriteResourceIds(favorites);
+        return response;
+    }
+
+    @Transactional
+    public CourseFavoriteResponse updateFavorite(Long resourceId, FavoriteUpdateRequest request) {
+        CurrentUser currentUser = accessPolicy.requireViewOrManage();
+        support.requirePublishedResource(resourceId);
+        QueryWrapper<LearningResourceFavorite> wrapper = new QueryWrapper<LearningResourceFavorite>()
+                .eq("user_id", currentUser.getUserId()).eq("resource_id", resourceId);
+        LearningResourceFavorite existing = favoriteMapper.selectOne(wrapper);
+        if (Boolean.TRUE.equals(request.getFavorite()) && existing == null) {
+            LearningResourceFavorite favorite = new LearningResourceFavorite();
+            favorite.setUserId(currentUser.getUserId());
+            favorite.setResourceId(resourceId);
+            favoriteMapper.insert(favorite);
+        } else if (Boolean.FALSE.equals(request.getFavorite()) && existing != null) {
+            favoriteMapper.deleteById(existing.getId());
+        }
+        CourseFavoriteResponse response = new CourseFavoriteResponse();
+        response.setResourceId(resourceId);
+        response.setFavorite(request.getFavorite());
+        return response;
     }
 
     public LearningRecord getOrCreateLearningRecord(Long userId) {

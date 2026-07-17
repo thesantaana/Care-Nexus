@@ -1,13 +1,9 @@
 <template>
   <section class="page profile-page">
     <div class="page-heading">
-      <p class="eyebrow">
-        MY ACCOUNT
-      </p>
-      <h1 tabindex="-1">
-        我的账号
-      </h1>
-      <p>查看当前账号、角色和学习权限。</p>
+      <p class="eyebrow">MY ACCOUNT</p>
+      <h1 tabindex="-1">我的账户</h1>
+      <p>查看当前护理学习账户信息。</p>
     </div>
 
     <article class="profile-card">
@@ -30,69 +26,15 @@
 
       <dl class="detail-list">
         <div>
-          <dt>主要角色</dt>
-          <dd>{{ sessionState.user?.mainRoleName }}</dd>
+          <dt>身份</dt>
+          <dd>{{ sessionState.user?.mainRoleName || '护工 / 护理人员' }}</dd>
         </div>
         <div>
-          <dt>角色代码</dt>
-          <dd>{{ sessionState.user?.mainRoleCode }}</dd>
-        </div>
-        <div>
-          <dt>账号 ID</dt>
-          <dd>{{ sessionState.user?.userId }}</dd>
+          <dt>账号</dt>
+          <dd>{{ sessionState.user?.username }}</dd>
         </div>
       </dl>
     </article>
-
-    <section
-      class="permission-card"
-      aria-labelledby="permission-title"
-    >
-      <div class="section-heading inline-heading">
-        <div>
-          <p class="section-kicker">
-            RBAC
-          </p>
-          <h2 id="permission-title">
-            当前权限
-          </h2>
-        </div>
-        <button
-          class="secondary-button compact-button"
-          type="button"
-          :disabled="refreshing"
-          @click="refresh"
-        >
-          <AppIcon name="refresh" />
-          {{ refreshing ? '更新中' : '更新' }}
-        </button>
-      </div>
-      <ul
-        v-if="permissions.length"
-        class="permission-list"
-      >
-        <li
-          v-for="permission in permissions"
-          :key="permission"
-        >
-          {{ permission }}
-        </li>
-      </ul>
-      <p
-        v-else
-        class="muted-copy"
-      >
-        当前账号未返回可展示的功能权限码。
-      </p>
-      <p
-        v-if="refreshMessage"
-        class="inline-feedback"
-        :class="{ error: refreshFailed }"
-        role="status"
-      >
-        {{ refreshMessage }}
-      </p>
-    </section>
 
     <button
       class="danger-button logout-button"
@@ -101,49 +43,26 @@
       @click="logoutUser"
     >
       <AppIcon name="logout" />
-      {{ loggingOut ? '正在退出…' : '退出登录' }}
+      {{ loggingOut ? '正在退出' : '退出登录' }}
     </button>
   </section>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
-import { refreshCurrentUser, sessionState, signOut } from '../session.js'
+import { sessionState, signOut } from '../session.js'
 
 const router = useRouter()
-const refreshing = ref(false)
 const loggingOut = ref(false)
-const refreshMessage = ref('')
-const refreshFailed = ref(false)
-
-const permissions = computed(() => sessionState.user?.permissionCodes || [])
-
-async function refresh() {
-  refreshing.value = true
-  refreshMessage.value = ''
-  refreshFailed.value = false
-  try {
-    const user = await refreshCurrentUser()
-    if (!user) throw new Error('当前用户信息更新失败。')
-    refreshMessage.value = '账号与权限信息已更新。'
-  } catch (error) {
-    refreshFailed.value = true
-    refreshMessage.value = error.message || '更新失败，请稍后重试。'
-  } finally {
-    refreshing.value = false
-  }
-}
 
 async function logoutUser() {
   loggingOut.value = true
   try {
     await signOut()
-    await router.replace({ name: 'login', query: { reason: 'logged-out' } })
-  } catch {
-    await router.replace({ name: 'login', query: { reason: 'local-logout' } })
   } finally {
+    await router.replace({ name: 'login', query: { reason: 'logged-out' } })
     loggingOut.value = false
   }
 }

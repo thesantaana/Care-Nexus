@@ -187,7 +187,7 @@
               </p>
             </div>
 
-            <div class="tn-field">
+            <div v-if="false" class="tn-field">
               <label for="training-resource-type">
                 资源类型 <span
                   class="tn-required"
@@ -221,7 +221,7 @@
               </p>
             </div>
 
-            <div class="tn-field">
+            <div v-if="false" class="tn-field">
               <label for="training-resource-category">
                 培训类别 <span
                   class="tn-required"
@@ -511,6 +511,7 @@
         </section>
 
         <section
+          v-if="false"
           class="tn-panel"
           aria-labelledby="resource-tags-title"
         >
@@ -552,7 +553,7 @@
                 v-else
                 class="tn-muted"
               >
-                暂无培训标签。可以先在“分类与标签”页面新增。
+                暂无培训标签。
               </p>
               <p
                 v-if="errors.tagIds"
@@ -964,6 +965,7 @@ async function loadForm() {
       loadedResource.value = null
       resourceStatus.value = 'DRAFT'
       Object.assign(form, defaultForm())
+      form.categoryId = categories.value[0]?.id || ''
       clearErrors()
       updateSnapshot()
     }

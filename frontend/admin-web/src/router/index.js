@@ -44,10 +44,10 @@ const routes = [
     meta: { title: '编辑培训资源', permissions: ['training:resource:manage'] }
   },
   {
-    path: '/training/catalogs',
-    name: 'training-catalogs',
-    component: () => import('../views/training/TrainingCatalogView.vue'),
-    meta: { title: '分类与标签', permissions: ['training:resource:manage'] }
+    path: '/training/assignments/publish',
+    name: 'training-assignment-publish',
+    component: () => import('../views/training/TrainingAssignmentPublishView.vue'),
+    meta: { title: '发布作业', permissions: ['training:resource:manage'] }
   },
   {
     path: '/training/exams',

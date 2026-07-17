@@ -1,6 +1,20 @@
 -- Repeatable showcase data. Existing user-created records are preserved.
 SET NAMES utf8mb4;
 
+-- Older local databases may predate the notes table even though it is part of
+-- the current base schema. Keep this showcase seed independently repeatable.
+CREATE TABLE IF NOT EXISTS training_note (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  resource_id BIGINT NOT NULL,
+  note_title VARCHAR(120) NOT NULL,
+  note_content LONGTEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_training_note_user_resource (user_id, resource_id),
+  KEY idx_training_note_user_updated (user_id, updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO sys_user (username, password_hash, real_name, avatar_url, main_role_id, account_status)
 SELECT 'caregiver_chen', u.password_hash, '陈护工', '/assets/default-avatar.png', u.main_role_id, 'NORMAL'
 FROM sys_user u WHERE u.username = 'caregiver_demo'
@@ -107,7 +121,7 @@ FROM sys_user u WHERE u.username = 'admin_demo' AND NOT EXISTS (SELECT 1 FROM ai
 
 INSERT IGNORE INTO ai_draft_source_resource (draft_id, resource_id)
 SELECT d.id, r.id FROM ai_draft d JOIN training_resource r
-ON r.id = CASE d.prompt WHEN 'DEMO-SHOWCASE-01' THEN 3 WHEN 'DEMO-SHOWCASE-02' THEN 2 WHEN 'DEMO-SHOWCASE-03' THEN 1 WHEN 'DEMO-SHOWCASE-05' THEN 1 ELSE 3 END
+ON r.id = CASE d.prompt WHEN 'DEMO-SHOWCASE-02' THEN 2 ELSE 1 END
 WHERE d.prompt LIKE 'DEMO-SHOWCASE-%';
 
 INSERT INTO exam_record (exam_id, user_id, attempt_no, score, pass_status, submitted_at)

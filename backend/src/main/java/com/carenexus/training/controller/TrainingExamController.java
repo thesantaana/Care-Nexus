@@ -4,6 +4,7 @@ import com.carenexus.common.response.ApiResponse;
 import com.carenexus.training.dto.ExamQuestionsRequest;
 import com.carenexus.training.dto.ExamRequest;
 import com.carenexus.training.dto.LearningAccessRequest;
+import com.carenexus.training.dto.FavoriteUpdateRequest;
 import com.carenexus.training.dto.QuestionOptionsRequest;
 import com.carenexus.training.dto.QuestionRequest;
 import com.carenexus.training.dto.SubmitExamRequest;
@@ -17,6 +18,8 @@ import com.carenexus.training.vo.ExamResponse;
 import com.carenexus.training.vo.LearningAccessResponse;
 import com.carenexus.training.vo.LearningRecordResponse;
 import com.carenexus.training.vo.CourseLearningStatusResponse;
+import com.carenexus.training.vo.CourseFavoriteResponse;
+import com.carenexus.training.vo.LearningLibraryResponse;
 import com.carenexus.training.vo.QuestionResponse;
 import com.carenexus.training.vo.TrainingScoreSummaryResponse;
 import com.carenexus.training.vo.CaregiverTrainingScoreResponse;
@@ -105,6 +108,17 @@ public class TrainingExamController {
     @GetMapping("/learning/resources/{resourceId}")
     public ApiResponse<CourseLearningStatusResponse> myCourseLearningStatus(@PathVariable Long resourceId) {
         return ApiResponse.success(learningService.myCourseLearningStatus(resourceId));
+    }
+
+    @GetMapping("/learning/library")
+    public ApiResponse<LearningLibraryResponse> myLearningLibrary() {
+        return ApiResponse.success(learningService.myLearningLibrary());
+    }
+
+    @PutMapping("/learning/resources/{resourceId}/favorite")
+    public ApiResponse<CourseFavoriteResponse> updateFavorite(@PathVariable Long resourceId,
+            @Valid @RequestBody FavoriteUpdateRequest request) {
+        return ApiResponse.success(learningService.updateFavorite(resourceId, request));
     }
 
     @GetMapping("/exams")

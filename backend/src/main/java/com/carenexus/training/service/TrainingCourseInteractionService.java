@@ -302,6 +302,7 @@ public class TrainingCourseInteractionService {
         response.type = assignment.getAssignmentType();
         response.content = assignment.getContent();
         response.optionsJson = assignment.getOptionsJson();
+        response.answerAnalysis = assignment.getAnswerAnalysis();
         response.dueAt = assignment.getDueAt();
         if (submission != null) {
             response.submissionStatus = submission.getSubmissionStatus();

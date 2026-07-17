@@ -42,23 +42,17 @@
     </div>
 
     <template v-else-if="resource">
+      <CourseWorkspaceNav :resource-id="resourceId" active="chapters" />
       <article class="resource-detail">
         <div class="resource-card-topline">
           <span class="resource-type">{{ resourceTypeLabel }}</span>
           <div class="detail-actions">
             <button
               type="button"
-              :class="{ active: isFavorite }"
-              @click="toggleFavorite(resource.id)"
-            >
-              <AppIcon name="bookmark" />{{ isFavorite ? '已收藏' : '收藏' }}
-            </button>
-            <button
-              type="button"
               :class="{ active: isCompleted }"
-              @click="toggleCompleted(resource.id)"
+              disabled
             >
-              <AppIcon name="check" />{{ isCompleted ? '已完成' : '标记完成' }}
+              <AppIcon name="check" />{{ isCompleted ? '已完成' : '进度自动同步' }}
             </button>
           </div>
         </div>
@@ -70,7 +64,7 @@
         </p>
 
         <div class="detail-meta">
-          <span>{{ resource.category?.categoryName || '未分类' }}</span>
+          <span>护理培训课程</span>
           <span v-if="resource.publishedAt">{{ formatDateTime(resource.publishedAt) }}发布</span>
         </div>
         <ul
@@ -164,7 +158,7 @@
               课程笔记
             </h2>
           </div>
-          <span class="storage-badge">仅当前设备可见</span>
+          <span class="storage-badge">已同步到账号</span>
         </div>
         <textarea
           v-model="noteContent"
@@ -315,8 +309,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
-import { askTrainingAi, getTrainingResource, getTrainingSuggestions, reportLearningAccess, summarizeTrainingResource } from '../api/training.js'
-import { learningLibrary, loadLearningLibrary, markVisited, saveNote, toggleCompleted, toggleFavorite } from '../learningStore.js'
+import CourseWorkspaceNav from '../components/CourseWorkspaceNav.vue'
+import { askTrainingAi, getTrainingNote, getTrainingResource, getTrainingSuggestions, reportLearningAccess, saveTrainingNote, summarizeTrainingResource } from '../api/training.js'
+import { learningLibrary, loadLearningLibrary } from '../learningStore.js'
 
 const props = defineProps({
   resourceId: { type: String, required: true }
@@ -340,7 +335,6 @@ let timer = null
 let controller = null
 
 const trainingBackLink = computed(() => ({ name: 'training', query: route.query }))
-const isFavorite = computed(() => learningLibrary.favorites.includes(Number(props.resourceId)))
 const isCompleted = computed(() => learningLibrary.completed.includes(Number(props.resourceId)))
 const resourceTypeLabel = computed(() =>
   ({ ARTICLE: '文章', VIDEO: '视频', PPT: 'PPT' })[resource.value?.resourceType] || '培训资料'
@@ -366,8 +360,12 @@ async function loadResource() {
   error.value = ''
   try {
     resource.value = await getTrainingResource(props.resourceId, requestController.signal)
-    markVisited(props.resourceId)
-    noteContent.value = learningLibrary.notes[String(props.resourceId)]?.content || ''
+    const serverNote = await getTrainingNote(props.resourceId, requestController.signal)
+    if (serverNote) {
+      noteContent.value = serverNote.content || ''
+    } else {
+      noteContent.value = ''
+    }
   } catch (requestError) {
     if (requestError.name !== 'AbortError') {
       error.value = requestError.message || '资源详情加载失败。'
@@ -379,9 +377,13 @@ async function loadResource() {
   }
 }
 
-function saveCurrentNote() {
-  saveNote(props.resourceId, noteContent.value, resource.value?.title || '')
-  noteMessage.value = noteContent.value.trim() ? '笔记已保存。' : '空白笔记已删除。'
+async function saveCurrentNote() {
+  try {
+    await saveTrainingNote(props.resourceId, resource.value?.title || '学习笔记', noteContent.value)
+    noteMessage.value = '笔记已保存到账号。'
+  } catch (requestError) {
+    noteMessage.value = requestError.message || '笔记保存失败，请重试。'
+  }
   window.setTimeout(() => { noteMessage.value = '' }, 2200)
 }
 
@@ -414,6 +416,7 @@ async function saveLearningTime() {
   learningFailed.value = false
   try {
     const result = await reportLearningAccess(Number(props.resourceId), secondsToSave)
+    await loadLearningLibrary()
     elapsedSeconds.value = Math.max(0, elapsedSeconds.value - secondsToSave)
     learningMessage.value = `已保存 ${formatTimer(result.accessSeconds)}，累计学习 ${formatDuration(result.totalLearningSeconds)}。`
   } catch (requestError) {
@@ -450,8 +453,8 @@ function formatDateTime(value) {
   }).format(date)
 }
 
-onMounted(() => {
-  loadLearningLibrary()
+onMounted(async () => {
+  await loadLearningLibrary()
   loadResource()
   timer = window.setInterval(() => {
     if (resource.value && document.visibilityState === 'visible') {

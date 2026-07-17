@@ -38,7 +38,8 @@ import { listCaregiverScores, listDrafts, listExams } from '../api/adminTraining
 const hour = new Date().getHours(); const greeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好'
 const stats = reactive({ resources: 0, exams: 0, pendingDrafts: 0, passedCaregivers: 0 }); const error = ref('')
 const cards = [
-  { title: '课程管理', description: '维护课程、分类、标签、封面和发布状态。', to: '/training/resources', icon: 'book' },
+  { title: '课程管理', description: '维护课程内容、封面、标签和发布状态。', to: '/training/resources', icon: 'book' },
+  { title: '发布作业', description: '上传 DOCX 作业，确认识别出的题目后发布到指定课程。', to: '/training/assignments/publish', icon: 'upload' },
   { title: '题库与考核', description: '按课程维护独立考核和60分及格规则。', to: '/training/exams', icon: 'exam' },
   { title: 'AI草稿审核', description: '审核基于培训资料生成的题目草稿。', to: '/training/ai-drafts', icon: 'spark' },
   { title: '培训成绩', description: '查看护工每课最高分、平均分和通过状态。', to: '/training/scores', icon: 'chart' }

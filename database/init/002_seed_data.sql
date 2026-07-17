@@ -16,7 +16,7 @@ SELECT 'admin_demo', '$2a$12$zct9XfU0FO2hmGJQuoyoruefDvq1vzdJd/LNjuQTn/o5o/lbROf
 FROM sys_role WHERE role_code = 'ADMIN';
 
 INSERT INTO sys_user (username, password_hash, real_name, main_role_id, account_status)
-SELECT 'caregiver_demo', '$2a$12$zct9XfU0FO2hmGJQuoyoruefDvq1vzdJd/LNjuQTn/o5o/lbROfkG', '演示护工', id, 'NORMAL'
+SELECT 'caregiver_demo', '$2a$12$zct9XfU0FO2hmGJQuoyoruefDvq1vzdJd/LNjuQTn/o5o/lbROfkG', '隋咏轩', id, 'NORMAL'
 FROM sys_role WHERE role_code = 'CAREGIVER';
 
 INSERT INTO sys_user (username, password_hash, real_name, main_role_id, account_status)

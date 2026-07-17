@@ -112,7 +112,17 @@
         class="content"
         tabindex="-1"
       >
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <Transition
+            name="admin-page"
+            mode="out-in"
+          >
+            <component
+              :is="Component"
+              :key="route.fullPath"
+            />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>

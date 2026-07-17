@@ -34,6 +34,14 @@
       {{ error }}
     </div>
 
+    <form class="admin-record-card ai-generate-form" @submit.prevent="generate">
+      <div><h3>从培训资料生成题目草稿</h3><p>选择已发布资料后，由当前 AI 实现生成草稿，仍需人工审核。</p></div>
+      <label>培训资料<select v-model.number="generateForm.resourceId" required><option disabled value="">请选择资料</option><option v-for="resource in resources" :key="resource.id" :value="resource.id">{{ resource.title }}</option></select></label>
+      <label>题型<select v-model="generateForm.questionType"><option value="SINGLE_CHOICE">单选题</option><option value="TRUE_FALSE">判断题</option></select></label>
+      <label>数量<input v-model.number="generateForm.count" type="number" min="1" max="10"></label>
+      <button class="button button-primary" :disabled="generating">{{ generating ? '正在生成…' : '生成草稿' }}</button>
+    </form>
+
     <div class="admin-card-grid ai-draft-grid">
       <article
         v-for="draft in drafts"
@@ -121,7 +129,8 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { listDrafts, reviewDraft } from '../../api/adminTraining.js'
+import { generateDrafts, listDrafts, reviewDraft } from '../../api/adminTraining.js'
+import { listResources } from '../../api/training.js'
 
 const statusOptions = [
   { value: 'DRAFT', label: '待审核' },
@@ -132,6 +141,9 @@ const drafts = ref([])
 const loading = ref(false)
 const error = ref('')
 const status = ref('DRAFT')
+const resources = ref([])
+const generating = ref(false)
+const generateForm = ref({ resourceId: '', questionType: 'SINGLE_CHOICE', count: 1 })
 
 const statusLabel = (value) => ({ DRAFT: '待审核', APPROVED: '已通过', REJECTED: '已驳回' }[value] || value)
 
@@ -172,6 +184,21 @@ async function load() {
   }
 }
 
+async function generate() {
+  if (!generateForm.value.resourceId || generating.value) return
+  generating.value = true
+  error.value = ''
+  try {
+    await generateDrafts({ sourceResourceIds: [generateForm.value.resourceId], questionType: generateForm.value.questionType, count: generateForm.value.count })
+    status.value = 'DRAFT'
+    await load()
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    generating.value = false
+  }
+}
+
 function selectStatus(value) {
   if (status.value === value) return
   status.value = value
@@ -183,14 +210,16 @@ async function review(draft, reviewStatus) {
   const reviewComment = window.prompt(message) ?? ''
   if (reviewStatus === 'REJECTED' && !reviewComment.trim()) return
   try {
-    await reviewDraft(draft.id, { reviewStatus, reviewComment })
+    await reviewDraft(draft.id, { reviewResult: reviewStatus, comment: reviewComment })
     await load()
   } catch (e) {
     error.value = e.message
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  await Promise.all([load(), listResources({ status: 'PUBLISHED', pageNo: 1, pageSize: 100 }).then((data) => { resources.value = data?.records || [] })])
+})
 </script>
 
 <style scoped>
@@ -212,5 +241,10 @@ onMounted(load)
 .ai-answer-details dt { color: var(--muted); font-size: 13px; font-weight: 700; }
 .ai-answer-details dd { margin: 0; line-height: 1.65; }
 .ai-source-list { margin-top: 0; }
+.ai-generate-form { display: grid; grid-template-columns: minmax(240px, 1fr) repeat(2, minmax(140px, 190px)) 140px auto; gap: 16px; align-items: end; margin-bottom: 22px; }
+.ai-generate-form p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.ai-generate-form label { display: grid; gap: 7px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.ai-generate-form select, .ai-generate-form input { min-height: 42px; border: 1px solid var(--border); border-radius: 6px; padding: 0 11px; background: #fff; }
+@media (max-width: 1100px) { .ai-generate-form { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 760px) { .ai-draft-heading { align-items: flex-start; } .draft-status-tabs { width: 100%; } .draft-status-tabs button { min-width: 0; flex: 1; } }
 </style>

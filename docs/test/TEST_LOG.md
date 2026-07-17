@@ -1,5 +1,13 @@
 # Test Log
 
+## 2026-07-15 Lite文档统一与构建验证
+
+- 后端：执行 `mvn verify`，结果 `BUILD SUCCESS`；共运行64个测试，失败0、错误0、跳过0；Checkstyle违规0。
+- 管理员端：执行 `npm run lint` 和 `npm run build`，均成功。
+- 护工端：执行 `npm run lint` 和 `npm run build`，均成功。
+- 门户端：执行 `npm run build`，成功；Vite提示单个产物包大于500 kB，该提示不阻塞本地演示，后续可按页面拆包优化。
+- 本轮未执行公网部署、高并发压测或真实模型API测试；AI保持Mock模式。
+
 更新时间：2026-07-09
 
 ## 2026-07-07 审计阶段测试基础

@@ -8,7 +8,7 @@
         <h1 tabindex="-1">
           学习笔记
         </h1>
-        <p>整理培训中的重点内容，笔记仅保存在当前设备和账号下。</p>
+        <p>整理培训中的重点内容，笔记会同步保存在当前账号中。</p>
       </div>
     </div>
 
@@ -26,7 +26,7 @@
           <time>{{ formatDate(note.updatedAt) }}</time>
         </div>
         <h2>{{ note.title || `培训资料 #${note.resourceId}` }}</h2>
-        <p>{{ note.content }}</p>
+        <p>{{ plainTextExcerpt(note.content) }}</p>
         <RouterLink :to="`/training/${note.resourceId}`">
           继续学习 <AppIcon name="arrow-right" />
         </RouterLink>
@@ -37,7 +37,10 @@
       class="empty-card notes-empty"
     >
       <span class="empty-icon"><AppIcon name="note" /></span>
-      <div><h2>还没有学习笔记</h2><p>打开任意培训资料，即可记录学习重点。</p></div>
+      <div>
+        <h2>还没有学习笔记</h2>
+        <p>打开任意培训课程，即可记录学习重点。</p>
+      </div>
       <RouterLink
         class="primary-button"
         to="/training"
@@ -49,15 +52,35 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import AppIcon from '../components/AppIcon.vue'
-import { learningLibrary, loadLearningLibrary } from '../learningStore.js'
+import { getTrainingNotes } from '../api/training.js'
 
-const notes = computed(() => Object.values(learningLibrary.notes).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
+const notes = ref([])
 
 function formatDate(value) {
-  return new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(value))
 }
 
-onMounted(loadLearningLibrary)
+function plainTextExcerpt(value) {
+  if (!value) return '暂无笔记内容'
+
+  const document = new DOMParser().parseFromString(String(value), 'text/html')
+  const text = (document.body.textContent || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!text) return '暂无笔记内容'
+  return text.length > 120 ? `${text.slice(0, 120)}…` : text
+}
+
+onMounted(async () => {
+  notes.value = (await getTrainingNotes())
+    .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
+})
 </script>

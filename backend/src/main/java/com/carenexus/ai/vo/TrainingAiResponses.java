@@ -44,4 +44,16 @@ public final class TrainingAiResponses {
     public static class DraftBatchResponse {
         public List<Long> draftIds = new ArrayList<>();
     }
+
+    public static class PracticeResponse {
+        public List<PracticeQuestion> questions = new ArrayList<>();
+        public List<Reference> references = new ArrayList<>();
+    }
+
+    public static class PracticeQuestion {
+        public String question;
+        public List<String> options = new ArrayList<>();
+        public int answer;
+        public String explanation;
+    }
 }

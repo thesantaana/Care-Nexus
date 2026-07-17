@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -187,8 +188,10 @@ public class AiQuestionDraftService {
         response.analysis = payload.analysis;
         response.options = payload.options.stream().map(this::toOption).collect(Collectors.toList());
         response.draftStatus = draft.getDraftStatus();
-        response.sourceResources = sourceService.load(sourceIds(draft.getId())).stream()
-                .map(this::toReference).collect(Collectors.toList());
+        List<Long> sourceIds = sourceIds(draft.getId());
+        response.sourceResources = sourceIds.isEmpty()
+                ? Collections.emptyList()
+                : sourceService.load(sourceIds).stream().map(this::toReference).collect(Collectors.toList());
         response.reviewedBy = draft.getReviewedBy();
         response.reviewedAt = draft.getReviewedAt();
         response.reviewComment = draft.getReviewComment();

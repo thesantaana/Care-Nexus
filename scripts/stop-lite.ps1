@@ -6,4 +6,4 @@ foreach ($port in $ports) {
         ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
 }
 
-Write-Host 'CareNexus 本地服务已停止。'
+Write-Host 'CareNexus Lite local services stopped.'

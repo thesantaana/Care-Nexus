@@ -2111,3 +2111,59 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Route and interaction motion */
+.admin-page-enter-active {
+  transition: opacity 280ms cubic-bezier(.22, 1, .36, 1), transform 280ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.admin-page-leave-active {
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.admin-page-enter-from {
+  opacity: 0;
+  transform: translateY(14px) scale(.994);
+}
+
+.admin-page-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+.admin-page-enter-active .page-heading,
+.admin-page-enter-active .admin-metrics,
+.admin-page-enter-active .data-panel,
+.admin-page-enter-active .admin-card-grid,
+.admin-page-enter-active .course-score-section {
+  animation: admin-content-rise 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.admin-page-enter-active .admin-metrics,
+.admin-page-enter-active .data-panel { animation-delay: 45ms; }
+.admin-page-enter-active .admin-card-grid,
+.admin-page-enter-active .course-score-section { animation-delay: 90ms; }
+
+@keyframes admin-content-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+button:not(:disabled):active,
+.button:not(:disabled):active,
+.primary-navigation a:active,
+.admin-module-link:active,
+.admin-record-card:active {
+  transform: translateY(1px) scale(.975);
+  transition-duration: 70ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-page-enter-active .page-heading,
+  .admin-page-enter-active .admin-metrics,
+  .admin-page-enter-active .data-panel,
+  .admin-page-enter-active .admin-card-grid,
+  .admin-page-enter-active .course-score-section {
+    animation: none !important;
+  }
+}

@@ -118,3 +118,60 @@ button {
 
 @media (max-width: 760px) { .sky-hero-copy { padding-top: 7rem; }.sky-card-orbit { bottom: 15vh; transform: translateX(-50%) scale(.62); transform-origin: bottom center; }.sky-rating { bottom: 4vh; }.sky-cloud-left { width: 60vw; }.sky-cloud-right { width: 58vw; } }
 @media (prefers-reduced-motion: reduce) { .sky-orbit-card, .sky-hero-actions button { transition: none; } }
+
+/* Course workspace route and section motion */
+.course-workspace-enter {
+  animation: courseWorkspaceIn 360ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.course-workspace-enter > header,
+.course-workspace-enter > aside {
+  animation: courseChromeIn 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.course-panel-enter {
+  animation: coursePanelIn 320ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.course-panel-enter > * {
+  animation: courseContentRise 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.course-panel-enter > *:nth-child(2) { animation-delay: 45ms; }
+.course-panel-enter > *:nth-child(n+3) { animation-delay: 80ms; }
+
+.course-workspace-enter button:not(:disabled):active,
+.course-workspace-enter a:active {
+  transform: translateY(1px) scale(.975);
+  transition-duration: 70ms;
+}
+
+@keyframes courseWorkspaceIn {
+  from { opacity: 0; transform: scale(.996); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes courseChromeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes coursePanelIn {
+  from { opacity: 0; transform: translateY(14px) scale(.994); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes courseContentRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-workspace-enter,
+  .course-workspace-enter > header,
+  .course-workspace-enter > aside,
+  .course-panel-enter,
+  .course-panel-enter > * {
+    animation: none !important;
+  }
+}

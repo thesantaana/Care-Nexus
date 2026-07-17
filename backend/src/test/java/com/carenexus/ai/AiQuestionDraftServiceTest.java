@@ -2,6 +2,7 @@ package com.carenexus.ai;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -25,6 +26,7 @@ import com.carenexus.training.mapper.ExamQuestionMapper;
 import com.carenexus.training.mapper.ExamQuestionOptionMapper;
 import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.resource.service.TrainingResourceQueryService;
+import com.carenexus.training.vo.ResourceResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,6 +104,23 @@ class AiQuestionDraftServiceTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> loader.load(Collections.singletonList(404L)));
         assertEquals(ErrorCode.NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void externalVideoUsesCourseSummaryAsReadableSource() {
+        TrainingResourceQueryService queryService = mock(TrainingResourceQueryService.class);
+        ResourceResponse resource = new ResourceResponse();
+        resource.setId(2L);
+        resource.setTitle("跌倒预防视频");
+        resource.setStorageMode("EXTERNAL_LINK");
+        resource.setSummary("介绍跌倒风险、环境整理和跌倒后应急处理原则。");
+        when(queryService.getResource(2L)).thenReturn(resource);
+
+        TrainingAiSource source = new TrainingAiSourceService(queryService)
+                .load(Collections.singletonList(2L)).get(0);
+
+        assertTrue(source.getContent().contains("跌倒预防视频"));
+        assertTrue(source.getContent().contains("跌倒风险"));
     }
 
     private QuestionDraftRequest request(String type) {

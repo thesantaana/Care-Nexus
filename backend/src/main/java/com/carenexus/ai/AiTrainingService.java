@@ -9,4 +9,8 @@ public interface AiTrainingService {
     TrainingAiResult suggestLearning(TrainingAiRequest request);
 
     TrainingAiResult generateQuestionDraft(TrainingAiRequest request);
+
+    TrainingAiResult generatePractice(TrainingAiRequest request);
+
+    TrainingAiResult explainAssignment(TrainingAiRequest request);
 }

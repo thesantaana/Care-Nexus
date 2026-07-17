@@ -116,10 +116,10 @@
                 <dt>存储方式</dt>
                 <dd>{{ storageModeLabel(resource.storageMode) }}</dd>
               </div>
-              <div>
+              <div v-if="false">
                 <dt>培训类别</dt>
                 <dd>
-                  {{ resource.category?.categoryName || '未分类' }}
+                  护理培训
                   <span
                     v-if="resource.category?.status === 'DISABLED'"
                     class="tn-muted"
@@ -140,7 +140,7 @@
               </div>
             </dl>
 
-            <div class="tn-detail-tags">
+            <div v-if="false" class="tn-detail-tags">
               <h3>培训标签</h3>
               <div
                 v-if="resource.tags?.length"

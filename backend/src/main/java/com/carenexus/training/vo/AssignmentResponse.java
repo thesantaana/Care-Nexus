@@ -15,4 +15,5 @@ public class AssignmentResponse {
     public String submittedAnswer;
     public BigDecimal score;
     public String correctAnswer;
+    public String answerAnalysis;
 }

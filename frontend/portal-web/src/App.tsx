@@ -1234,6 +1234,7 @@ function App() {
   const mouse = useRef<Point>({ x: -999, y: -999 });
   const smooth = useRef<Point>({ x: -999, y: -999 });
   const rafRef = useRef<number | null>(null);
+  const assistantHomeScrollRef = useRef<number | null>(null);
   const [cursorPos, setCursorPos] = useState<Point>({ x: -999, y: -999 });
   const [portalRoute, setPortalRoute] = useState<AppRoute>(() => readPortalRoute());
 
@@ -1244,6 +1245,15 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (portalRoute === 'home' && assistantHomeScrollRef.current !== null) {
+      const scrollTop = assistantHomeScrollRef.current;
+      assistantHomeScrollRef.current = null;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollTop, left: 0, behavior: 'auto' });
+      });
+      return;
+    }
+
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [portalRoute]);
 
@@ -1277,6 +1287,11 @@ function App() {
   function navigate(route: AppRoute) {
     setPortalRoute(route);
     window.location.hash = route === 'home' ? 'home' : route;
+  }
+
+  function openAssistantFromHome() {
+    assistantHomeScrollRef.current = window.scrollY;
+    navigate('assistant');
   }
 
   if (portalRoute === 'concept') {
@@ -1354,7 +1369,7 @@ function App() {
         </section>
 
         <CyberVideoModule onOpenConcept={() => navigate('concept')} />
-        <AssistantDetailModule onOpenCapabilities={() => navigate('assistant')} />
+        <AssistantDetailModule onOpenCapabilities={openAssistantFromHome} />
         <CryptoBlueprintModules />
       </div>
     </div>

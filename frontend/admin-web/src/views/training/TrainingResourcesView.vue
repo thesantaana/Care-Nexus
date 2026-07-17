@@ -21,12 +21,6 @@
           class="tn-page-actions"
         >
           <RouterLink
-            class="tn-button tn-button--secondary"
-            :to="catalogPath"
-          >
-            分类与标签
-          </RouterLink>
-          <RouterLink
             class="tn-button tn-button--primary"
             :to="createPath"
           >
@@ -49,7 +43,7 @@
         class="tn-alert tn-alert--warning"
         role="alert"
       >
-        <p>{{ optionsError }} 分类与标签筛选暂不可用，资源列表仍可继续查看。</p>
+        <p>{{ optionsError }} 标签信息暂不可用，资源列表仍可继续查看。</p>
         <div class="tn-alert-actions">
           <button
             class="tn-button tn-button--secondary"
@@ -70,7 +64,7 @@
             <h2 id="training-filter-title">
               筛选资源
             </h2>
-            <p>可按关键字、类型、类别和标签组合查询。</p>
+            <p>可按关键字、资源类型和发布状态组合查询。</p>
           </div>
         </div>
         <form
@@ -89,7 +83,7 @@
               autocomplete="off"
             >
           </div>
-          <div class="tn-field">
+          <div v-if="false" class="tn-field">
             <label for="resource-type">资源类型</label>
             <select
               id="resource-type"
@@ -107,7 +101,7 @@
               </option>
             </select>
           </div>
-          <div class="tn-field">
+          <div v-if="false" class="tn-field">
             <label for="resource-category">培训类别</label>
             <select
               id="resource-category"
@@ -123,25 +117,6 @@
                 :value="category.id"
               >
                 {{ category.categoryName }}{{ category.status === 'DISABLED' ? '（已停用）' : '' }}
-              </option>
-            </select>
-          </div>
-          <div class="tn-field">
-            <label for="resource-tag">培训标签</label>
-            <select
-              id="resource-tag"
-              v-model.number="filters.tagId"
-              :disabled="optionsLoading"
-            >
-              <option value="">
-                全部标签
-              </option>
-              <option
-                v-for="tag in tags"
-                :key="tag.id"
-                :value="tag.id"
-              >
-                {{ tag.tagName }}{{ tag.status === 'DISABLED' ? '（已停用）' : '' }}
               </option>
             </select>
           </div>
@@ -287,9 +262,6 @@
                     类型与来源
                   </th>
                   <th scope="col">
-                    类别与标签
-                  </th>
-                  <th scope="col">
                     状态
                   </th>
                   <th scope="col">
@@ -324,25 +296,6 @@
                       class="tn-muted"
                     >
                       建议学习 {{ Math.ceil(resource.durationSeconds / 60) }} 分钟
-                    </div>
-                  </td>
-                  <td>
-                    <strong>{{ resource.categoryName || '未分类' }}</strong>
-                    <div
-                      v-if="resource.tags?.length"
-                      class="tn-tag-list tn-table-tags"
-                    >
-                      <span
-                        v-for="tag in resource.tags"
-                        :key="tag.id"
-                        class="tn-tag"
-                      >{{ tag.tagName }}</span>
-                    </div>
-                    <div
-                      v-else
-                      class="tn-muted"
-                    >
-                      暂无标签
                     </div>
                   </td>
                   <td>
@@ -492,7 +445,6 @@ import { computed, reactive, ref, watch } from 'vue'
 import {
   listCategories,
   listResources,
-  listTags,
   offlineResource,
   publishResource
 } from '../../api/training.js'
@@ -522,10 +474,6 @@ const props = defineProps({
     type: String,
     default: '/training/resources/new'
   },
-  catalogPath: {
-    type: String,
-    default: '/training/catalogs'
-  },
   resourceBasePath: {
     type: String,
     default: '/training/resources'
@@ -541,14 +489,12 @@ const listError = ref('')
 const optionsError = ref('')
 const successMessage = ref('')
 const categories = ref([])
-const tags = ref([])
 let requestSequence = 0
 
 const filters = reactive({
   keyword: '',
   resourceType: '',
   categoryId: '',
-  tagId: '',
   status: '',
   pageNo: 1,
   pageSize: 10
@@ -576,7 +522,6 @@ const hasActiveFilters = computed(() => Boolean(
   filters.keyword.trim() ||
   filters.resourceType ||
   filters.categoryId ||
-  filters.tagId ||
   (canManage.value && filters.status)
 ))
 
@@ -624,14 +569,10 @@ async function loadOptions() {
   optionsError.value = ''
   try {
     const status = canManage.value ? '' : 'ENABLED'
-    const [categoryData, tagData] = await Promise.all([
-      listCategories(status),
-      listTags(status)
-    ])
+    const categoryData = await listCategories(status)
     categories.value = Array.isArray(categoryData) ? categoryData : []
-    tags.value = Array.isArray(tagData) ? tagData : []
   } catch (error) {
-    optionsError.value = errorMessage(error, '分类与标签加载失败。')
+    optionsError.value = errorMessage(error, '分类加载失败。')
   } finally {
     optionsLoading.value = false
   }
@@ -650,7 +591,6 @@ async function loadResources() {
       keyword: filters.keyword.trim(),
       resourceType: filters.resourceType,
       categoryId: filters.categoryId,
-      tagId: filters.tagId,
       status: canManage.value ? filters.status : '',
       pageNo: filters.pageNo,
       pageSize: filters.pageSize
@@ -692,7 +632,6 @@ function resetFilters() {
     keyword: '',
     resourceType: '',
     categoryId: '',
-    tagId: '',
     status: '',
     pageNo: 1
   })
@@ -791,10 +730,6 @@ watch([canView, canManage], ([hasAccess, hasManage], previous) => {
 
 .tn-panel-header .tn-field-label {
   margin: 0;
-}
-
-.tn-table-tags {
-  margin-top: 8px;
 }
 
 .tn-numeric {

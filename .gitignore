@@ -50,6 +50,7 @@ pnpm-debug.log*
 uploads/
 tmp/
 temp/
+.runtime/
 
 # Database
 *.sql.gz

@@ -11,9 +11,9 @@ export const navigationItems = [
     permissions: ['training:resource:view', 'training:resource:manage']
   },
   {
-    label: '分类与标签',
-    to: '/training/catalogs',
-    icon: 'tag',
+    label: '发布作业',
+    to: '/training/assignments/publish',
+    icon: 'upload',
     permissions: ['training:resource:manage']
   },
   {

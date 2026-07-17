@@ -1,24 +1,16 @@
-# Database
+# CareNexus Lite 数据库
 
-本目录存放 CareNexus 颐联数据库初始化脚本和数据字典。
+数据库名：`care_nexus`，要求 MySQL 8 和 `utf8mb4`。
 
-当前 T-011 仅提供 MVP 工程骨架所需的结构设计和演示数据规划，不包含真实隐私数据、真实密码、Token 或密钥。
+按编号执行：
 
-```text
-database/
-├── init/
-│   ├── 001_schema.sql
-│   └── 002_seed_data.sql
-├── dict/
-│   └── data-dictionary.md
-└── model/
-    ├── README.md
-    ├── CDM说明.md
-    └── PDM说明.md
-```
+1. `001_schema.sql`：基础账号、培训、考核、AI、文件和审计结构。
+2. `002_seed_data.sql`：角色、权限、演示账号和基础培训数据。
+3. `003_add_account_course_images.sql`：用户头像与课程封面。
+4. `004_course_interactions.sql`：笔记、讨论与作业基础。
+5. `005_demo_learning_progress.sql`：学习进度演示数据。
+6. `006_multi_question_assignments.sql`：多题作业。
+7. `007_social_discussions.sql`：社交式讨论、回复和点赞。
+8. `008_demo_showcase_data.sql`：答辩展示数据与中文修复。
 
-目标数据库：MySQL 8.0。
-
-当前轻量版物理表数量：22 张（原21张核心表及新增的 `training_note`）。
-
-PowerDesigner `.pdm` 文件和 CDM/PDM 截图需在安装 PowerDesigner 的环境中生成；当前仓库不得包含伪造模型文件。
+脚本用于本地演示，生产环境需改用正式迁移工具、独立账号、备份和密钥管理。

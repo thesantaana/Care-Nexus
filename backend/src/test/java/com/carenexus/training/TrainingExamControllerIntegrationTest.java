@@ -29,6 +29,7 @@ import com.carenexus.training.entity.ExamQuestionOption;
 import com.carenexus.training.entity.ExamRecord;
 import com.carenexus.training.entity.LearningAccessLog;
 import com.carenexus.training.entity.LearningRecord;
+import com.carenexus.training.entity.LearningResourceFavorite;
 import com.carenexus.training.entity.TrainingExam;
 import com.carenexus.training.entity.TrainingExamQuestion;
 import com.carenexus.training.entity.TrainingResource;
@@ -38,6 +39,7 @@ import com.carenexus.training.mapper.ExamQuestionOptionMapper;
 import com.carenexus.training.mapper.ExamRecordMapper;
 import com.carenexus.training.mapper.LearningAccessLogMapper;
 import com.carenexus.training.mapper.LearningRecordMapper;
+import com.carenexus.training.mapper.LearningResourceFavoriteMapper;
 import com.carenexus.training.mapper.TrainingCategoryMapper;
 import com.carenexus.training.mapper.TrainingExamMapper;
 import com.carenexus.training.mapper.TrainingExamQuestionMapper;
@@ -115,6 +117,8 @@ class TrainingExamControllerIntegrationTest {
     private LearningRecordMapper learningRecordMapper;
     @MockBean
     private LearningAccessLogMapper learningAccessLogMapper;
+    @MockBean
+    private LearningResourceFavoriteMapper favoriteMapper;
 
     @BeforeEach
     void setUp() {
@@ -158,6 +162,7 @@ class TrainingExamControllerIntegrationTest {
         when(examRecordMapper.updateById(any())).thenReturn(1);
         when(learningRecordMapper.updateById(any())).thenReturn(1);
         when(learningAccessLogMapper.insert(any())).thenReturn(1);
+        when(favoriteMapper.insert(any())).thenReturn(1);
         when(operationLogMapper.insert(any())).thenReturn(1);
     }
 
@@ -209,6 +214,35 @@ class TrainingExamControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalLearningSeconds").value(600))
                 .andExpect(jsonPath("$.data.trainingStatus").value(LearningStatus.LEARNING));
+    }
+
+    @Test
+    void learningLibraryUsesPersistedAccessAndFavoriteData() throws Exception {
+        LearningAccessLog completed = accessLog(11L, 1L);
+        LearningResourceFavorite favorite = new LearningResourceFavorite();
+        favorite.setId(61L);
+        favorite.setUserId(11L);
+        favorite.setResourceId(1L);
+        when(learningAccessLogMapper.selectList(any())).thenReturn(Collections.singletonList(completed));
+        when(favoriteMapper.selectList(any())).thenReturn(Collections.singletonList(favorite));
+
+        mockMvc.perform(get("/api/v1/training/learning/library")
+                        .header("Authorization", bearer(caregiverToken())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.courseResourceIds[0]").value(1))
+                .andExpect(jsonPath("$.data.completedResourceIds[0]").value(1))
+                .andExpect(jsonPath("$.data.favoriteResourceIds[0]").value(1));
+    }
+
+    @Test
+    void caregiverCanPersistFavoriteState() throws Exception {
+        when(favoriteMapper.selectOne(any())).thenReturn(null);
+        mockMvc.perform(put("/api/v1/training/learning/resources/1/favorite")
+                        .header("Authorization", bearer(caregiverToken()))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"favorite\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.resourceId").value(1))
+                .andExpect(jsonPath("$.data.favorite").value(true));
     }
 
     @Test

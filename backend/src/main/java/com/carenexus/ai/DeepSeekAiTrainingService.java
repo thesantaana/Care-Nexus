@@ -47,6 +47,23 @@ public class DeepSeekAiTrainingService implements AiTrainingService {
                 + "题干草稿。只输出题干，不输出选项、答案或解析：\n" + context(request), true);
     }
 
+    @Override
+    public TrainingAiResult generatePractice(TrainingAiRequest request) {
+        requireSources(request);
+        return result("请严格依据以下资料生成3道单选练习题。只输出JSON数组，不要使用Markdown。"
+                + "每项字段为question、options（4个字符串）、answer（从0开始的正确选项下标）、explanation。\n"
+                + context(request), false);
+    }
+
+    @Override
+    public TrainingAiResult explainAssignment(TrainingAiRequest request) {
+        requireSources(request);
+        return result("培训资料：\n" + context(request) + "\n\n题目：" + request.getPrompt()
+                + "\n学员答案：" + request.getUserAnswer()
+                + "\n正确答案：" + request.getStandardAnswer()
+                + "\n请解释正确答案，并指出常见错误原因。不得扩展为医疗诊断或治疗建议。", false);
+    }
+
     private TrainingAiResult result(String prompt, boolean draft) {
         return new TrainingAiResult(client.chat(SYSTEM_PROMPT, prompt), draft);
     }

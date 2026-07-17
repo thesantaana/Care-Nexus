@@ -1679,16 +1679,52 @@ progress::-moz-progress-bar {
 
 .page-fade-enter-active,
 .page-fade-leave-active {
-  transition: opacity var(--motion-fast) ease, transform var(--motion-fast) ease;
+  transition: opacity 280ms cubic-bezier(.22, 1, .36, 1), transform 280ms cubic-bezier(.22, 1, .36, 1);
 }
 
 .page-fade-enter-from {
   opacity: 0;
-  transform: translateY(5px);
+  transform: translateY(14px) scale(.992);
 }
 
 .page-fade-leave-to {
   opacity: 0;
+  transform: translateY(-5px);
+}
+
+.page-fade-enter-active .page-heading,
+.page-fade-enter-active .workspace-hero,
+.page-fade-enter-active .library-title-row,
+.page-fade-enter-active .content-card,
+.page-fade-enter-active .course-card,
+.page-fade-enter-active .progress-card,
+.page-fade-enter-active .note-card {
+  animation: mobile-content-rise 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.page-fade-enter-active .content-card:nth-of-type(2),
+.page-fade-enter-active .course-card:nth-child(2),
+.page-fade-enter-active .progress-card:nth-child(2),
+.page-fade-enter-active .note-card:nth-child(2) { animation-delay: 45ms; }
+
+.page-fade-enter-active .content-card:nth-of-type(n+3),
+.page-fade-enter-active .course-card:nth-child(n+3),
+.page-fade-enter-active .progress-card:nth-child(n+3),
+.page-fade-enter-active .note-card:nth-child(n+3) { animation-delay: 90ms; }
+
+@keyframes mobile-content-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+button:not(:disabled):active,
+.primary-button:not(:disabled):active,
+.secondary-button:not(:disabled):active,
+.sidebar-nav a:active,
+.course-card:active,
+.note-card:active {
+  transform: translateY(1px) scale(.972);
+  transition-duration: 70ms;
 }
 
 @media (min-width: 480px) {
@@ -2181,8 +2217,14 @@ progress::-moz-progress-bar {
 }
 
 @media (max-width: 760px) {
-  .mobile-shell:not(.public-shell) > main { padding-left: 76px; }
-  .learning-sidebar { width: 76px; padding: 18px 9px; align-items: center; }
+  .mobile-shell:not(.public-shell) > main {
+    width: 100%;
+    margin: 0;
+    padding-right: 0;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    padding-left: 0;
+  }
+  .learning-sidebar { display: none; }
   .learning-sidebar .brand-link > span:last-child,
   .sidebar-profile .user-chip-copy,
   .sidebar-nav span,

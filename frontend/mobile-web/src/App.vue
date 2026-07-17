@@ -57,6 +57,12 @@
       </div>
     </aside>
 
+    <nav v-if="!isPublicRoute" class="mobile-bottom-nav" aria-label="移动端主导航">
+      <RouterLink v-for="item in navigationItems" :key="`bottom-${item.path}`" :to="item.path">
+        <AppIcon :name="item.icon" /><span>{{ item.label }}</span>
+      </RouterLink>
+    </nav>
+
     <main
       id="main-content"
       ref="mainContent"
@@ -67,7 +73,10 @@
           name="page-fade"
           mode="out-in"
         >
-          <component :is="Component" />
+          <component
+            :is="Component"
+            :key="route.fullPath"
+          />
         </Transition>
       </RouterView>
     </main>
@@ -105,3 +114,21 @@ watch(
   { immediate: true }
 )
 </script>
+
+<style scoped>
+.mobile-bottom-nav { display: none; }
+@media (max-width: 760px) {
+  .learning-sidebar { display: none; }
+  .mobile-shell { display: block; }
+  .mobile-shell:not(.public-shell) > main { width: 100%; margin: 0; padding-left: 0; }
+  .mobile-bottom-nav {
+    position: fixed; z-index: 80; right: 10px; bottom: 10px; left: 10px;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-height: 62px; border: 1px solid #d8e3e6; border-radius: 8px;
+    background: rgba(255,255,255,.97); box-shadow: 0 12px 35px rgba(15,50,58,.16);
+  }
+  .mobile-bottom-nav a { display: grid; place-items: center; gap: 3px; padding: 8px 2px; color: #61747c; font-size: 11px; text-decoration: none; }
+  .mobile-bottom-nav a :deep(.app-icon) { width: 21px; height: 21px; }
+  .mobile-bottom-nav a.router-link-active { color: #087e75; font-weight: 700; }
+}
+</style>

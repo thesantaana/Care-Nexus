@@ -5,6 +5,8 @@ import com.carenexus.ai.TrainingAiRequest;
 import com.carenexus.ai.TrainingAiResult;
 import com.carenexus.ai.TrainingAiSource;
 import com.carenexus.ai.dto.TrainingAiRequests.ContentRequest;
+import com.carenexus.ai.dto.TrainingAiRequests.AssignmentExplanationRequest;
+import com.carenexus.ai.dto.TrainingAiRequests.PracticeRequest;
 import com.carenexus.ai.vo.TrainingAiResponses;
 import com.carenexus.common.error.ErrorCode;
 import com.carenexus.common.exception.BusinessException;
@@ -12,6 +14,8 @@ import com.carenexus.training.exam.service.TrainingLearningService;
 import com.carenexus.training.resource.support.TrainingResourceAccessPolicy;
 import com.carenexus.training.vo.LearningRecordResponse;
 import java.util.List;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,14 +26,16 @@ public class TrainingAiAssistanceService {
     private final TrainingAiSourceService sourceService;
     private final AiTrainingService aiTrainingService;
     private final TrainingLearningService learningService;
+    private final ObjectMapper objectMapper;
 
     public TrainingAiAssistanceService(TrainingResourceAccessPolicy accessPolicy,
             TrainingAiSourceService sourceService, AiTrainingService aiTrainingService,
-            TrainingLearningService learningService) {
+            TrainingLearningService learningService, ObjectMapper objectMapper) {
         this.accessPolicy = accessPolicy;
         this.sourceService = sourceService;
         this.aiTrainingService = aiTrainingService;
         this.learningService = learningService;
+        this.objectMapper = objectMapper;
     }
 
     public TrainingAiResponses.ContentResponse answer(ContentRequest request) {
@@ -54,6 +60,47 @@ public class TrainingAiAssistanceService {
                 + ",累计学习秒数=" + learning.getTotalLearningSeconds();
         TrainingAiRequest aiRequest = request(request.getSourceResourceIds(), context);
         return response(aiTrainingService.suggestLearning(aiRequest), aiRequest.getSources());
+    }
+
+    public TrainingAiResponses.PracticeResponse practice(PracticeRequest request) {
+        accessPolicy.requireViewOrManage();
+        TrainingAiRequest aiRequest = request(request.getSourceResourceIds(), null);
+        String content = aiTrainingService.generatePractice(aiRequest).getContent();
+        try {
+            String json = stripJsonFence(content);
+            List<TrainingAiResponses.PracticeQuestion> questions = objectMapper.readValue(json,
+                    new TypeReference<List<TrainingAiResponses.PracticeQuestion>>() { });
+            if (questions.isEmpty()) {
+                throw new IllegalArgumentException("AI returned no practice questions");
+            }
+            TrainingAiResponses.PracticeResponse response = new TrainingAiResponses.PracticeResponse();
+            response.questions = questions.stream().limit(request.getCount()).collect(Collectors.toList());
+            response.references = aiRequest.getSources().stream().map(this::reference)
+                    .collect(Collectors.toList());
+            return response;
+        } catch (Exception exception) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI练习题生成失败，请稍后重试");
+        }
+    }
+
+    public TrainingAiResponses.ContentResponse explainAssignment(
+            AssignmentExplanationRequest request) {
+        accessPolicy.requireViewOrManage();
+        String prompt = "题目：" + request.getQuestion() + "\n学员答案："
+                + request.getUserAnswer();
+        TrainingAiRequest aiRequest = request(request.getSourceResourceIds(), prompt);
+        aiRequest.setUserAnswer(request.getUserAnswer());
+        aiRequest.setStandardAnswer(request.getStandardAnswer());
+        return response(aiTrainingService.explainAssignment(aiRequest), aiRequest.getSources());
+    }
+
+    private String stripJsonFence(String content) {
+        String value = content == null ? "" : content.trim();
+        if (value.startsWith("```")) {
+            value = value.replaceFirst("^```(?:json)?\\s*", "")
+                    .replaceFirst("\\s*```$", "");
+        }
+        return value;
     }
 
     private TrainingAiRequest request(List<Long> sourceIds, String prompt) {

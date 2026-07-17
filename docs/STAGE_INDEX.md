@@ -1,32 +1,20 @@
-# RUP 阶段工件索引
+# CareNexus Lite 阶段工件索引
 
-本文件用于说明《软件工程案例分析与实践》实训中各阶段工件在仓库中的唯一存放位置。
+## 已完成：范围与设计
 
-## 先启阶段
+- `requirements/`：Lite需求、用例和流程。
+- `design/`：当前架构、数据库、认证、模型和页面地图。
+- `api/`：接口规范与已实现清单。
+- `decisions/`：模块化单体与三前端决策。
 
-- `docs/plans/`：项目开发计划、进度计划、配置管理计划。
-- `docs/requirements/`：软件需求规约、用例模型、关键用例、业务流程、MVP边界。
-- `docs/test/`：测试计划初稿。
-- `docs/management/`：风险、任务、问题、评审和状态记录。
+## 当前：构建收尾
 
-## 精化阶段
+- 源代码：`backend/`、`frontend/`。
+- 数据库：`database/init/`。
+- 测试：`test/`。
+- 管理：`management/`。
 
-- `docs/requirements/`：剩余用例和需求细化。
-- `docs/design/`：架构、概要/详细设计、类图、时序图、活动图、CDM/PDM、数据库设计、原型。
-- `docs/api/`：接口设计。
-- `docs/test/`：详细测试用例。
-- `docs/decisions/`：架构决策记录。
+## 后续：交付
 
-## 构建阶段
-
-- 源代码和可执行代码：按后续确认的工程目录存放。
-- `docs/test/`：单元测试、联调、缺陷和测试日志。
-- `docs/logs/`：个人工作日志。
-- `docs/meetings/`：阶段会议记录。
-
-## 产品化阶段
-
-- `docs/test/`：最终测试报告、缺陷关闭情况和测试结果汇总。
-- `docs/delivery/`：部署说明、用户手册、产品说明、答辩材料和交付清单。
-
-交付清单可以引用 `docs/test/` 中的测试报告，不得复制不同版本的测试报告。
+- `delivery/`：部署、演示、用户手册和答辩材料。
+- `database/model/`：最终PowerDesigner模型和截图。

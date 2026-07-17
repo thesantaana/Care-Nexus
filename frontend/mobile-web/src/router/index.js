@@ -50,6 +50,18 @@ const routes = [
     }
   },
   {
+    path: '/training/:resourceId(\\d+)/:section(discussions|assignments|exam|mistakes|records)',
+    name: 'course-feature',
+    component: () => import('../views/CourseFeatureView.vue'),
+    props: true,
+    meta: {
+      requiresAuth: true,
+      roles: ['CAREGIVER'],
+      permissions: ['training:resource:view'],
+      title: '课程学习'
+    }
+  },
+  {
     path: '/learning',
     name: 'learning',
     component: () => import('../views/LearningProgressView.vue'),

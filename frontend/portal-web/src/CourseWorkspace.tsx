@@ -37,7 +37,7 @@ export function CourseWorkspace({ user, token, resource, scoreSummary, onBack, o
     { id: 'records' as const, label: '学习记录', icon: BookOpen },
   ];
 
-  return <main className="min-h-screen bg-[#f1f4f8] pl-[78px] text-slate-900 md:pl-[220px]">
+  return <main className="course-workspace-enter min-h-screen bg-[#f1f4f8] pl-[78px] text-slate-900 md:pl-[220px]">
     <header className="fixed inset-x-0 top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 md:pl-[244px]">
       <button className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-teal-700" onClick={onBack}><ArrowLeft size={18} />全部课程</button>
       <div className="flex items-center gap-3"><img className="h-9 w-9 rounded-full object-cover" src={userProfile.avatarDataUrl} alt={`${userProfile.displayName}的头像`} /><strong className="hidden text-sm sm:block">{userProfile.displayName}</strong><button className="rounded-md p-2 text-slate-500 hover:bg-slate-100" onClick={onLogout} title="退出登录"><LogOut size={18} /></button></div>
@@ -47,7 +47,7 @@ export function CourseWorkspace({ user, token, resource, scoreSummary, onBack, o
       <nav className="mt-7 grid" aria-label="课程导航">{navigation.map((item) => <button key={item.id} className={`flex min-h-14 items-center justify-center gap-3 border-l-4 px-3 text-sm transition md:justify-start md:px-6 ${section === item.id ? 'border-teal-600 bg-teal-50 font-semibold text-teal-700' : 'border-transparent text-slate-500 hover:bg-slate-50'}`} onClick={() => setSection(item.id)}><item.icon size={19} /><span className="hidden md:inline">{item.label}</span></button>)}</nav>
     </aside>
     <section className="min-h-screen px-5 pb-12 pt-24 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-6xl">
+      <div className="course-panel-enter mx-auto max-w-6xl" key={section}>
         {section === 'ai' && <AiTutor resource={resource} token={token} />}
         {section === 'chapters' && <Chapters userId={user.userId} resource={resource} score={score} token={token} />}
         {section === 'discussions' && <SocialDiscussions resourceId={resource.id} token={token} />}
@@ -66,6 +66,7 @@ function PageTitle({ eyebrow, title, description }: { eyebrow: string; title: st
 
 type AiTutorTool = 'qa' | 'summary' | 'suggestions' | 'practice';
 type PracticeQuestion = { question: string; options: string[]; answer: number; explanation: string };
+type SuggestedQuestion = { question: string; answer: string };
 
 function AiTutor({ resource, token }: { resource: TrainingResource; token: string }) {
   const [tool, setTool] = useState<AiTutorTool>('qa');
@@ -76,7 +77,8 @@ function AiTutor({ resource, token }: { resource: TrainingResource; token: strin
   const [practiceIndex, setPracticeIndex] = useState(0);
   const [practiceAnswer, setPracticeAnswer] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
-  const practiceQuestions = useMemo(() => coursePracticeQuestions(resource), [resource]);
+  const [practiceQuestions, setPracticeQuestions] = useState<PracticeQuestion[]>([]);
+  const suggestedQuestions = useMemo(() => courseSuggestedQuestions(resource), [resource]);
 
   const tools: Array<{ id: AiTutorTool; title: string; description: string; icon: typeof Sparkles; tone: string }> = [
     { id: 'qa', title: '资料问答', description: '围绕当前课程资料提问，快速定位规范与操作要点。', icon: MessageSquareText, tone: 'bg-violet-50 text-violet-600' },
@@ -89,17 +91,42 @@ function AiTutor({ resource, token }: { resource: TrainingResource; token: strin
     setTool(next);
     setContent('');
     setError('');
-    if (next === 'practice') resetPractice();
+    if (next === 'practice') void loadPractice();
   }
 
-  async function generate(action: 'qa' | 'summary' | 'suggestions') {
-    if (loading || (action === 'qa' && !question.trim())) return;
+  function askSuggestedQuestion(item: SuggestedQuestion) {
+    setQuestion(item.question);
+    void generate('qa', item.question);
+  }
+
+  async function loadPractice() {
+    if (loading) return;
+    resetPractice();
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api<{ questions: PracticeQuestion[] }>('/training/ai/practice', {
+        method: 'POST', body: JSON.stringify({ sourceResourceIds: [resource.id], count: 3 }),
+      }, token);
+      setPracticeQuestions(response.questions || []);
+    } catch (requestError) {
+      setPracticeQuestions([]);
+      setError(requestError instanceof Error ? requestError.message : 'AI练习生成失败，请稍后重试。');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function generate(action: 'qa' | 'summary' | 'suggestions', suggestedQuestion?: string) {
+    const prompt = (suggestedQuestion ?? question).trim();
+    if (loading || (action === 'qa' && !prompt)) return;
+    if (action === 'qa') setQuestion(prompt);
     setLoading(true);
     setError('');
     setContent('');
     try {
       const body = action === 'qa'
-        ? { sourceResourceIds: [resource.id], question: question.trim() }
+        ? { sourceResourceIds: [resource.id], question: prompt }
         : { sourceResourceIds: [resource.id] };
       const response = await api<{ content: string }>(`/training/ai/${action}`, {
         method: 'POST', body: JSON.stringify(body),
@@ -121,7 +148,7 @@ function AiTutor({ resource, token }: { resource: TrainingResource; token: strin
   function answerPractice(index: number) {
     if (practiceAnswer !== null) return;
     setPracticeAnswer(index);
-    if (index === practiceQuestions[practiceIndex].answer) setCorrectCount((count) => count + 1);
+    if (index === practiceQuestions[practiceIndex]?.answer) setCorrectCount((count) => count + 1);
   }
 
   function nextPractice() {
@@ -145,13 +172,13 @@ function AiTutor({ resource, token }: { resource: TrainingResource; token: strin
     <section className="mt-6 rounded-md bg-white p-6 shadow-sm sm:p-8">
       <div className="flex items-start gap-4 border-b border-slate-100 pb-6"><span className={`grid h-11 w-11 shrink-0 place-items-center rounded-md ${activeTool.tone}`}><activeTool.icon size={22} /></span><div><h2 className="text-xl font-semibold">{activeTool.title}</h2><p className="mt-1 text-sm text-slate-500">{activeTool.description}</p></div></div>
 
-      {tool === 'qa' && <div className="mt-6"><label className="text-sm font-semibold text-slate-700" htmlFor="course-ai-question">向AI助教提问</label><textarea id="course-ai-question" className="mt-3 min-h-32 w-full resize-y rounded-md border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={question} maxLength={500} onChange={(event) => setQuestion(event.target.value)} placeholder={`例如：${resource.title}中最需要注意的风险是什么？`} /><div className="mt-3 flex justify-end"><button className="inline-flex min-h-11 items-center gap-2 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={loading || !question.trim()} onClick={() => generate('qa')}><Sparkles size={17} />{loading ? '正在思考…' : '发送问题'}</button></div></div>}
+      {tool === 'qa' && <div className="mt-6"><p className="text-sm font-semibold text-slate-700">你可以这样问</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{suggestedQuestions.map((item) => <button type="button" className="min-h-12 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm leading-6 text-slate-600 transition hover:border-teal-500 hover:bg-teal-50 hover:text-teal-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={loading} key={item.question} onClick={() => askSuggestedQuestion(item)}>{item.question}</button>)}</div><label className="mt-6 block text-sm font-semibold text-slate-700" htmlFor="course-ai-question">向AI助教提问</label><textarea id="course-ai-question" className="mt-3 min-h-32 w-full resize-y rounded-md border border-slate-300 p-4 text-sm leading-6 outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-100" value={question} maxLength={500} onChange={(event) => setQuestion(event.target.value)} placeholder={`例如：${resource.title}中最需要注意的风险是什么？`} /><div className="mt-3 flex justify-end"><button className="inline-flex min-h-11 items-center gap-2 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={loading || !question.trim()} onClick={() => generate('qa')}><Sparkles size={17} />{loading ? '正在思考…' : '发送问题'}</button></div></div>}
       {tool === 'summary' && <AiGenerateAction loading={loading} button="生成课程总结" description="AI助教将按照学习目标、核心要点、风险提示和记录要求整理当前课程。" onGenerate={() => generate('summary')} />}
       {tool === 'suggestions' && <AiGenerateAction loading={loading} button="生成学习建议" description="AI助教将结合本课程内容给出阅读、复习和练习顺序。" onGenerate={() => generate('suggestions')} />}
       {error && <p className="mt-6 rounded-md bg-red-50 p-4 text-sm text-red-700" role="alert">{error}</p>}
       {content && <div className="mt-6 border-l-4 border-teal-500 bg-teal-50 p-5"><div className="whitespace-pre-wrap text-sm leading-8 text-slate-700">{content}</div><p className="mt-4 text-xs text-slate-500">内容由AI根据当前课程资料生成，请核查重要信息。</p></div>}
 
-      {tool === 'practice' && <div className="mt-6"><div className="flex items-center justify-between"><span className="text-sm font-semibold text-teal-700">第 {practiceIndex + 1}/{practiceQuestions.length} 题</span><span className="text-sm text-slate-500">答对 {correctCount} 题</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><span className="block h-full rounded-full bg-teal-500 transition-all" style={{ width: `${((practiceIndex + 1) / practiceQuestions.length) * 100}%` }} /></div><h3 className="mt-7 text-lg font-semibold leading-8">{practice.question}</h3><div className="mt-5 grid gap-3">{practice.options.map((option, index) => { const answered = practiceAnswer !== null; const correct = index === practice.answer; const selected = index === practiceAnswer; const style = answered && correct ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : answered && selected ? 'border-red-400 bg-red-50 text-red-700' : selected ? 'border-teal-600 bg-teal-50' : 'border-slate-200 hover:border-teal-400'; return <button className={`min-h-14 rounded-md border px-5 text-left text-sm transition ${style}`} disabled={answered} key={option} onClick={() => answerPractice(index)}><span className="mr-3 font-semibold">{String.fromCharCode(65 + index)}.</span>{option}</button>; })}</div>{practiceAnswer !== null && <div className="mt-5 rounded-md bg-slate-50 p-5"><strong className={practiceAnswer === practice.answer ? 'text-emerald-700' : 'text-red-600'}>{practiceAnswer === practice.answer ? '回答正确' : '回答错误'}</strong><p className="mt-2 text-sm leading-7 text-slate-600">{practice.explanation}</p></div>}<div className="mt-6 flex justify-end">{practiceFinished ? <button className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white" onClick={resetPractice}><RefreshCw size={17} />重新练习</button> : <button className="rounded-md bg-teal-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-40" disabled={practiceAnswer === null} onClick={nextPractice}>下一题</button>}</div></div>}
+      {tool === 'practice' && (practice ? <div className="mt-6"><div className="flex items-center justify-between"><span className="text-sm font-semibold text-teal-700">第 {practiceIndex + 1}/{practiceQuestions.length} 题</span><span className="text-sm text-slate-500">答对 {correctCount} 题</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><span className="block h-full rounded-full bg-teal-500 transition-all" style={{ width: `${((practiceIndex + 1) / practiceQuestions.length) * 100}%` }} /></div><h3 className="mt-7 text-lg font-semibold leading-8">{practice.question}</h3><div className="mt-5 grid gap-3">{practice.options.map((option, index) => { const answered = practiceAnswer !== null; const correct = index === practice.answer; const selected = index === practiceAnswer; const style = answered && correct ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : answered && selected ? 'border-red-400 bg-red-50 text-red-700' : selected ? 'border-teal-600 bg-teal-50' : 'border-slate-200 hover:border-teal-400'; return <button className={`min-h-14 rounded-md border px-5 text-left text-sm transition ${style}`} disabled={answered} key={option} onClick={() => answerPractice(index)}><span className="mr-3 font-semibold">{String.fromCharCode(65 + index)}.</span>{option}</button>; })}</div>{practiceAnswer !== null && <div className="mt-5 rounded-md bg-slate-50 p-5"><strong className={practiceAnswer === practice.answer ? 'text-emerald-700' : 'text-red-600'}>{practiceAnswer === practice.answer ? '回答正确' : '回答错误'}</strong><p className="mt-2 text-sm leading-7 text-slate-600">{practice.explanation}</p></div>}<div className="mt-6 flex justify-end">{practiceFinished ? <button className="inline-flex items-center gap-2 rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white" onClick={() => void loadPractice()}><RefreshCw size={17} />重新生成</button> : <button className="rounded-md bg-teal-700 px-6 py-3 text-sm font-semibold text-white disabled:opacity-40" disabled={practiceAnswer === null} onClick={nextPractice}>下一题</button>}</div></div> : <AiGenerateAction loading={loading} button="生成陪练题" description="AI助教将依据当前课程资料生成三道练习题。" onGenerate={() => void loadPractice()} />)}
     </section>
   </div>;
 }
@@ -160,21 +187,36 @@ function AiGenerateAction({ loading, button, description, onGenerate }: { loadin
   return <div className="mt-6 flex flex-col items-start justify-between gap-5 rounded-md bg-slate-50 p-6 sm:flex-row sm:items-center"><p className="max-w-2xl text-sm leading-7 text-slate-600">{description}</p><button className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md bg-teal-700 px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={loading} onClick={onGenerate}><Sparkles size={17} />{loading ? '正在生成…' : button}</button></div>;
 }
 
-function coursePracticeQuestions(resource: TrainingResource): PracticeQuestion[] {
-  if (resource.title.includes('压疮')) return [
-    { question: '下列哪项最符合压力性损伤的日常预防要求？', options: ['长时间保持同一体位', '按计划变换体位并保持皮肤清洁干燥', '发红后用力按摩', '破损后才开始记录'], answer: 1, explanation: '应按护理计划变换体位，保持皮肤和床单位清洁干燥，并持续观察和记录。' },
-    { question: '发现受压部位持续发红或出现水疱时，应如何处理？', options: ['继续原照护操作', '自行处理深部伤口', '立即报告负责人并做好记录', '等待下一班再处理'], answer: 2, explanation: '持续发红、水疱、破损或渗液属于需要立即报告的异常信号，护工不得自行诊断和治疗。' },
-    { question: '整理床单位时，哪项做法正确？', options: ['保留床单褶皱', '清除碎屑并保持床单平整', '把硬物留在床下', '不检查潮湿情况'], answer: 1, explanation: '床单应平整、干燥，并及时清除碎屑和硬物，避免额外摩擦和持续受压。' },
-  ];
-  if (resource.title.includes('跌倒')) return [
-    { question: '清洁湿滑区域时首先应采取什么措施？', options: ['让老人快速通过', '设置明显安全警示并及时处理湿滑区域', '只口头提醒一次', '等待自然晾干'], answer: 1, explanation: '清洁前和清洁过程中应设置安全警示，保持通道安全并及时处理湿滑区域。' },
-    { question: '高风险老人准备起身时，正确做法是什么？', options: ['催促其立即站立', '先坐起并确认无头晕乏力后再协助站立', '只提供助行器后离开', '让老人自行尝试'], answer: 1, explanation: '应循序协助起身，观察头晕、乏力和步态情况，并按风险等级提供陪护。' },
-    { question: '老人跌倒后，护工首先应怎么做？', options: ['立即强行扶起', '让老人自行回房', '观察意识和伤情并呼叫专业人员', '不记录等待恢复'], answer: 2, explanation: '跌倒后不应立即强行扶起，要先观察意识、呼吸、疼痛、出血和肢体异常并呼叫专业人员。' },
-  ];
+function courseSuggestedQuestions(resource: TrainingResource): SuggestedQuestion[] {
+  if (resource.title.includes('跌倒')) {
+    return [
+      { question: '跌倒预防中需要重点观察哪些风险信号？', answer: '应重点观察老人近期是否有跌倒史，是否出现头晕、乏力、步态不稳、视力下降或意识状态变化，同时关注服药后反应、起身过快、鞋袜不合适以及助行器使用不当等情况。发现风险变化应及时记录并报告负责人。' },
+      { question: '协助老人起身和行走时应遵循哪些步骤？', answer: '先确认环境安全并准备合适的鞋袜和助行器；协助老人缓慢坐起，在床边停留并询问是否头晕；确认状态稳定后再协助站立；行走时站在老人较弱一侧或后侧提供保护，保持通道畅通，不催促、不强拉，并根据风险等级安排陪护。' },
+      { question: '老人发生跌倒后，护工应如何正确处理？', answer: '不要立即强行扶起老人。首先保持现场安全，观察意识、呼吸、疼痛、出血和肢体异常，立即呼叫专业人员并按机构流程报告；在专业人员到达前给予适当保护和安抚，不擅自搬动疑似骨折或头部受伤的老人；事后如实记录时间、地点、经过和观察结果。' },
+      { question: '请根据课程资料整理一份环境安全检查清单。', answer: '环境检查可包括：地面干燥且无杂物；通道和床边照明充足；常用物品放在老人可及位置；床、轮椅和助行器稳定且制动有效；扶手牢固；电线不横跨通道；鞋袜防滑合脚；呼叫装置可用；卫生间配有防滑和扶手设施。发现问题应立即处理或上报。' },
+    ];
+  }
+  if (resource.title.includes('压疮') || resource.title.includes('压力性损伤')) {
+    return [
+      { question: '哪些老人更容易发生压力性损伤？', answer: '长期卧床或活动受限、营养状况较差、大小便失禁、感觉障碍、皮肤潮湿、消瘦或水肿，以及不能自主变换体位的老人风险较高。护工应按护理计划重点观察，而不是自行作出医疗诊断。' },
+      { question: '日常照护中应如何进行皮肤观察和体位变换？', answer: '按护理计划协助老人规律变换体位，动作轻柔，避免拖拉造成摩擦；重点查看骶尾部、足跟、髋部、肘部等受压部位是否发红、破损或潮湿；保持皮肤清洁干燥和床单位平整无碎屑，并记录每次观察及体位变化。' },
+      { question: '发现受压部位持续发红时应该怎么处理？', answer: '应立即减轻该部位压力，停止摩擦或按摩，保持局部清洁干燥，并及时报告负责人或专业医护人员，同时记录发现时间、部位、颜色变化和皮肤完整情况。护工不得自行处理深部伤口或使用未经许可的药物。' },
+      { question: '请根据课程资料整理一份压疮预防检查清单。', answer: '检查要点包括：是否按计划变换体位；受压部位皮肤是否完整；床单是否平整、干燥、无碎屑；衣物和纸尿裤是否潮湿；支撑垫位置是否正确；老人营养和饮水异常是否已报告；每次皮肤观察、体位变换和异常情况是否完成记录。' },
+    ];
+  }
+  if (resource.title.includes('手卫生') || resource.title.includes('感染')) {
+    return [
+      { question: '手卫生的五个关键时刻分别是什么？', answer: '五个关键时刻是：接触老人之前；进行清洁或无菌相关操作之前；可能接触血液、分泌物、排泄物等体液之后；接触老人之后；接触老人周围环境和物品之后。' },
+      { question: '什么情况下应洗手，什么情况下可以进行手消毒？', answer: '双手有肉眼可见污物、接触排泄物或机构明确要求时，应使用流动水和洗手液洗手。双手无可见污物且符合机构规范时，可使用速干手消毒剂。具体操作应遵循所在机构的感染控制制度。' },
+      { question: '佩戴和摘除手套时需要注意哪些事项？', answer: '戴手套前先进行手卫生，选择合适尺寸并检查完整性；不同老人或不同操作之间要更换手套；避免戴手套触碰清洁公共区域；摘除时不要让污染面接触皮肤，摘后立即进行手卫生。手套不能替代手卫生。' },
+      { question: '请根据课程资料总结感染预防的关键步骤。', answer: '感染预防应做到：在关键时刻规范手卫生；正确使用手套等防护用品；清洁与污染物品分开；及时处理体液污染；保持环境和常用物品清洁；发现发热、异常分泌物等情况及时报告；按要求完成清洁、消毒和操作记录。' },
+    ];
+  }
   return [
-    { question: '以下哪项属于手卫生五个关键时刻？', options: ['只在下班前洗手', '接触老人之前', '手明显很脏时才洗手', '戴手套后无需洗手'], answer: 1, explanation: '接触老人之前属于五个关键时刻之一，接触老人之后和接触周围环境之后也需要手卫生。' },
-    { question: '摘除一次性手套后是否还需要进行手卫生？', options: ['需要', '不需要'], answer: 0, explanation: '手套不能替代手卫生，摘除手套后仍应按要求洗手或进行卫生手消毒。' },
-    { question: '双手有可见污物时，应优先选择哪种方式？', options: ['只用纸巾擦拭', '佩戴新手套', '流动水和洗手液洗手', '等待污物自然脱落'], answer: 2, explanation: '双手有可见污物时，应使用流动水和洗手液清洗；无可见污物时可按机构要求使用速干手消毒剂。' },
+    { question: `请概括《${resource.title}》的核心要点。`, answer: `《${resource.title}》强调在护理操作前确认学习目标和服务对象状态，操作中遵循规范流程、观察风险信号，操作后完成清洁整理和记录。遇到异常情况应停止不安全操作并及时报告，不以个人经验替代机构制度和专业判断。` },
+    { question: '这门课程中最需要注意的风险有哪些？', answer: '需要关注服务对象状态变化、环境安全、操作步骤遗漏、交叉感染、辅助用具使用不当以及记录不完整等风险。实施操作前应核对要求，过程中持续观察，发现异常及时停止并报告。' },
+    { question: '实际护理操作时应该遵循哪些关键步骤？', answer: '一般应依次完成：确认任务与对象、评估环境和风险、准备用品并进行手卫生、解释并取得配合、按规范实施操作、持续观察反应、整理环境与用品、记录结果并报告异常。具体步骤以课程资料和机构制度为准。' },
+    { question: '请根据课程资料整理一份复习清单。', answer: '复习时可依次核对：学习目标是否理解；操作前准备是否完整；关键步骤能否按顺序复述；主要风险信号是否掌握；异常情况是否知道如何报告；操作后的清洁和记录要求是否清楚；相关练习题是否完成并订正。' },
   ];
 }
 
@@ -450,6 +492,8 @@ function Assignments({ resource, token }: { resource: TrainingResource; token: s
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [aiExplanations, setAiExplanations] = useState<Record<number, string>>({});
+  const [explanationLoading, setExplanationLoading] = useState(false);
 
   async function load() {
     const loaded = await api<Assignment[]>(`/training/resources/${resource.id}/assignments`, {}, token);
@@ -467,6 +511,25 @@ function Assignments({ resource, token }: { resource: TrainingResource; token: s
   const visible = filter === 'all' || (filter === 'completed' ? completed : !completed);
   const allAnswered = items.length > 0 && items.every((item) => (answers[item.id] ?? item.submittedAnswer ?? '').trim());
   const current = items[currentIndex];
+
+  useEffect(() => {
+    if (!reviewMode || !current || current.type === 'TEXT' || aiExplanations[current.id]) return;
+    let active = true;
+    setExplanationLoading(true);
+    api<{ content: string }>('/training/ai/assignment-explanation', {
+      method: 'POST',
+      body: JSON.stringify({
+        sourceResourceIds: [resource.id], question: current.content,
+        userAnswer: answers[current.id] ?? current.submittedAnswer ?? '',
+        standardAnswer: current.correctAnswer || '',
+      }),
+    }, token).then((response) => {
+      if (active) setAiExplanations((values) => ({ ...values, [current.id]: response.content }));
+    }).catch((requestError) => {
+      if (active) setAiExplanations((values) => ({ ...values, [current.id]: requestError instanceof Error ? requestError.message : 'AI讲解暂时不可用' }));
+    }).finally(() => { if (active) setExplanationLoading(false); });
+    return () => { active = false; };
+  }, [reviewMode, current?.id, token, resource.id]);
 
   function startAnswering() {
     setAnswers(Object.fromEntries(items.map((item) => [item.id, item.submittedAnswer || ''])));
@@ -524,7 +587,7 @@ function Assignments({ resource, token }: { resource: TrainingResource; token: s
         <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-5"><strong>第 {currentIndex + 1} 题</strong><span className="text-sm text-slate-400">{current.type === 'TEXT' ? '文本题' : current.type === 'TRUE_FALSE' ? '判断题' : '选择题'}</span></div>
         <p className="leading-7 text-slate-700">{current.content}</p>
         <div className="mt-6">{current.type === 'TEXT' ? <textarea className="min-h-40 w-full rounded-md border p-4 text-sm" value={currentAnswer} disabled={reviewMode} onChange={(event) => setAnswers({ ...answers, [current.id]: event.target.value })} placeholder="输入作业内容" /> : <div className="grid gap-3">{options.map((option, index) => { const value = current.type === 'TRUE_FALSE' ? (index === 0 ? 'true' : 'false') : option; const selected = selectedOptionIndexes[current.id] === index; const isCorrect = reviewMode && value === correctValue; const isWrongSelection = reviewMode && selected && value !== correctValue; const optionStyle = isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : isWrongSelection ? 'border-red-400 bg-red-50 text-red-700' : selected ? 'border-teal-600 bg-teal-50' : 'hover:border-slate-400'; return <label className={`flex items-center gap-3 rounded-md border p-4 text-sm transition ${reviewMode ? 'cursor-default' : 'cursor-pointer'} ${optionStyle}`} key={`${current.id}-${index}`}><input type="radio" name={`assignment-${current.id}`} checked={selected} disabled={reviewMode} onChange={() => { setAnswers({ ...answers, [current.id]: value }); setSelectedOptionIndexes({ ...selectedOptionIndexes, [current.id]: index }); }} />{option}{isCorrect && <span className="ml-auto text-xs font-semibold">正确答案</span>}{isWrongSelection && <span className="ml-auto text-xs font-semibold">你的选择</span>}</label>; })}</div>}</div>
-        {reviewMode && current.type !== 'TEXT' && <div className={`mt-6 rounded-md border-l-4 p-5 ${Number(current.score) >= 60 ? 'border-emerald-500 bg-emerald-50' : 'border-amber-500 bg-amber-50'}`}><strong className="text-sm">AI 讲解</strong><p className="mt-2 text-sm leading-7 text-slate-700">{mockAssignmentExplanation(current)}</p><small className="mt-3 block text-slate-500">讲解由AI根据学习资料生成，请核查重要信息。</small></div>}
+        {reviewMode && current.type !== 'TEXT' && <div className={`mt-6 rounded-md border-l-4 p-5 ${Number(current.score) >= 60 ? 'border-emerald-500 bg-emerald-50' : 'border-amber-500 bg-amber-50'}`}><strong className="text-sm">AI 讲解</strong><p className="mt-2 text-sm leading-7 text-slate-700">{explanationLoading ? '正在生成讲解…' : aiExplanations[current.id] || '讲解准备中…'}</p><small className="mt-3 block text-slate-500">讲解由AI根据学习资料生成，请核查重要信息。</small></div>}
         <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-5"><button className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-semibold disabled:opacity-40" disabled={currentIndex === 0} onClick={() => setCurrentIndex(currentIndex - 1)}>上一题</button>{reviewMode ? <div className="flex gap-3"><button className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-semibold" onClick={() => setAnswering(false)}>返回作业列表</button><button className="rounded-md bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white" onClick={startAnswering}>重新作答</button></div> : currentIndex < items.length - 1 ? <button className="rounded-md bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40" disabled={!currentAnswer.trim()} onClick={() => setCurrentIndex(currentIndex + 1)}>下一题</button> : <button className="rounded-md bg-teal-600 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40" disabled={!allAnswered} onClick={() => setConfirmOpen(true)}>提交作业</button>}</div>
       </article>
 
@@ -533,16 +596,6 @@ function Assignments({ resource, token }: { resource: TrainingResource; token: s
 
     {confirmOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-5" role="dialog" aria-modal="true" aria-labelledby="assignment-submit-title"><div className="w-full max-w-md rounded-lg bg-white p-7 shadow-2xl"><h2 className="text-xl font-semibold" id="assignment-submit-title">是否确认交卷？</h2><p className="mt-3 text-sm leading-6 text-slate-500">提交后将立即批改客观题并返回作业列表。你之后仍可重新作答。</p><div className="mt-7 flex justify-end gap-3"><button className="rounded-md border border-slate-300 px-5 py-2.5 text-sm font-semibold" disabled={submitting} onClick={() => setConfirmOpen(false)}>继续检查</button><button className="rounded-md bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50" disabled={submitting} onClick={submitPaper}>{submitting ? '正在交卷…' : '确认交卷'}</button></div></div></div>}
   </>;
-}
-
-function mockAssignmentExplanation(item: Assignment) {
-  if (item.content.includes('异常风险')) {
-    return `正确答案是“${item.correctAnswer}”。照护过程中发现异常风险时，应暂停或调整当前操作，及时记录并按规范上报，不能忽略风险继续操作。`;
-  }
-  if (item.content.includes('首先应完成')) {
-    return `正确答案是“${item.correctAnswer}”。规范照护开始前需要完成手卫生、核对服务对象及照护要求，并确认环境和用品符合安全条件。`;
-  }
-  return `正确答案是“${item.correctAnswer}”。本题考查课程中的基础照护规范，实际操作应遵循已发布培训资料中的流程、风险控制和记录要求。`;
 }
 
 function ExamPanel({ resourceId, score, token, onUpdated }: { resourceId: number; score?: CourseScore; token: string; onUpdated: () => void }) {

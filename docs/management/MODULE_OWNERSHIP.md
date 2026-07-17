@@ -1,41 +1,20 @@
 # Module Ownership
 
-更新时间：2026-07-07
+| 范围 | 路径 | 负责人 | 规则 |
+| --- | --- | --- | --- |
+| 后端基础与认证 | `backend/.../auth`、`common` | 隋咏轩 | 安全配置变更需回归认证测试 |
+| 培训业务 | `backend/.../training` | 隋咏轩 | 保持资源、学习、考试边界清晰 |
+| AI培训辅助 | `backend/.../ai` | 隋咏轩、孙洋 | 仅授权AI任务可修改 |
+| 管理员端 | `frontend/admin-web` | 孙洋 | 管理员权限入口 |
+| 护工端 | `frontend/mobile-web` | 孙洋 | 护工学习入口 |
+| 门户端 | `frontend/portal-web` | 隋咏轩、孙洋 | 品牌与统一入口 |
+| 数据库 | `database` | 隋咏轩 | 所有结构变化提交SQL |
+| 测试与交付 | `docs/test`、`docs/delivery` | 张远航、李亦航 | 记录真实结果 |
 
-## 模块负责人
-
-| 模块/范围 | 负责人 | 当前状态 | 说明 |
-|---|---|---|---|
-| 后端架构与核心接口 | 隋咏轩 | 骨架已创建 | 当前已创建 Java 8、Spring Boot 2.7.x、MyBatis-Plus 后端骨架 |
-| 前端与页面联调 | 孙洋 | 骨架已创建 | 当前已创建 PC 管理端和移动端 Vue 工程骨架 |
-| 需求与文档 | 李亦航 | 已形成需求基线 | 需求规约、用例模型和业务流程已进入需求基线 v1.0 |
-| 测试与交付 | 张远航 | 测试设计已完成 | 测试计划和详细测试用例已完成审核，尚未执行真实业务测试 |
-| AI 模块 | 隋咏轩、孙洋 | 骨架已创建 | 当前已创建 AI 培训辅助适配接口和 Mock 实现，真实模型接入需后续任务确认 |
-
-## AI 受保护范围
-
-当前已发现并登记以下实际 AI 相关范围：
+## AI保护范围
 
 - `backend/src/main/java/com/carenexus/ai/`
-- `docs/api/API设计规范.md` 中 AI 草稿接口规范部分
-- `docs/design/系统架构设计.md` 中 AI 适配层设计部分
-- `docs/design/数据库设计.md` 中 AI 草稿和审核相关表设计
+- `frontend/portal-web` 和护工端中的 AI 助手交互代码
+- `database` 中 `ai_draft`、`ai_draft_source_resource` 相关结构
 
-以上范围由隋咏轩、孙洋负责。非 AI 负责人或非 AI 任务不得修改；AI负责人隋咏轩、孙洋在需求确认和用户授权后可在登记范围内开发。
-
-后续如出现以下目录或文件，应在本文件登记为受保护范围。非 AI 负责人或非 AI 任务不得修改；AI负责人隋咏轩、孙洋在需求确认和用户授权后可在登记范围内开发：
-
-- `backend/*/ai/`
-- `backend/*/assistant/`
-- `backend/*/llm/`
-- `backend/*/rag/`
-- `backend/*/vector/`
-- `backend/*/prompt/`
-- `frontend/*/ai/`
-- `frontend/*/assistant/`
-- AI 接口协议文档，如 `docs/api/*ai*.md`、`docs/api/*assistant*.md`
-- Spring AI、向量数据库、RAG 相关配置或依赖
-
-## 本轮登记结论
-
-T-011 已创建 AI 培训辅助适配层骨架，但尚未接入真实 AI 模型，尚未实现 AI 题目正式发布逻辑，也未扩展到医生端、老人端或管理决策 AI。
+AI负责人在需求确认后可修改；其他任务不得顺手改变AI协议、审核边界或真实模型配置。

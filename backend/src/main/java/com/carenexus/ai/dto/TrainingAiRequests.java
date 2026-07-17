@@ -45,6 +45,42 @@ public final class TrainingAiRequests {
         public void setCount(Integer value) { this.count = value; }
     }
 
+    public static class PracticeRequest {
+        @NotEmpty private List<Long> sourceResourceIds = new ArrayList<>();
+        @NotNull @Min(1) @Max(10) private Integer count = 3;
+
+        public List<Long> getSourceResourceIds() { return sourceResourceIds; }
+
+        public void setSourceResourceIds(List<Long> value) { this.sourceResourceIds = value; }
+
+        public Integer getCount() { return count; }
+
+        public void setCount(Integer value) { this.count = value; }
+    }
+
+    public static class AssignmentExplanationRequest {
+        @NotEmpty private List<Long> sourceResourceIds = new ArrayList<>();
+        @NotBlank @Size(max = 1000) private String question;
+        @Size(max = 1000) private String userAnswer;
+        @NotBlank @Size(max = 1000) private String standardAnswer;
+
+        public List<Long> getSourceResourceIds() { return sourceResourceIds; }
+
+        public void setSourceResourceIds(List<Long> value) { this.sourceResourceIds = value; }
+
+        public String getQuestion() { return question; }
+
+        public void setQuestion(String value) { this.question = value; }
+
+        public String getUserAnswer() { return userAnswer; }
+
+        public void setUserAnswer(String value) { this.userAnswer = value; }
+
+        public String getStandardAnswer() { return standardAnswer; }
+
+        public void setStandardAnswer(String value) { this.standardAnswer = value; }
+    }
+
     public static class ReviewRequest {
         @NotBlank private String reviewResult;
         @Size(max = 500) private String comment;

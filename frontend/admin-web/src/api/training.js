@@ -99,3 +99,19 @@ export function offlineResource(id, reason) {
     body: { reason }
   })
 }
+
+export function previewAssignmentDocx(file) {
+  const body = new FormData()
+  body.append('file', file)
+  return request('/training/assignments/import-preview', {
+    method: 'POST',
+    body
+  })
+}
+
+export function publishAssignment(payload) {
+  return request('/training/assignments/publish', {
+    method: 'POST',
+    body: payload
+  })
+}

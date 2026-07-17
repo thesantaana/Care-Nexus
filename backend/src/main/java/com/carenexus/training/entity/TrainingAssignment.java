@@ -12,6 +12,7 @@ public class TrainingAssignment {
     private String content;
     private String optionsJson;
     private String standardAnswer;
+    private String answerAnalysis;
     private String assignmentStatus;
     private Long createdBy;
     private LocalDateTime dueAt;
@@ -44,6 +45,10 @@ public class TrainingAssignment {
     public String getStandardAnswer() { return standardAnswer; }
 
     public void setStandardAnswer(String value) { standardAnswer = value; }
+
+    public String getAnswerAnalysis() { return answerAnalysis; }
+
+    public void setAnswerAnalysis(String value) { answerAnalysis = value; }
 
     public String getAssignmentStatus() { return assignmentStatus; }
 

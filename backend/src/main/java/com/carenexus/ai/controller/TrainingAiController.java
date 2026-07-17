@@ -1,6 +1,8 @@
 package com.carenexus.ai.controller;
 
 import com.carenexus.ai.dto.TrainingAiRequests.ContentRequest;
+import com.carenexus.ai.dto.TrainingAiRequests.AssignmentExplanationRequest;
+import com.carenexus.ai.dto.TrainingAiRequests.PracticeRequest;
 import com.carenexus.ai.dto.TrainingAiRequests.QuestionDraftRequest;
 import com.carenexus.ai.dto.TrainingAiRequests.ReviewRequest;
 import com.carenexus.ai.service.AiQuestionDraftService;
@@ -50,6 +52,18 @@ public class TrainingAiController {
     public ApiResponse<TrainingAiResponses.ContentResponse> suggestions(
             @Valid @RequestBody ContentRequest request) {
         return ApiResponse.success(assistanceService.suggestions(request));
+    }
+
+    @PostMapping("/practice")
+    public ApiResponse<TrainingAiResponses.PracticeResponse> practice(
+            @Valid @RequestBody PracticeRequest request) {
+        return ApiResponse.success(assistanceService.practice(request));
+    }
+
+    @PostMapping("/assignment-explanation")
+    public ApiResponse<TrainingAiResponses.ContentResponse> explainAssignment(
+            @Valid @RequestBody AssignmentExplanationRequest request) {
+        return ApiResponse.success(assistanceService.explainAssignment(request));
     }
 
     @PostMapping("/question-drafts")
